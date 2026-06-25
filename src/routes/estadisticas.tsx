@@ -8,11 +8,10 @@ import {
   PieChart, Pie, AreaChart, Area, Legend,
 } from "recharts";
 import {
-  AlertCircle, Users, MapPin, Building, Download, Activity,
+  AlertCircle, Users, MapPin, Download, Activity,
   ShieldCheck, CheckCircle2, Clock, Flame, Waves, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Report } from "@/lib/types";
 
 export const Route = createFileRoute("/estadisticas")({
   ssr: false,
