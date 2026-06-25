@@ -55,16 +55,36 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
   return { reports, loading, refetch };
 }
 
+export type MissingCounts = { all: number; missing: number; found: number; deceased: number };
+
 export function useMissing() {
   const [missing, setMissing] = useState<MissingPerson[]>([]);
+  const [counts, setCounts] = useState<MissingCounts>({ all: 0, missing: 0, found: 0, deceased: 0 });
+
+  const refetchCounts = useCallback(async () => {
+    const [all, m, f, d] = await Promise.all([
+      supabase.from("missing_persons").select("id", { count: "exact", head: true }),
+      supabase.from("missing_persons").select("id", { count: "exact", head: true }).eq("status", "missing"),
+      supabase.from("missing_persons").select("id", { count: "exact", head: true }).eq("status", "found"),
+      supabase.from("missing_persons").select("id", { count: "exact", head: true }).eq("status", "deceased"),
+    ]);
+    setCounts({
+      all: all.count ?? 0,
+      missing: m.count ?? 0,
+      found: f.count ?? 0,
+      deceased: d.count ?? 0,
+    });
+  }, []);
 
   const refetch = useCallback(async () => {
     const { data } = await supabase
       .from("missing_persons")
       .select("*")
-      .order("report_date", { ascending: false });
+      .order("report_date", { ascending: false })
+      .limit(2000);
     if (data) setMissing(data as unknown as MissingPerson[]);
-  }, []);
+    await refetchCounts();
+  }, [refetchCounts]);
 
   useEffect(() => {
     let mounted = true;
@@ -72,9 +92,11 @@ export function useMissing() {
       .from("missing_persons")
       .select("*")
       .order("report_date", { ascending: false })
+      .limit(2000)
       .then(({ data }) => {
         if (mounted && data) setMissing(data as unknown as MissingPerson[]);
       });
+    refetchCounts();
     const ch = supabase
       .channel(`missing-rt-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "missing_persons" }, (payload) => {
@@ -86,14 +108,15 @@ export function useMissing() {
             return prev.filter((r) => r.id !== (payload.old as MissingPerson).id);
           return prev;
         });
+        refetchCounts();
       })
       .subscribe();
     return () => {
       mounted = false;
       supabase.removeChannel(ch);
     };
-  }, []);
-  return { missing, refetch };
+  }, [refetchCounts]);
+  return { missing, counts, refetch };
 }
 
 export function useAuth() {
