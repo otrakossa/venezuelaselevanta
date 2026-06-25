@@ -21,10 +21,10 @@ export type TechCredit = {
 
 export const team: Person[] = [
   {
-    name: "Tu nombre aquí",
-    role: "Fundador / Desarrollo",
-    initials: "VL",
-    links: [{ label: "Web", url: "https://venezuelaselevanta.info" }],
+    name: "Codex",
+    role: "Creador y mantenedor — Desarrollo e infraestructura",
+    initials: "CX",
+    links: [{ label: "codextecnologia.com", url: "https://codextecnologia.com" }],
   },
 ];
 
