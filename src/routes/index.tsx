@@ -5,7 +5,7 @@ import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search } from "lucide-react";
 import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
@@ -36,6 +36,10 @@ function HomePage() {
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
+  const [urgencies, setUrgencies] = useState<string[]>([]);
+  const [timeWindow, setTimeWindow] = useState<"all" | "24h" | "7d">("all");
+  const [search2, setSearch2] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showQuakes, setShowQuakes] = useState(true);
@@ -55,18 +59,40 @@ function HomePage() {
 
   const toggle = (slug: string) =>
     setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
+  const toggleUrgency = (u: string) =>
+    setUrgencies((cur) => (cur.includes(u) ? cur.filter((s) => s !== u) : [...cur, u]));
 
   const visible = useMemo(() => {
+    const q = search2.trim().toLowerCase();
+    const cutoff =
+      timeWindow === "24h"
+        ? Date.now() - 24 * 3600 * 1000
+        : timeWindow === "7d"
+          ? Date.now() - 7 * 24 * 3600 * 1000
+          : 0;
     return reports.filter((r) => {
       if (active.length > 0 && !active.includes(r.category)) return false;
+      if (urgencies.length > 0 && !urgencies.includes(r.urgency)) return false;
       if (trust === "verified" && !r.verified) return false;
       if (trust === "trusted") {
         const c = getCredibility(r);
         if (c.level !== "verified" && c.level !== "trusted") return false;
       }
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
+      if (q) {
+        const hay = `${r.title} ${r.description ?? ""} ${r.address ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
-  }, [reports, active, trust]);
+  }, [reports, active, urgencies, trust, timeWindow, search2]);
+
+  const activeFilterCount =
+    (active.length > 0 ? 1 : 0) +
+    (urgencies.length > 0 ? 1 : 0) +
+    (trust !== "all" ? 1 : 0) +
+    (timeWindow !== "all" ? 1 : 0) +
+    (search2 ? 1 : 0);
 
   return (
     <div className="flex flex-col">
@@ -210,12 +236,101 @@ function HomePage() {
                 >
                   <Activity className="h-3 w-3" /> 🌍 Sismos USGS
                 </button>
+                <button
+                  onClick={() => setShowFilters((s) => !s)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    showFilters || activeFilterCount > 0
+                      ? "bg-[color:var(--midnight)] text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Más filtros"
+                >
+                  <Search className="h-3 w-3" /> Filtros
+                  {activeFilterCount > 0 && (
+                    <span className="ml-0.5 bg-[color:var(--sunrise)] text-white rounded-full px-1.5 text-[9px] font-bold">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
               {visible.length}
             </div>
           </div>
+
+          {/* Expanded filter panel */}
+          {showFilters && (
+            <div className="absolute top-12 left-2 right-2 z-[399] bg-card/95 backdrop-blur border border-border rounded-lg shadow-lg p-3 space-y-2.5 max-w-md">
+              <div>
+                <label className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground block mb-1">Buscar</label>
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={search2}
+                    onChange={(e) => setSearch2(e.target.value)}
+                    placeholder="Título, descripción o dirección..."
+                    className="w-full pl-7 pr-2 py-1.5 rounded-md border border-input bg-background text-xs"
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground mb-1">Urgencia</div>
+                <div className="flex flex-wrap gap-1">
+                  {Object.entries(URGENCY_LABELS).map(([k, v]) => {
+                    const isOn = urgencies.includes(k);
+                    return (
+                      <button
+                        key={k}
+                        onClick={() => toggleUrgency(k)}
+                        className={cn(
+                          "text-[10px] px-2 py-1 rounded-full font-semibold border transition",
+                          isOn ? "text-white border-transparent" : "bg-background text-foreground border-border",
+                        )}
+                        style={isOn ? { background: v.color } : undefined}
+                      >
+                        {v.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground mb-1">Tiempo</div>
+                <div className="flex gap-1">
+                  {([
+                    { k: "all", label: "Todos" },
+                    { k: "24h", label: "Últimas 24h" },
+                    { k: "7d", label: "7 días" },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.k}
+                      onClick={() => setTimeWindow(t.k)}
+                      className={cn(
+                        "text-[10px] px-2 py-1 rounded-full font-semibold border transition",
+                        timeWindow === t.k
+                          ? "bg-[color:var(--sky)] text-white border-transparent"
+                          : "bg-background text-foreground border-border",
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => {
+                    setActive([]); setUrgencies([]); setTrust("all"); setTimeWindow("all"); setSearch2("");
+                  }}
+                  className="w-full text-[11px] py-1.5 rounded-md bg-muted hover:bg-muted/70 font-semibold"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          )}
 
           <ClientOnly
             fallback={

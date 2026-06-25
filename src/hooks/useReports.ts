@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Report, MissingPerson } from "@/lib/types";
 
-export function useReports() {
+export function useReports(opts: { includeHidden?: boolean } = {}) {
+  const includeHidden = opts.includeHidden ?? false;
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,7 +14,10 @@ export function useReports() {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (mounted && data) setReports(data as unknown as Report[]);
+        if (mounted && data) {
+          const rows = data as unknown as Report[];
+          setReports(includeHidden ? rows : rows.filter((r) => !r.hidden));
+        }
         setLoading(false);
       });
 
