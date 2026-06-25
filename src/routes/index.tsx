@@ -103,9 +103,9 @@ function HomePage() {
                 Respuesta ciudadana
               </span>
               <h1 className="font-display text-2xl sm:text-5xl leading-[1.05] tracking-tight">
-                Juntos mapeamos.
+                La tierra se movió,
                 <br />
-                <span className="text-[color:var(--gold)]">Juntos nos levantamos.</span>
+                <span className="text-[color:var(--gold)]">pero Venezuela sigue firme.</span>
               </h1>
               <p className="text-xs sm:text-base text-white/85 max-w-xl hidden sm:block">
                 Mapa colaborativo de crisis del terremoto. Reporta, consulta y coordina ayuda en tiempo real.
