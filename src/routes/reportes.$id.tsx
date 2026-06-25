@@ -20,6 +20,7 @@ const VIDEO_RE = /\.(mp4|mov|webm|m4v)(\?|$)/i;
 function ReportDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, userId } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -38,10 +39,38 @@ function ReportDetailPage() {
         else setReport(data as unknown as Report);
         setLoading(false);
       });
+
+    const ch = supabase
+      .channel(`report-detail-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "reports", filter: `id=eq.${id}` },
+        (payload) => {
+          setReport(payload.new as unknown as Report);
+        },
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      supabase.removeChannel(ch);
     };
   }, [id]);
+
+  const toggleVerify = async () => {
+    if (!report) return;
+    const next = !report.verified;
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        verified: next,
+        verified_by: next ? userId : null,
+        verified_at: next ? new Date().toISOString() : null,
+      })
+      .eq("id", report.id);
+    if (error) toast.error(error.message);
+    else toast.success(next ? "Marcado como verificado" : "Verificación retirada");
+  };
 
   if (loading) {
     return (
