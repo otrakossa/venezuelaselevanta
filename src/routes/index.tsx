@@ -9,9 +9,13 @@ import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, Bad
 import heroImage from "@/assets/hero-amanecer.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
+import { ReportDetailSheet } from "@/components/ReportDetailSheet";
 
 export const Route = createFileRoute("/")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    report: typeof search.report === "string" ? search.report : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
@@ -26,12 +30,18 @@ export const Route = createFileRoute("/")({
 const HERO_DISMISS_KEY = "vsl-hero-dismissed";
 
 function HomePage() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
+
+  const openReportId = search.report ?? null;
+  const openDetail = (id: string) => navigate({ search: { report: id }, replace: false });
+  const closeDetail = () => navigate({ search: {}, replace: false });
 
   useEffect(() => {
     if (localStorage.getItem(HERO_DISMISS_KEY) === "1") setShowHero(false);
@@ -200,7 +210,7 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} focusReport={focusReport} />
+            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} />
           </ClientOnly>
 
           {/* Mobile bottom-sheet handle for the recent reports list */}
@@ -250,7 +260,7 @@ function HomePage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                      openDetail(r.id);
                       setSheetOpen(false);
                     }}
                     className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
@@ -303,6 +313,12 @@ function HomePage() {
           </ul>
         </aside>
       </div>
+
+      <ReportDetailSheet
+        reportId={openReportId}
+        onClose={closeDetail}
+        onFocusMap={(lat, lng, id) => setFocusReport({ id, lat, lng, nonce: Date.now() })}
+      />
     </div>
   );
 }

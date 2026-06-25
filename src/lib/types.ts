@@ -37,6 +37,14 @@ export interface ReportVote {
   updated_at: string;
 }
 
+export interface ReportComment {
+  id: string;
+  report_id: string;
+  author_name: string | null;
+  content: string;
+  created_at: string;
+}
+
 export interface MissingPerson {
   id: string;
   name: string;
