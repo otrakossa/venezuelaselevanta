@@ -101,13 +101,50 @@ export type Database = {
         }
         Relationships: []
       }
+      report_votes: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          report_id: string
+          updated_at: string
+          vote: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          report_id: string
+          updated_at?: string
+          vote: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          report_id?: string
+          updated_at?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_votes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           address: string | null
           affected_count: number | null
           category: string
+          confirm_count: number
           created_at: string
           description: string | null
+          dispute_count: number
           id: string
           lat: number
           lng: number
@@ -120,13 +157,17 @@ export type Database = {
           updated_at: string
           urgency: string
           verified: boolean
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           address?: string | null
           affected_count?: number | null
           category: string
+          confirm_count?: number
           created_at?: string
           description?: string | null
+          dispute_count?: number
           id?: string
           lat: number
           lng: number
@@ -139,13 +180,17 @@ export type Database = {
           updated_at?: string
           urgency?: string
           verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           address?: string | null
           affected_count?: number | null
           category?: string
+          confirm_count?: number
           created_at?: string
           description?: string | null
+          dispute_count?: number
           id?: string
           lat?: number
           lng?: number
@@ -158,6 +203,8 @@ export type Database = {
           updated_at?: string
           urgency?: string
           verified?: boolean
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: [
           {
