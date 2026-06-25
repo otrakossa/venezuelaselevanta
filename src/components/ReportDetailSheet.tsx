@@ -220,6 +220,12 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
                     </div>
                   )}
 
+                  {report.lat != null && report.lng != null && (
+                    <ClientOnly fallback={<div className="rounded-lg border border-border bg-muted h-40" />}>
+                      <MiniMap lat={report.lat} lng={report.lng} color={cat.color} emoji={cat.emoji} />
+                    </ClientOnly>
+                  )}
+
                   <div className="grid grid-cols-2 gap-2">
                     {report.affected_count != null && (
                       <div className="rounded-lg border border-border bg-card p-3 flex items-center gap-2">
