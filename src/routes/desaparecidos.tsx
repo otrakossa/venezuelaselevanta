@@ -221,71 +221,84 @@ function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFou
         {s.label}
       </div>
 
-      {/* Photo / avatar */}
-      <div className={`relative h-40 bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ${s.ring}`}>
-        <div className="absolute inset-0 grid place-items-center">
-          <div className="h-20 w-20 rounded-full bg-card border-2 border-border grid place-items-center text-2xl font-black text-muted-foreground">
-            {initials(person.name) || <User className="h-8 w-8" />}
+      {/* Clickable area → focus on map */}
+      <button
+        type="button"
+        onClick={openOnMap}
+        className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
+        title={hasCoords ? "Ver en el mapa" : "Sin ubicación geolocalizada"}
+      >
+        {/* Photo / avatar */}
+        <div className={`relative h-40 bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ${s.ring}`}>
+          <div className="absolute inset-0 grid place-items-center">
+            <div className="h-20 w-20 rounded-full bg-card border-2 border-border grid place-items-center text-2xl font-black text-muted-foreground">
+              {initials(person.name) || <User className="h-8 w-8" />}
+            </div>
+          </div>
+          {person.photo_url && (
+            <img
+              src={person.photo_url}
+              alt={person.name}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+          {hasCoords && (
+            <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-black/55 text-white backdrop-blur">
+              <MapIcon className="h-3 w-3" /> Ver en mapa
+            </div>
+          )}
+          <div className="absolute bottom-2 left-3 right-3 text-white">
+            <h3 className="font-bold text-lg leading-tight drop-shadow line-clamp-1">{person.name}</h3>
+            <div className="flex items-center gap-2 text-[11px] opacity-90 mt-0.5">
+              {person.age != null && <span>{person.age} años</span>}
+              {person.age != null && <span className="opacity-50">•</span>}
+              <span className="inline-flex items-center gap-1">
+                <CalendarDays className="h-3 w-3" />
+                {daysAgo === 0 ? "Hoy" : `Hace ${daysAgo}d`}
+              </span>
+            </div>
           </div>
         </div>
-        {person.photo_url && (
-          <img
-            src={person.photo_url}
-            alt={person.name}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        )}
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-2 left-3 right-3 text-white">
-          <h3 className="font-bold text-lg leading-tight drop-shadow line-clamp-1">{person.name}</h3>
-          <div className="flex items-center gap-2 text-[11px] opacity-90 mt-0.5">
-            {person.age != null && <span>{person.age} años</span>}
-            {person.age != null && <span className="opacity-50">•</span>}
-            <span className="inline-flex items-center gap-1">
-              <CalendarDays className="h-3 w-3" />
-              {daysAgo === 0 ? "Hoy" : `Hace ${daysAgo}d`}
-            </span>
-          </div>
+
+        {/* Body */}
+        <div className="p-4 space-y-2.5">
+          {person.last_seen_location && (
+            <div className="flex items-start gap-1.5 text-xs">
+              <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+              <span className="text-foreground/90 line-clamp-2">{person.last_seen_location}</span>
+            </div>
+          )}
+
+          {person.description && (
+            <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{person.description}</p>
+          )}
         </div>
-      </div>
+      </button>
 
-      {/* Body */}
-      <div className="p-4 space-y-2.5">
-        {person.last_seen_location && (
-          <div className="flex items-start gap-1.5 text-xs">
-            <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
-            <span className="text-foreground/90 line-clamp-2">{person.last_seen_location}</span>
-          </div>
-        )}
-
-        {person.description && (
-          <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">{person.description}</p>
-        )}
-
-        {(person.contact_name || person.contact_phone || person.contact_email) && (
-          <div className="pt-2 border-t border-border/60 space-y-1">
-            {person.contact_name && (
-              <div className="flex items-center gap-1.5 text-xs">
-                <User className="h-3 w-3 text-muted-foreground" />
-                <span className="font-medium">{person.contact_name}</span>
-              </div>
-            )}
-            {person.contact_phone && (
-              <a href={`tel:${person.contact_phone}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
-                <Phone className="h-3 w-3" /> {person.contact_phone}
-              </a>
-            )}
-            {person.contact_email && (
-              <a href={`mailto:${person.contact_email}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate">
-                <Mail className="h-3 w-3 shrink-0" /> <span className="truncate">{person.contact_email}</span>
-              </a>
-            )}
-          </div>
-        )}
-      </div>
+      {(person.contact_name || person.contact_phone || person.contact_email) && (
+        <div className="px-4 pb-2 pt-1 border-t border-border/60 space-y-1">
+          {person.contact_name && (
+            <div className="flex items-center gap-1.5 text-xs">
+              <User className="h-3 w-3 text-muted-foreground" />
+              <span className="font-medium">{person.contact_name}</span>
+            </div>
+          )}
+          {person.contact_phone && (
+            <a href={`tel:${person.contact_phone}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+              <Phone className="h-3 w-3" /> {person.contact_phone}
+            </a>
+          )}
+          {person.contact_email && (
+            <a href={`mailto:${person.contact_email}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline truncate">
+              <Mail className="h-3 w-3 shrink-0" /> <span className="truncate">{person.contact_email}</span>
+            </a>
+          )}
+        </div>
+      )}
 
       {/* Actions */}
       <div className="px-4 pb-4 flex items-center gap-2">
