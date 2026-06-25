@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Heart, ExternalLink, Mail, Send, ArrowLeft, Users, Building2, Code2, HandHeart } from "lucide-react";
-import { team, collaborators, organizations, tech, CONTACT_EMAIL, TELEGRAM_BOT, type Person, type Organization } from "@/lib/credits";
+import { Heart, ExternalLink, Send, ArrowLeft, Users, Building2, Code2, HandHeart, MessageSquare } from "lucide-react";
+import { team, collaborators, organizations, tech, TELEGRAM_BOT, type Person, type Organization } from "@/lib/credits";
+import { ContactForm } from "@/components/ContactForm";
 import heroImage from "@/assets/hero-rescate.jpg";
 
 export const Route = createFileRoute("/creditos")({
