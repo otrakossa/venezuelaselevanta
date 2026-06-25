@@ -36,18 +36,21 @@ export const collaborators: Person[] = [
 export const organizations: Organization[] = [
   {
     name: "Fundación Casa del Bosque",
-    description: "Organización aliada",
+    description: "Organización aliada · conservación y comunidad",
     url: "https://x.com/fcbosque",
+    logo: "https://www.google.com/s2/favicons?domain=x.com/fcbosque&sz=128",
   },
   {
     name: "Activistas por el Software Libre",
-    description: "Organización aliada",
+    description: "Promueven tecnología libre y soberana",
     url: "https://activistasxsl.org/",
+    logo: "https://www.google.com/s2/favicons?domain=activistasxsl.org&sz=128",
   },
   {
-    name: "Tu organización aliada",
-    description: "¿Quieres aparecer aquí? Escríbenos.",
-    url: "mailto:contacto@venezuelaselevanta.info",
+    name: "Codex Tecnología",
+    description: "Desarrollo, infraestructura y mantenimiento",
+    url: "https://codextecnologia.com",
+    logo: "https://www.google.com/s2/favicons?domain=codextecnologia.com&sz=128",
   },
 ];
 
