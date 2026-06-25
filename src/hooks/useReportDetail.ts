@@ -48,25 +48,41 @@ export function useReportDetail(id: string | null) {
   return { report, loading, notFound };
 }
 
+const COMMENTS_LIMIT = 20;
+
 export function useReportComments(reportId: string | null) {
   const [comments, setComments] = useState<ReportComment[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   useEffect(() => {
     if (!reportId) {
       setComments([]);
+      setHasMore(false);
       return;
     }
     let mounted = true;
     setLoading(true);
+    setHasMore(false);
     supabase
       .from("report_comments")
       .select("*")
       .eq("report_id", reportId)
       .order("created_at", { ascending: true })
+      .limit(COMMENTS_LIMIT + 1)
       .then(({ data }) => {
         if (!mounted) return;
-        if (data) setComments(data as unknown as ReportComment[]);
+        if (data) {
+          const rows = data as unknown as ReportComment[];
+          if (rows.length > COMMENTS_LIMIT) {
+            setComments(rows.slice(0, COMMENTS_LIMIT));
+            setHasMore(true);
+          } else {
+            setComments(rows);
+            setHasMore(false);
+          }
+        }
         setLoading(false);
       });
 
@@ -98,5 +114,21 @@ export function useReportComments(reportId: string | null) {
     };
   }, [reportId]);
 
-  return { comments, loading };
+  const loadMore = async () => {
+    if (!reportId || loadingMore) return;
+    setLoadingMore(true);
+    const { data } = await supabase
+      .from("report_comments")
+      .select("*")
+      .eq("report_id", reportId)
+      .order("created_at", { ascending: true });
+    if (data) {
+      setComments(data as unknown as ReportComment[]);
+      setHasMore(false);
+    }
+    setLoadingMore(false);
+  };
+
+  return { comments, loading, hasMore, loadMore, loadingMore };
 }
+
