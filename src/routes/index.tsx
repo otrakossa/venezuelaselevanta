@@ -36,6 +36,10 @@ function HomePage() {
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
+  const [urgencies, setUrgencies] = useState<string[]>([]);
+  const [timeWindow, setTimeWindow] = useState<"all" | "24h" | "7d">("all");
+  const [search2, setSearch2] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showQuakes, setShowQuakes] = useState(true);
@@ -55,18 +59,40 @@ function HomePage() {
 
   const toggle = (slug: string) =>
     setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
+  const toggleUrgency = (u: string) =>
+    setUrgencies((cur) => (cur.includes(u) ? cur.filter((s) => s !== u) : [...cur, u]));
 
   const visible = useMemo(() => {
+    const q = search2.trim().toLowerCase();
+    const cutoff =
+      timeWindow === "24h"
+        ? Date.now() - 24 * 3600 * 1000
+        : timeWindow === "7d"
+          ? Date.now() - 7 * 24 * 3600 * 1000
+          : 0;
     return reports.filter((r) => {
       if (active.length > 0 && !active.includes(r.category)) return false;
+      if (urgencies.length > 0 && !urgencies.includes(r.urgency)) return false;
       if (trust === "verified" && !r.verified) return false;
       if (trust === "trusted") {
         const c = getCredibility(r);
         if (c.level !== "verified" && c.level !== "trusted") return false;
       }
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
+      if (q) {
+        const hay = `${r.title} ${r.description ?? ""} ${r.address ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       return true;
     });
-  }, [reports, active, trust]);
+  }, [reports, active, urgencies, trust, timeWindow, search2]);
+
+  const activeFilterCount =
+    (active.length > 0 ? 1 : 0) +
+    (urgencies.length > 0 ? 1 : 0) +
+    (trust !== "all" ? 1 : 0) +
+    (timeWindow !== "all" ? 1 : 0) +
+    (search2 ? 1 : 0);
 
   return (
     <div className="flex flex-col">
