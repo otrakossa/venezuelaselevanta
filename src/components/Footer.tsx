@@ -93,7 +93,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-[11px] opacity-70">
           <span>© 2026 Venezuela Se Levanta · CC BY 4.0 · Datos abiertos para la humanidad</span>
-          <span>Construido con Lovable · Supabase · OpenStreetMap</span>
+          <span>{"\n"}</span>
         </div>
       </div>
     </footer>
