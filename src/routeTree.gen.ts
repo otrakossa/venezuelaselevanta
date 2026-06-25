@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ReportarRouteImport } from './routes/reportar'
 import { Route as EstadisticasRouteImport } from './routes/estadisticas'
 import { Route as DesaparecidosRouteImport } from './routes/desaparecidos'
+import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -32,6 +33,11 @@ const EstadisticasRoute = EstadisticasRouteImport.update({
 const DesaparecidosRoute = DesaparecidosRouteImport.update({
   id: '/desaparecidos',
   path: '/desaparecidos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreditosRoute = CreditosRouteImport.update({
+  id: '/creditos',
+  path: '/creditos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/creditos'
     | '/desaparecidos'
     | '/estadisticas'
     | '/reportar'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/creditos'
     | '/desaparecidos'
     | '/estadisticas'
     | '/reportar'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/creditos'
     | '/desaparecidos'
     | '/estadisticas'
     | '/reportar'
@@ -140,6 +152,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  CreditosRoute: typeof CreditosRoute
   DesaparecidosRoute: typeof DesaparecidosRoute
   EstadisticasRoute: typeof EstadisticasRoute
   ReportarRoute: typeof ReportarRoute
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/desaparecidos'
       fullPath: '/desaparecidos'
       preLoaderRoute: typeof DesaparecidosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creditos': {
+      id: '/creditos'
+      path: '/creditos'
+      fullPath: '/creditos'
+      preLoaderRoute: typeof CreditosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -220,6 +240,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  CreditosRoute: CreditosRoute,
   DesaparecidosRoute: DesaparecidosRoute,
   EstadisticasRoute: EstadisticasRoute,
   ReportarRoute: ReportarRoute,
