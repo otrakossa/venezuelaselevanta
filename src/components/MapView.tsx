@@ -22,6 +22,16 @@ function createIcon(color: string, emoji: string, pulse = false) {
   });
 }
 
+function createMissingIcon(name: string) {
+  const initial = (name?.trim()?.[0] ?? "?").toUpperCase();
+  return L.divIcon({
+    html: `<div class="crisis-marker" style="background:#f43f5e;border:2px solid white;color:white;font-weight:800;font-family:system-ui">${initial}</div>`,
+    className: "crisis-marker-wrapper missing-marker",
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
+  });
+
 function ClickPicker({ onPick }: { onPick: (lat: number, lng: number) => void }) {
   useMapEvents({ click: (e) => onPick(e.latlng.lat, e.latlng.lng) });
   return null;
