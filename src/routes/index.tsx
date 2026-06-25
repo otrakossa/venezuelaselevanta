@@ -211,8 +211,16 @@ function HomePage() {
             {visible.slice(0, 30).map((r) => {
               const cat = CATEGORY_MAP[r.category];
               return (
-                <li key={r.id} className="p-3 active:bg-muted/70 hover:bg-muted/50 transition">
-                  <div className="flex items-start gap-2.5">
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                      setSheetOpen(false);
+                    }}
+                    className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                  >
+                    <div className="flex items-start gap-2.5">
                     <div
                       className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
                       style={{ background: cat?.color, color: "white" }}
