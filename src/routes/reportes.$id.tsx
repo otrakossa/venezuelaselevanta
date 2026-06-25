@@ -140,16 +140,51 @@ function ReportDetailPage() {
             {urgency.label}
           </span>
           <span className="text-xs px-2 py-1 rounded bg-muted font-semibold">{status}</span>
-          {report.verified && (
-            <span className="text-xs px-2 py-1 rounded bg-emerald-500 text-white font-semibold">✓ Verificado</span>
-          )}
+          {(() => {
+            const c = getCredibility(report);
+            return (
+              <span
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold"
+                style={{ background: c.bg, color: c.fg }}
+                title={c.label}
+              >
+                {c.level === "verified" && <BadgeCheck className="h-3.5 w-3.5" />}
+                {c.label}
+              </span>
+            );
+          })()}
         </div>
 
         <h1 className="font-display text-2xl sm:text-3xl leading-tight">{report.title}</h1>
         <div className="text-xs text-muted-foreground">
           Reportado {format(new Date(report.created_at), "dd MMM yyyy · HH:mm")}
+          {report.verified_at && (
+            <> · Verificado {format(new Date(report.verified_at), "dd MMM yyyy")}</>
+          )}
         </div>
       </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <h2 className="text-sm font-semibold">¿Puedes corroborar este reporte?</h2>
+            <p className="text-xs text-muted-foreground">
+              Tu voto ayuda a la comunidad a saber qué información es confiable. 1 voto por dispositivo.
+            </p>
+          </div>
+          {isAuthenticated && (
+            <button
+              onClick={toggleVerify}
+              className={cnVerify(report.verified)}
+            >
+              <BadgeCheck className="h-4 w-4" />
+              {report.verified ? "Quitar verificación" : "Marcar como verificado"}
+            </button>
+          )}
+        </div>
+        <ReportRating report={report} variant="full" showBadge={false} />
+      </div>
+
 
       {media.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
