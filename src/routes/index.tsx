@@ -236,12 +236,101 @@ function HomePage() {
                 >
                   <Activity className="h-3 w-3" /> 🌍 Sismos USGS
                 </button>
+                <button
+                  onClick={() => setShowFilters((s) => !s)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    showFilters || activeFilterCount > 0
+                      ? "bg-[color:var(--midnight)] text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Más filtros"
+                >
+                  <Search className="h-3 w-3" /> Filtros
+                  {activeFilterCount > 0 && (
+                    <span className="ml-0.5 bg-[color:var(--sunrise)] text-white rounded-full px-1.5 text-[9px] font-bold">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
               {visible.length}
             </div>
           </div>
+
+          {/* Expanded filter panel */}
+          {showFilters && (
+            <div className="absolute top-12 left-2 right-2 z-[399] bg-card/95 backdrop-blur border border-border rounded-lg shadow-lg p-3 space-y-2.5 max-w-md">
+              <div>
+                <label className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground block mb-1">Buscar</label>
+                <div className="relative">
+                  <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={search2}
+                    onChange={(e) => setSearch2(e.target.value)}
+                    placeholder="Título, descripción o dirección..."
+                    className="w-full pl-7 pr-2 py-1.5 rounded-md border border-input bg-background text-xs"
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground mb-1">Urgencia</div>
+                <div className="flex flex-wrap gap-1">
+                  {Object.entries(URGENCY_LABELS).map(([k, v]) => {
+                    const isOn = urgencies.includes(k);
+                    return (
+                      <button
+                        key={k}
+                        onClick={() => toggleUrgency(k)}
+                        className={cn(
+                          "text-[10px] px-2 py-1 rounded-full font-semibold border transition",
+                          isOn ? "text-white border-transparent" : "bg-background text-foreground border-border",
+                        )}
+                        style={isOn ? { background: v.color } : undefined}
+                      >
+                        {v.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground mb-1">Tiempo</div>
+                <div className="flex gap-1">
+                  {([
+                    { k: "all", label: "Todos" },
+                    { k: "24h", label: "Últimas 24h" },
+                    { k: "7d", label: "7 días" },
+                  ] as const).map((t) => (
+                    <button
+                      key={t.k}
+                      onClick={() => setTimeWindow(t.k)}
+                      className={cn(
+                        "text-[10px] px-2 py-1 rounded-full font-semibold border transition",
+                        timeWindow === t.k
+                          ? "bg-[color:var(--sky)] text-white border-transparent"
+                          : "bg-background text-foreground border-border",
+                      )}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => {
+                    setActive([]); setUrgencies([]); setTrust("all"); setTimeWindow("all"); setSearch2("");
+                  }}
+                  className="w-full text-[11px] py-1.5 rounded-md bg-muted hover:bg-muted/70 font-semibold"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          )}
 
           <ClientOnly
             fallback={
