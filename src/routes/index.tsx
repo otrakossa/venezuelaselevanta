@@ -62,7 +62,7 @@ function HomePage() {
       setShowMissing(true);
       setFocusMissing({ id: m.id, lat: m.last_seen_lat, lng: m.last_seen_lng, nonce: Date.now() });
       // Clear the URL param so re-clicking the same card re-focuses
-      navigate({ search: (prev) => ({ ...prev, missing: undefined }), replace: true });
+      navigate({ search: { report: search.report }, replace: true });
     }
   }, [search.missing, missing, navigate]);
 
