@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThumbsUp, ThumbsDown, BadgeCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceId } from "@/lib/device-id";
@@ -16,6 +16,7 @@ interface Props {
 export function ReportRating({ report, variant = "compact", showBadge = true }: Props) {
   const [myVote, setMyVote] = useState<VoteKind | null>(null);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   // local optimistic deltas (parent will refresh via realtime)
   const [delta, setDelta] = useState({ confirm: 0, dispute: 0 });
   const cred = getCredibility({
@@ -43,9 +44,10 @@ export function ReportRating({ report, variant = "compact", showBadge = true }: 
   }, [report.id]);
 
   const cast = async (vote: VoteKind) => {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     const deviceId = getDeviceId();
-    if (!deviceId) return;
+    if (!deviceId) { busyRef.current = false; return; }
     setBusy(true);
     const prev = myVote;
 
@@ -90,6 +92,7 @@ export function ReportRating({ report, variant = "compact", showBadge = true }: 
       setDelta((d) => ({ confirm: d.confirm - cDelta, dispute: d.dispute - dDelta }));
       toast.error("No se pudo registrar tu valoración");
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   };

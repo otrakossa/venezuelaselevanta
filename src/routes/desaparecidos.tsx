@@ -442,7 +442,18 @@ function MissingForm({ onDone }: { onDone: () => void }) {
         <h2 className="font-bold text-sm">Nuevo reporte de desaparecido</h2>
       </div>
       <input className={field} placeholder="Nombre completo *" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required maxLength={100} />
-      <input type="number" className={field} placeholder="Edad" value={f.age} onChange={(e) => setF({ ...f, age: e.target.value })} />
+      <input
+        type="number"
+        min="0"
+        max="120"
+        className={field}
+        placeholder="Edad"
+        value={f.age}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === "" || (Number(v) >= 0 && Number(v) <= 120)) setF({ ...f, age: v });
+        }}
+      />
       <input className={`${field} sm:col-span-2`} placeholder="Descripción física (ropa, altura, señas)" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={500} />
       <div className="sm:col-span-2 space-y-2">
         <input

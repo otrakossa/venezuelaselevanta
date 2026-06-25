@@ -9,6 +9,7 @@ import { getCredibility } from "@/lib/credibility";
 import { useUSGSQuakes, quakeColor } from "@/hooks/useUSGSQuakes";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Link } from "@tanstack/react-router";
+import { isValidCoords } from "@/lib/geo";
 
 const VZLA_CENTER: [number, number] = [9.5, -66.5];
 
@@ -66,12 +67,14 @@ function FocusController({
     if (!target) return;
     const targetZoom = Math.max(map.getZoom(), 13);
     map.flyTo([target.lat, target.lng], targetZoom, { duration: 0.8 });
-    // Wait for the cluster group to settle so the marker exists at this zoom.
-    const t = window.setTimeout(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    const tryOpen = () => {
       const m = markersRef.current.get(target.id);
-      if (m) m.openPopup();
-    }, 700);
-    return () => window.clearTimeout(t);
+      if (m) { m.openPopup(); } else if (++attempts < 5) { timerId = setTimeout(tryOpen, 250); }
+    };
+    timerId = setTimeout(tryOpen, 900);
+    return () => clearTimeout(timerId);
   }, [target, map, markersRef]);
   return null;
 }
@@ -262,7 +265,7 @@ export function MapView({
 
         {showMissing &&
           missing
-            .filter((m) => m.last_seen_lat != null && m.last_seen_lng != null && m.status === "missing")
+            .filter((m) => m.status === "missing" && isValidCoords(m.last_seen_lat, m.last_seen_lng))
             .map((m) => {
               const directLink = (typeof window !== "undefined" ? window.location.origin : "https://venezuelaselevanta.info") + `/?missing=${m.id}`;
               const waText = `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n👤 ${m.name}${m.age ? ` (${m.age} años)` : ""}\n${m.last_seen_location ? `📍 ${m.last_seen_location}\n` : ""}${m.description ? `📝 ${m.description}\n` : ""}${m.contact_phone ? `📞 ${m.contact_phone}\n` : ""}\n${directLink}`;
