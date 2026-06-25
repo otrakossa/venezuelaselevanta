@@ -180,6 +180,15 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "rose
 }
 
 function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFound: () => void }) {
+  const navigate = useNavigate();
+  const hasCoords = person.last_seen_lat != null && person.last_seen_lng != null;
+  const openOnMap = () => {
+    if (!hasCoords) {
+      toast.error("Esta persona no tiene ubicación geolocalizada");
+      return;
+    }
+    navigate({ to: "/", search: { missing: person.id } });
+  };
   const s = STATUS_STYLES[person.status];
   const reported = new Date(person.report_date);
   const daysAgo = Math.floor((Date.now() - reported.getTime()) / 86_400_000);
