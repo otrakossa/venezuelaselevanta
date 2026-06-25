@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@/components/ClientOnly";
 import { MapView } from "@/components/MapView";
-import { CategoryFilter } from "@/components/CategoryFilter";
-import { CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
+import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { Filter, AlertTriangle, FilePlus, Map as MapIcon, X } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown } from "lucide-react";
 import heroImage from "@/assets/hero-amanecer.jpg";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -22,11 +22,21 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+const HERO_DISMISS_KEY = "vsl-hero-dismissed";
+
 function HomePage() {
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
   const [showHero, setShowHero] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(HERO_DISMISS_KEY) === "1") setShowHero(false);
+  }, []);
+  const dismissHero = () => {
+    setShowHero(false);
+    localStorage.setItem(HERO_DISMISS_KEY, "1");
+  };
 
   const toggle = (slug: string) =>
     setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
@@ -40,12 +50,12 @@ function HomePage() {
     <div className="flex flex-col">
       {showHero && (
         <section
-          className="relative overflow-hidden border-b border-border"
+          className="relative overflow-hidden border-b border-border lg:block"
           style={{ backgroundColor: "var(--midnight)" }}
         >
           <img
             src={heroImage}
-            alt="Amanecer sobre Venezuela: siluetas de personas con las manos en alto frente al sol naciente"
+            alt="Amanecer sobre Venezuela"
             className="absolute inset-0 h-full w-full object-cover opacity-70"
             width={1536}
             height={1024}
@@ -58,41 +68,40 @@ function HomePage() {
             }}
           />
           <button
-            onClick={() => setShowHero(false)}
-            className="absolute top-3 right-3 z-10 p-1.5 rounded-full bg-black/30 hover:bg-black/50 text-white transition"
+            onClick={dismissHero}
+            className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white"
             aria-label="Ocultar portada"
           >
             <X className="h-4 w-4" />
           </button>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 text-[color:var(--cream)]">
-            <div className="max-w-2xl space-y-4">
-              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] bg-[color:var(--sunrise)]/20 border border-[color:var(--sunrise)]/40 text-[color:var(--gold)] px-3 py-1 rounded-full">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-10 text-[color:var(--cream)]">
+            <div className="max-w-2xl space-y-2 sm:space-y-4">
+              <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] bg-[color:var(--sunrise)]/20 border border-[color:var(--sunrise)]/40 text-[color:var(--gold)] px-2.5 py-1 rounded-full">
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--sunrise)] animate-pulse" />
-                Respuesta ciudadana en tiempo real
+                Respuesta ciudadana
               </span>
-              <h1 className="font-display text-3xl sm:text-5xl leading-[1.05] tracking-tight">
+              <h1 className="font-display text-2xl sm:text-5xl leading-[1.05] tracking-tight">
                 Juntos mapeamos.
                 <br />
                 <span className="text-[color:var(--gold)]">Juntos nos levantamos.</span>
               </h1>
-              <p className="text-sm sm:text-base text-white/85 max-w-xl">
-                Venezuela Se Levanta es el mapa colaborativo de crisis del terremoto. Reporta,
-                consulta y coordina ayuda en tiempo real, desde cualquier rincón del país.
+              <p className="text-xs sm:text-base text-white/85 max-w-xl hidden sm:block">
+                Mapa colaborativo de crisis del terremoto. Reporta, consulta y coordina ayuda en tiempo real.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 <Link
                   to="/reportar"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-[color:var(--sunrise)] hover:bg-[#e85a28] text-white font-semibold text-sm shadow-lg shadow-[color:var(--sunrise)]/30 transition"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[color:var(--sunrise)] hover:bg-[#e85a28] text-white font-semibold text-sm shadow-lg shadow-[color:var(--sunrise)]/30"
                 >
                   <FilePlus className="h-4 w-4" />
-                  Reportar un incidente
+                  Reportar
                 </Link>
                 <button
-                  onClick={() => setShowHero(false)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm transition"
+                  onClick={dismissHero}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm"
                 >
                   <MapIcon className="h-4 w-4" />
-                  Ver el mapa
+                  Ver mapa
                 </button>
               </div>
             </div>
@@ -100,92 +109,144 @@ function HomePage() {
         </section>
       )}
 
-      <div className={showHero ? "flex flex-col lg:flex-row h-[calc(100vh-22rem)] min-h-[420px]" : "flex flex-col lg:flex-row h-[calc(100vh-7rem)]"}>
+      <div
+        className={cn(
+          "flex flex-col lg:flex-row",
+          // Mobile: fill the viewport minus header (3.5rem) and bottom nav spacer area
+          showHero
+            ? "h-[60vh] min-h-[360px] lg:h-[calc(100vh-22rem)]"
+            : "h-[calc(100vh-3.5rem-5rem)] lg:h-[calc(100vh-7rem)]",
+        )}
+      >
         <div className="flex-1 relative">
-        <div className="absolute top-3 left-3 right-3 z-[400] flex flex-col gap-2 pointer-events-none">
-          <div className="flex items-center justify-between gap-2 pointer-events-auto">
-            <button
-              onClick={() => setShowFilters((s) => !s)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-card border border-border rounded-md text-xs font-semibold shadow-md"
-            >
-              <Filter className="h-3.5 w-3.5" />
-              Filtros {active.length > 0 && `(${active.length})`}
-            </button>
-            <div className="bg-card/95 border border-border rounded-md px-3 py-1.5 text-xs font-medium shadow-md">
-              {visible.length} reportes
-            </div>
-          </div>
-          {showFilters && (
-            <div className="bg-card border border-border rounded-md p-3 shadow-md pointer-events-auto">
-              <CategoryFilter active={active} onToggle={toggle} />
-              {active.length > 0 && (
+          {/* Floating top bar: scrollable category chips + count */}
+          <div className="absolute top-2 left-2 right-2 z-[400] flex items-center gap-2 pointer-events-none">
+            <div className="pointer-events-auto flex-1 overflow-x-auto no-scrollbar">
+              <div className="flex gap-1.5 pr-2">
                 <button
                   onClick={() => setActive([])}
-                  className="mt-2 text-[11px] text-muted-foreground hover:text-foreground underline"
+                  className={cn(
+                    "shrink-0 text-[11px] px-2.5 py-1.5 rounded-full font-semibold border whitespace-nowrap",
+                    active.length === 0
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
                 >
-                  Limpiar filtros
+                  Todos
                 </button>
-              )}
+                {CATEGORIES.map((c) => {
+                  const isOn = active.includes(c.slug);
+                  return (
+                    <button
+                      key={c.slug}
+                      onClick={() => toggle(c.slug)}
+                      className={cn(
+                        "shrink-0 flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                        isOn ? "text-white border-transparent" : "bg-card/95 text-foreground border-border",
+                      )}
+                      style={isOn ? { background: c.color } : undefined}
+                    >
+                      <span>{c.emoji}</span>
+                      <span>{c.name.split(" ")[0]}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          )}
-        </div>
-        <ClientOnly
-          fallback={
-            <div className="h-full flex items-center justify-center bg-muted">
-              <AlertTriangle className="h-8 w-8 text-vzla-red animate-pulse" />
+            <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
+              {visible.length}
             </div>
-          }
-        >
-          <MapView reports={visible} />
-        </ClientOnly>
-      </div>
+          </div>
 
-      <aside className="w-full lg:w-80 border-l border-border bg-card overflow-y-auto max-h-[40vh] lg:max-h-none">
-        <div className="sticky top-0 bg-card border-b border-border px-4 py-3">
-          <h2 className="font-bold text-sm">Reportes recientes</h2>
-          <p className="text-[11px] text-muted-foreground">{loading ? "Cargando..." : `${visible.length} incidentes`}</p>
+          <ClientOnly
+            fallback={
+              <div className="h-full flex items-center justify-center bg-muted">
+                <AlertTriangle className="h-8 w-8 text-[color:var(--sunrise)] animate-pulse" />
+              </div>
+            }
+          >
+            <MapView reports={visible} />
+          </ClientOnly>
+
+          {/* Mobile bottom-sheet handle for the recent reports list */}
+          <button
+            onClick={() => setSheetOpen((s) => !s)}
+            className="lg:hidden absolute left-1/2 -translate-x-1/2 bottom-3 z-[450] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/95 border border-border shadow-md text-[11px] font-semibold"
+          >
+            {sheetOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+            {sheetOpen ? "Ocultar lista" : `${visible.length} reportes`}
+          </button>
         </div>
-        <ul className="divide-y divide-border">
-          {visible.slice(0, 30).map((r) => {
-            const cat = CATEGORY_MAP[r.category];
-            return (
-              <li key={r.id} className="p-3 hover:bg-muted/50 transition">
-                <div className="flex items-start gap-2">
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0"
-                    style={{ background: cat?.color, color: "white" }}
-                  >
-                    {cat?.emoji}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-xs truncate">{r.title}</span>
-                      {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
-                    </div>
-                    {r.address && (
-                      <div className="text-[10px] text-muted-foreground truncate">📍 {r.address}</div>
-                    )}
-                    <div className="flex items-center gap-1 mt-1">
-                      <span
-                        className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
-                        style={{ background: URGENCY_LABELS[r.urgency].color }}
-                      >
-                        {URGENCY_LABELS[r.urgency].label}
-                      </span>
-                      <span className="text-[9px] text-muted-foreground">
-                        {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-          {visible.length === 0 && !loading && (
-            <li className="p-6 text-center text-xs text-muted-foreground">No hay reportes</li>
+
+        {/* Sidebar (desktop) / Bottom sheet (mobile) */}
+        <aside
+          className={cn(
+            "border-l border-border bg-card",
+            // Desktop: standard sidebar
+            "lg:w-80 lg:overflow-y-auto",
+            // Mobile: fixed bottom sheet that slides up
+            "lg:static lg:translate-y-0 lg:max-h-none",
+            "fixed inset-x-0 bottom-16 z-[900] rounded-t-2xl border-t shadow-2xl transition-transform duration-300 max-h-[55vh] overflow-y-auto lg:rounded-none lg:shadow-none",
+            sheetOpen ? "translate-y-0" : "translate-y-full lg:translate-y-0",
           )}
-        </ul>
-      </aside>
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+            <div>
+              <h2 className="font-bold text-sm">Reportes recientes</h2>
+              <p className="text-[11px] text-muted-foreground">
+                {loading ? "Cargando..." : `${visible.length} incidentes`}
+              </p>
+            </div>
+            <button
+              onClick={() => setSheetOpen(false)}
+              className="lg:hidden p-1.5 rounded-md hover:bg-muted"
+              aria-label="Cerrar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <ul className="divide-y divide-border">
+            {visible.slice(0, 30).map((r) => {
+              const cat = CATEGORY_MAP[r.category];
+              return (
+                <li key={r.id} className="p-3 active:bg-muted/70 hover:bg-muted/50 transition">
+                  <div className="flex items-start gap-2.5">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
+                      style={{ background: cat?.color, color: "white" }}
+                    >
+                      {cat?.emoji}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-sm truncate">{r.title}</span>
+                        {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
+                      </div>
+                      {r.address && (
+                        <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
+                      )}
+                      <div className="flex items-center gap-1 mt-1 flex-wrap">
+                        <span
+                          className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
+                          style={{ background: URGENCY_LABELS[r.urgency].color }}
+                        >
+                          {URGENCY_LABELS[r.urgency].label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+            {visible.length === 0 && !loading && (
+              <li className="p-6 text-center text-xs text-muted-foreground">No hay reportes</li>
+            )}
+          </ul>
+        </aside>
       </div>
     </div>
   );
