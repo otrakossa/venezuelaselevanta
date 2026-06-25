@@ -61,14 +61,16 @@ function categoryKb() {
 const urgencyKb = () =>
   ikb([URGENCIES.map((u) => ({ text: u.n, callback_data: `urg:${u.v}` }))]);
 
-const mediaKb = () => ({
+const mediaKb = (hasAny: boolean) => ({
   reply_markup: {
     keyboard: [
-      [{ text: "⏭️ Omitir foto/video" }],
+      hasAny
+        ? [{ text: "✅ Listo, continuar" }]
+        : [{ text: "⏭️ Omitir foto/video" }],
       [{ text: "❌ Cancelar" }],
     ],
     resize_keyboard: true,
-    one_time_keyboard: true,
+    one_time_keyboard: false,
   },
 });
 
