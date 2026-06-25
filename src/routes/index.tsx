@@ -35,6 +35,7 @@ function HomePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { reports, loading } = useReports();
+  const { missing } = useMissing();
   const [active, setActive] = useState<string[]>([]);
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [urgencies, setUrgencies] = useState<string[]>([]);
