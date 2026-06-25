@@ -10,6 +10,9 @@ export interface Report {
   urgency: Urgency;
   status: ReportStatus;
   address: string | null;
+  state: string | null;
+  municipality: string | null;
+  parish: string | null;
   lat: number;
   lng: number;
   reporter_name: string | null;
@@ -54,6 +57,9 @@ export interface MissingPerson {
   age: number | null;
   description: string | null;
   last_seen_location: string | null;
+  state: string | null;
+  municipality: string | null;
+  parish: string | null;
   last_seen_lat: number | null;
   last_seen_lng: number | null;
   photo_url: string | null;
