@@ -43,29 +43,44 @@ function initials(name: string) {
 }
 
 function MissingPage() {
-  const { missing, counts, refetch } = useMissing();
+  const { missing, counts, refetch, loadMore, hasMore, loadingMore } = useMissing();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("missing");
   const [showForm, setShowForm] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [searchResults, setSearchResults] = useState<MissingPerson[] | null>(null);
+  const [searching, setSearching] = useState(false);
   // Mark loaded once we have any data, or after first render tick.
   useMemo(() => { if (missing.length > 0) setLoaded(true); }, [missing.length]);
   const ptr = usePullToRefresh<HTMLDivElement>({
     onRefresh: async () => { await refetch(); toast.success("Lista actualizada"); },
   });
 
+  useEffect(() => {
+    if (!q.trim() || q.trim().length < 2) { setSearchResults(null); return; }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const needle = q.trim();
+        const { data } = await supabase
+          .from("missing_persons")
+          .select("*")
+          .or(`name.ilike.%${needle}%,last_seen_location.ilike.%${needle}%,description.ilike.%${needle}%`)
+          .order("report_date", { ascending: false })
+          .limit(200);
+        setSearchResults((data ?? []) as unknown as MissingPerson[]);
+      } finally {
+        setSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [q]);
+
   const list = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return missing
-      .filter((m) => filter === "all" || m.status === filter)
-      .filter(
-        (m) =>
-          !needle ||
-          m.name.toLowerCase().includes(needle) ||
-          (m.last_seen_location ?? "").toLowerCase().includes(needle) ||
-          (m.description ?? "").toLowerCase().includes(needle),
-      );
-  }, [missing, filter, q]);
+    const source = searchResults ?? missing;
+    return source.filter((m) => filter === "all" || m.status === filter);
+  }, [searchResults, missing, filter]);
+
 
   const markFound = async (id: string) => {
     const { error } = await supabase
