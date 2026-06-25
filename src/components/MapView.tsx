@@ -84,6 +84,7 @@ export function MapView({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {onMapClick ? <ClickPicker onPick={onMapClick} /> : null}
+        <FocusController target={focusReport ?? null} markersRef={markersRef} />
         {pickedLocation ? (
           <Marker
             position={[pickedLocation.lat, pickedLocation.lng]}
@@ -109,6 +110,10 @@ export function MapView({
                 key={r.id}
                 position={[r.lat, r.lng]}
                 icon={createIcon(cat.color, cat.emoji, pulse)}
+                ref={(instance) => {
+                  if (instance) markersRef.current.set(r.id, instance);
+                  else markersRef.current.delete(r.id);
+                }}
               >
                 <Popup>
                   <div className="min-w-[220px] space-y-1">
