@@ -60,6 +60,8 @@ export type Database = {
           name: string
           photo_url: string | null
           report_date: string
+          source_label: string | null
+          source_url: string | null
           status: string
           updated_at: string
         }
@@ -78,6 +80,8 @@ export type Database = {
           name: string
           photo_url?: string | null
           report_date?: string
+          source_label?: string | null
+          source_url?: string | null
           status?: string
           updated_at?: string
         }
@@ -96,6 +100,8 @@ export type Database = {
           name?: string
           photo_url?: string | null
           report_date?: string
+          source_label?: string | null
+          source_url?: string | null
           status?: string
           updated_at?: string
         }
