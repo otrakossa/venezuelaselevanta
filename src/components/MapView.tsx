@@ -110,24 +110,42 @@ export function MapView({
                         ? r.media_urls
                         : (r.photo_url ? [r.photo_url] : []);
                       if (media.length === 0) return null;
+                      const thumbs = r.media_thumbs ?? [];
                       return (
                         <div className={`grid gap-1 pt-1 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
                           {media.map((url, i) => {
                             const isVideo = /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
+                            const thumb = thumbs[i] || (isVideo ? null : url);
                             return isVideo ? (
-                              <video
+                              <a
                                 key={i}
-                                src={url}
-                                controls
-                                className="w-full h-24 object-cover rounded bg-black"
-                              />
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="relative block w-full h-24 rounded overflow-hidden bg-black"
+                                aria-label={`Reproducir video ${i + 1}`}
+                              >
+                                {thumb ? (
+                                  <img
+                                    src={thumb}
+                                    alt={`Video ${i + 1}`}
+                                    className="w-full h-full object-cover opacity-90"
+                                    loading="lazy"
+                                    decoding="async"
+                                  />
+                                ) : null}
+                                <span className="absolute inset-0 flex items-center justify-center">
+                                  <span className="w-8 h-8 rounded-full bg-black/60 text-white text-base flex items-center justify-center">▶</span>
+                                </span>
+                              </a>
                             ) : (
                               <a key={i} href={url} target="_blank" rel="noreferrer">
                                 <img
-                                  src={url}
+                                  src={thumb ?? url}
                                   alt={`Adjunto ${i + 1}`}
                                   className="w-full h-24 object-cover rounded"
                                   loading="lazy"
+                                  decoding="async"
                                 />
                               </a>
                             );
