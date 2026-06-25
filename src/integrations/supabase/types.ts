@@ -163,6 +163,27 @@ export type Database = {
           },
         ]
       }
+      telegram_sessions: {
+        Row: {
+          chat_id: number
+          draft: Json
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          chat_id: number
+          draft?: Json
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          chat_id?: number
+          draft?: Json
+          state?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
