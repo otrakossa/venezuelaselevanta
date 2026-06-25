@@ -643,13 +643,23 @@ function HomePage() {
                           <img
                             src={m.photo_url}
                             alt={m.name}
-                            className="w-9 h-9 rounded-full object-cover shrink-0 shadow-sm ring-2 ring-rose-500"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const img = e.currentTarget;
+                              img.style.display = "none";
+                              const fb = img.nextElementSibling as HTMLElement | null;
+                              if (fb) fb.style.display = "flex";
+                            }}
+                            className="w-9 h-9 rounded-full object-cover shrink-0 shadow-sm ring-2 ring-rose-500 bg-rose-100"
                           />
-                        ) : (
-                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm bg-rose-500 text-white">
-                            <Users className="h-4 w-4" />
-                          </div>
-                        )}
+                        ) : null}
+                        <div
+                          className="w-9 h-9 rounded-full items-center justify-center shrink-0 shadow-sm bg-rose-500 text-white"
+                          style={{ display: m.photo_url ? "none" : "flex" }}
+                        >
+                          <Users className="h-4 w-4" />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-semibold text-sm truncate">{m.name}</span>
