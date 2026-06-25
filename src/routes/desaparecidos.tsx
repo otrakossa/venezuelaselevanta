@@ -13,6 +13,7 @@ import { geocodeAddress } from "@/lib/geocode";
 import { MissingGridSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { LocationSelect } from "@/components/LocationSelect";
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
@@ -533,7 +534,15 @@ function MissingForm({ onDone }: { onDone: () => void }) {
           {!coords && (
             <span className="text-[11px] text-muted-foreground">Sin coordenadas → solo aparece en la lista.</span>
           )}
-        </div>
+      </div>
+      <div className="sm:col-span-2">
+        <LocationSelect
+          state={f.state}
+          municipality={f.municipality}
+          parish={f.parish}
+          onChange={(v) => setF({ ...f, ...v })}
+        />
+      </div>
       </div>
       <input className={field} placeholder="Nombre del contacto" value={f.contact_name} onChange={(e) => setF({ ...f, contact_name: e.target.value })} maxLength={100} />
       <input className={field} placeholder="Teléfono del contacto" value={f.contact_phone} onChange={(e) => setF({ ...f, contact_phone: e.target.value })} maxLength={40} />
