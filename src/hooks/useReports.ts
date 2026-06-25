@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Report, MissingPerson } from "@/lib/types";
 
@@ -6,6 +6,18 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
   const includeHidden = opts.includeHidden ?? false;
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    const { data } = await supabase
+      .from("reports")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) {
+      const rows = data as unknown as Report[];
+      setReports(includeHidden ? rows : rows.filter((r) => !r.hidden));
+    }
+    setLoading(false);
+  }, [includeHidden]);
 
   useEffect(() => {
     let mounted = true;
@@ -38,13 +50,22 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
       mounted = false;
       supabase.removeChannel(ch);
     };
-  }, []);
+  }, [includeHidden]);
 
-  return { reports, loading };
+  return { reports, loading, refetch };
 }
 
 export function useMissing() {
   const [missing, setMissing] = useState<MissingPerson[]>([]);
+
+  const refetch = useCallback(async () => {
+    const { data } = await supabase
+      .from("missing_persons")
+      .select("*")
+      .order("report_date", { ascending: false });
+    if (data) setMissing(data as unknown as MissingPerson[]);
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     supabase
@@ -72,7 +93,7 @@ export function useMissing() {
       supabase.removeChannel(ch);
     };
   }, []);
-  return { missing };
+  return { missing, refetch };
 }
 
 export function useAuth() {
