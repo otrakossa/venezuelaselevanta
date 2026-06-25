@@ -103,6 +103,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    void import("@/lib/pwa-register");
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background flex flex-col">
@@ -113,6 +116,7 @@ function RootComponent() {
         </main>
         <Footer />
         <BottomNav />
+        <PWAInstallBanner />
       </div>
       <Toaster />
     </QueryClientProvider>
