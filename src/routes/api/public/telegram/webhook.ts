@@ -364,7 +364,7 @@ async function processUpdate(update: Record<string, unknown>) {
     }
     // Skip (no media yet)
     if (text === "⏭️ Omitir foto/video" || text === "/omitir" || text === "-") {
-      await setSession(chatId, "awaiting_location", { ...session.draft, media_urls: [] });
+      await setSession(chatId, "awaiting_location", { ...session.draft, media_urls: [], media_thumbs: [] });
       return send(
         chatId,
         "5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
