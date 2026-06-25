@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ClientOnly } from "@/components/ClientOnly";
 import { MapView } from "@/components/MapView";
@@ -6,7 +6,8 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { Filter, AlertTriangle } from "lucide-react";
+import { Filter, AlertTriangle, FilePlus, Map as MapIcon, X } from "lucide-react";
+import heroImage from "@/assets/hero-amanecer.jpg";
 
 export const Route = createFileRoute("/")({
   ssr: false,
