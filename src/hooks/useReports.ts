@@ -18,7 +18,8 @@ export function useReports() {
       });
 
     const ch = supabase
-      .channel("reports-rt")
+      .channel(`reports-rt-${Math.random().toString(36).slice(2)}`)
+
       .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, (payload) => {
         setReports((prev) => {
           if (payload.eventType === "INSERT") return [payload.new as Report, ...prev];
@@ -51,7 +52,8 @@ export function useMissing() {
         if (mounted && data) setMissing(data as MissingPerson[]);
       });
     const ch = supabase
-      .channel("missing-rt")
+      .channel(`missing-rt-${Math.random().toString(36).slice(2)}`)
+
       .on("postgres_changes", { event: "*", schema: "public", table: "missing_persons" }, (payload) => {
         setMissing((prev) => {
           if (payload.eventType === "INSERT") return [payload.new as MissingPerson, ...prev];
