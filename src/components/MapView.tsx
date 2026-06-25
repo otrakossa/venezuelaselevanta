@@ -84,6 +84,8 @@ export function MapView({
   focusReport,
   onOpenDetail,
   showQuakes = true,
+  missing = [],
+  showMissing = true,
 }: MapViewProps) {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const { data: quakes = [] } = useUSGSQuakes(showQuakes);
