@@ -249,6 +249,13 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           />
         </div>
 
+        <LocationSelect
+          state={form.state}
+          municipality={form.municipality}
+          parish={form.parish}
+          onChange={(v) => setForm({ ...form, ...v })}
+        />
+
         {/* Photo + Location actions */}
         <div className="grid grid-cols-2 gap-2">
           <button
