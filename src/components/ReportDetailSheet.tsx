@@ -9,6 +9,7 @@ import { es } from "date-fns/locale";
 import { CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReportDetail, useReportComments } from "@/hooks/useReportDetail";
 import { ReportRating } from "@/components/ReportRating";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
