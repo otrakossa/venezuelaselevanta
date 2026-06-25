@@ -6,7 +6,7 @@ export const Route = createFileRoute("/reportar")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Reportar incidente — VenezuelaSOS" },
+      { title: "Reportar incidente — Venezuela Se Levanta" },
       { name: "description", content: "Reporta un incidente para que la comunidad y rescatistas puedan responder." },
     ],
   }),

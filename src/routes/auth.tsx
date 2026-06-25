@@ -6,7 +6,7 @@ import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Iniciar sesión — VenezuelaSOS" }] }),
+  head: () => ({ meta: [{ title: "Iniciar sesión — Venezuela Se Levanta" }] }),
   component: AuthPage,
 });
 

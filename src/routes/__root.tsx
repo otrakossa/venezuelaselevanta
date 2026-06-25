@@ -53,8 +53,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VenezuelaSOS — Mapa Colaborativo de Crisis" },
-      { name: "description", content: "Plataforma ciudadana de respuesta al terremoto de Venezuela." },
+      { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
+      { name: "description", content: "Venezuela Se Levanta — plataforma ciudadana de respuesta al terremoto. venezuelaselevanta.info" },
       { name: "theme-color", content: "#CF142B" },
     ],
     links: [

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/estadisticas")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Estadísticas — VenezuelaSOS" },
+      { title: "Estadísticas — Venezuela Se Levanta" },
       { name: "description", content: "Estadísticas en tiempo real de la respuesta al terremoto en Venezuela." },
     ],
   }),
