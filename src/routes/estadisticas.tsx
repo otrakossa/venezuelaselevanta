@@ -145,7 +145,7 @@ function StatsPage() {
               </span>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-green-600">En vivo</span>
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl leading-tight">Dashboard de crisis</h1>
+            <h1 className="font-display text-2xl sm:text-3xl leading-tight">Centro de Control</h1>
             <p className="text-sm text-muted-foreground">
               Indicadores en tiempo real — actualizado con cada reporte ciudadano.
             </p>
