@@ -17,22 +17,28 @@ export type Database = {
       categories: {
         Row: {
           color: string
+          created_at: string
           description: string | null
           icon: string
+          id: string
           name: string
           slug: string
         }
         Insert: {
           color: string
+          created_at?: string
           description?: string | null
           icon: string
+          id?: string
           name: string
           slug: string
         }
         Update: {
           color?: string
+          created_at?: string
           description?: string | null
           icon?: string
+          id?: string
           name?: string
           slug?: string
         }
@@ -41,43 +47,55 @@ export type Database = {
       missing_persons: {
         Row: {
           age: number | null
-          contact_info: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
           created_at: string
+          description: string | null
+          found_date: string | null
           id: string
+          last_seen_lat: number | null
+          last_seen_lng: number | null
           last_seen_location: string | null
-          lat: number | null
-          lng: number | null
           name: string
           photo_url: string | null
-          physical_description: string | null
+          report_date: string
           status: string
           updated_at: string
         }
         Insert: {
           age?: number | null
-          contact_info?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
+          description?: string | null
+          found_date?: string | null
           id?: string
+          last_seen_lat?: number | null
+          last_seen_lng?: number | null
           last_seen_location?: string | null
-          lat?: number | null
-          lng?: number | null
           name: string
           photo_url?: string | null
-          physical_description?: string | null
+          report_date?: string
           status?: string
           updated_at?: string
         }
         Update: {
           age?: number | null
-          contact_info?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
           created_at?: string
+          description?: string | null
+          found_date?: string | null
           id?: string
+          last_seen_lat?: number | null
+          last_seen_lng?: number | null
           last_seen_location?: string | null
-          lat?: number | null
-          lng?: number | null
           name?: string
           photo_url?: string | null
-          physical_description?: string | null
+          report_date?: string
           status?: string
           updated_at?: string
         }
@@ -85,6 +103,7 @@ export type Database = {
       }
       reports: {
         Row: {
+          address: string | null
           affected_count: number | null
           category: string
           created_at: string
@@ -92,7 +111,6 @@ export type Database = {
           id: string
           lat: number
           lng: number
-          location_text: string | null
           photo_url: string | null
           reporter_name: string | null
           status: string
@@ -102,6 +120,7 @@ export type Database = {
           verified: boolean
         }
         Insert: {
+          address?: string | null
           affected_count?: number | null
           category: string
           created_at?: string
@@ -109,7 +128,6 @@ export type Database = {
           id?: string
           lat: number
           lng: number
-          location_text?: string | null
           photo_url?: string | null
           reporter_name?: string | null
           status?: string
@@ -119,6 +137,7 @@ export type Database = {
           verified?: boolean
         }
         Update: {
+          address?: string | null
           affected_count?: number | null
           category?: string
           created_at?: string
@@ -126,7 +145,6 @@ export type Database = {
           id?: string
           lat?: number
           lng?: number
-          location_text?: string | null
           photo_url?: string | null
           reporter_name?: string | null
           status?: string
