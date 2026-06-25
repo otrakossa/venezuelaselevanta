@@ -7,7 +7,7 @@ import type { MissingPerson, MissingStatus } from "@/lib/types";
 import { toast } from "sonner";
 import {
   Search, UserPlus, UserCheck, MapPin, Phone, Mail, User,
-  CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, MapIcon,
+  CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, Map as MapIcon,
 } from "lucide-react";
 import { geocodeAddress } from "@/lib/geocode";
 
