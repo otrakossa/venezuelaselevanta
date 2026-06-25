@@ -36,7 +36,7 @@ export const collaborators: Person[] = [
 export const organizations: Organization[] = [
   {
     name: "Fundación Casa del Bosque",
-    description: "Organización aliada · conservación y comunidad",
+    description: "Organización aliada · activismo tecnopolítico",
     url: "https://x.com/fcbosque",
     logo: "/__l5e/assets-v1/ec3094bf-2500-4fe2-9bf7-b7c27b394faf/logo-fcbosque.png",
   },
