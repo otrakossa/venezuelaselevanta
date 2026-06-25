@@ -212,43 +212,54 @@ function HomePage() {
               const cat = CATEGORY_MAP[r.category];
               return (
                 <li key={r.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
-                      setSheetOpen(false);
-                    }}
-                    className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
-                  >
-                    <div className="flex items-start gap-2.5">
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
-                      style={{ background: cat?.color, color: "white" }}
+                  <div className="flex items-stretch active:bg-muted/70 hover:bg-muted/50 transition">
+                    <Link
+                      to="/reportes/$id"
+                      params={{ id: r.id }}
+                      className="flex-1 min-w-0 text-left p-3"
                     >
-                      {cat?.emoji}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="font-semibold text-sm truncate">{r.title}</span>
-                        {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
-                      </div>
-                      {r.address && (
-                        <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
-                      )}
-                      <div className="flex items-center gap-1 mt-1 flex-wrap">
-                        <span
-                          className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
-                          style={{ background: URGENCY_LABELS[r.urgency].color }}
+                      <div className="flex items-start gap-2.5">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
+                          style={{ background: cat?.color, color: "white" }}
                         >
-                          {URGENCY_LABELS[r.urgency].label}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
-                        </span>
+                          {cat?.emoji}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-sm truncate">{r.title}</span>
+                            {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
+                          </div>
+                          {r.address && (
+                            <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
+                          )}
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
+                              style={{ background: URGENCY_LABELS[r.urgency].color }}
+                            >
+                              {URGENCY_LABELS[r.urgency].label}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    </div>
-                  </button>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                        setSheetOpen(false);
+                      }}
+                      className="px-3 border-l border-border text-[10px] font-semibold text-muted-foreground hover:text-foreground"
+                      aria-label="Ver en el mapa"
+                      title="Ver en el mapa"
+                    >
+                      📍
+                    </button>
+                  </div>
                 </li>
               );
             })}
