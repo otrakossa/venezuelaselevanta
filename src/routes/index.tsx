@@ -69,18 +69,23 @@ function HomePage() {
   const timeWindow: TimeWindow = search.t ?? "all";
   const search2 = search.q ?? "";
 
+  type SearchShape = {
+    report?: string; missing?: string;
+    cat?: string; urg?: string;
+    trust?: TrustMode; t?: TimeWindow; q?: string;
+  };
   const setSearch = (
     patch: Partial<{ cat: string[]; urg: string[]; trust: TrustMode; t: TimeWindow; q: string }>,
   ) => {
     navigate({
-      search: (prev) => ({
+      search: ((prev: SearchShape) => ({
         ...prev,
         cat: patch.cat !== undefined ? joinList(patch.cat) : prev.cat,
         urg: patch.urg !== undefined ? joinList(patch.urg) : prev.urg,
         trust: patch.trust !== undefined ? (patch.trust === "all" ? undefined : patch.trust) : prev.trust,
         t: patch.t !== undefined ? (patch.t === "all" ? undefined : patch.t) : prev.t,
         q: patch.q !== undefined ? (patch.q.trim() ? patch.q : undefined) : prev.q,
-      }),
+      })) as never,
       replace: true,
     });
   };
