@@ -84,7 +84,18 @@ function MissingPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6">
+    <div ref={ptr.ref} className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
+      {(ptr.pull > 0 || ptr.refreshing) && (
+        <div className="ptr-indicator" style={{ height: Math.max(28, ptr.pull) }}>
+          {ptr.refreshing ? (
+            <span className="flex items-center gap-1.5"><span className="ptr-spinner" /> Actualizando…</span>
+          ) : ptr.pull >= ptr.threshold ? (
+            <span className="flex items-center gap-1.5"><RefreshCw className="h-3 w-3" /> Suelta para actualizar</span>
+          ) : (
+            <span className="flex items-center gap-1.5 opacity-70"><ChevronDown className="h-3 w-3" /> Desliza para actualizar</span>
+          )}
+        </div>
+      )}
       {/* Hero */}
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
@@ -157,17 +168,42 @@ function MissingPage() {
 
       {/* Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {list.map((m) => (
-          <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} />
-        ))}
-        {list.length === 0 && (
-          <div className="col-span-full text-center py-16 rounded-2xl border border-dashed border-border bg-card/50">
-            <div className="mx-auto w-12 h-12 rounded-full grid place-items-center bg-muted text-muted-foreground mb-3">
-              <Search className="h-5 w-5" />
-            </div>
-            <p className="text-sm font-medium">No hay registros que coincidan.</p>
-            <p className="text-xs text-muted-foreground mt-1">Prueba ajustar la búsqueda o cambiar el filtro.</p>
+        {!loaded && missing.length === 0 ? (
+          <div className="col-span-full">
+            <MissingGridSkeleton count={6} />
           </div>
+        ) : (
+          <>
+            {list.map((m) => (
+              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} />
+            ))}
+            {list.length === 0 && (
+              <div className="col-span-full">
+                <EmptyState
+                  emoji="🕊️"
+                  title="No hay registros que coincidan"
+                  description="Prueba ajustar la búsqueda o cambiar el filtro de estado."
+                  action={
+                    (q || filter !== "all") ? (
+                      <button
+                        onClick={() => { setQ(""); setFilter("all"); }}
+                        className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                      >
+                        Limpiar filtros
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setShowForm(true)}
+                        className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                      >
+                        Reportar persona desaparecida
+                      </button>
+                    )
+                  }
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
