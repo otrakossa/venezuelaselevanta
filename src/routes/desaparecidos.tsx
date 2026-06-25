@@ -211,6 +211,26 @@ function MissingPage() {
                 />
               </div>
             )}
+            {!searchResults && hasMore && list.length > 0 && (
+              <div className="col-span-full flex justify-center pt-4">
+                <button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted disabled:opacity-60"
+                >
+                  {loadingMore ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Cargando...</>
+                  ) : (
+                    <>Ver más personas ({Math.max(counts.all - missing.length, 0)} sin cargar)</>
+                  )}
+                </button>
+              </div>
+            )}
+            {searchResults && (
+              <div className="col-span-full text-center text-xs text-muted-foreground pt-2">
+                {searching ? "Buscando en toda la base de datos..." : `${list.length} resultado(s) encontrado(s) en toda la base de datos`}
+              </div>
+            )}
           </>
         )}
       </div>
