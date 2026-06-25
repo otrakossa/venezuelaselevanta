@@ -32,6 +32,7 @@ export interface MapViewProps {
   pickedLocation?: { lat: number; lng: number } | null;
   height?: string;
   focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
+  onOpenDetail?: (id: string) => void;
 }
 
 function FocusController({
@@ -63,6 +64,7 @@ export function MapView({
   pickedLocation,
   height = "100%",
   focusReport,
+  onOpenDetail,
 }: MapViewProps) {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const filtered = useMemo(
@@ -117,73 +119,24 @@ export function MapView({
                   else markersRef.current.delete(r.id);
                 }}
               >
-                <Popup>
-                  <div className="min-w-[220px] space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="inline-block w-2.5 h-2.5 rounded-full"
-                        style={{ background: cat.color }}
-                      />
-                      <span className="text-[10px] uppercase tracking-wide text-neutral-500">
-                        {cat.name}
-                      </span>
-                    </div>
-                    <div className="font-semibold text-sm">{r.title}</div>
-                    {r.description ? (
-                      <p className="text-xs text-neutral-600">{r.description}</p>
-                    ) : null}
-                    {r.address ? (
-                      <div className="text-[11px] text-neutral-500">📍 {r.address}</div>
-                    ) : null}
-                    {(() => {
-                      const media = (r.media_urls && r.media_urls.length > 0)
-                        ? r.media_urls
-                        : (r.photo_url ? [r.photo_url] : []);
-                      if (media.length === 0) return null;
-                      const thumbs = r.media_thumbs ?? [];
-                      return (
-                        <div className={`grid gap-1 pt-1 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
-                          {media.map((url, i) => {
-                            const isVideo = /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
-                            const thumb = thumbs[i] || (isVideo ? null : url);
-                            return isVideo ? (
-                              <a
-                                key={i}
-                                href={url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="relative block w-full h-24 rounded overflow-hidden bg-black"
-                                aria-label={`Reproducir video ${i + 1}`}
-                              >
-                                {thumb ? (
-                                  <img
-                                    src={thumb}
-                                    alt={`Video ${i + 1}`}
-                                    className="w-full h-full object-cover opacity-90"
-                                    loading="lazy"
-                                    decoding="async"
-                                  />
-                                ) : null}
-                                <span className="absolute inset-0 flex items-center justify-center">
-                                  <span className="w-8 h-8 rounded-full bg-black/60 text-white text-base flex items-center justify-center">▶</span>
-                                </span>
-                              </a>
-                            ) : (
-                              <a key={i} href={url} target="_blank" rel="noreferrer">
-                                <img
-                                  src={thumb ?? url}
-                                  alt={`Adjunto ${i + 1}`}
-                                  className="w-full h-24 object-cover rounded"
-                                  loading="lazy"
-                                  decoding="async"
-                                />
-                              </a>
-                            );
-                          })}
+                <Popup maxWidth={260} minWidth={240}>
+                  <div className="w-[240px] space-y-2">
+                    <div
+                      className="-mx-3 -mt-3 px-3 py-2 rounded-t flex items-center gap-2"
+                      style={{ background: cat.color, color: "white" }}
+                    >
+                      <span className="text-lg leading-none">{cat.emoji}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[10px] uppercase tracking-wide opacity-90 font-semibold leading-none">
+                          {cat.name}
                         </div>
-                      );
-                    })()}
-                    <div className="flex flex-wrap gap-1 pt-1">
+                        <div className="font-bold text-[13px] truncate leading-tight mt-0.5">
+                          {r.title}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white"
                         style={{ background: URGENCY_LABELS[r.urgency].color }}
@@ -205,18 +158,34 @@ export function MapView({
                         );
                       })()}
                     </div>
-                    <div className="pt-1">
-                      <ReportRating report={r} variant="compact" showBadge={false} />
-                    </div>
-                    {r.affected_count ? (
-                      <div className="text-[11px] text-neutral-600 pt-1">
-                        👥 {r.affected_count} personas afectadas
-                      </div>
+
+                    {r.description ? (
+                      <p className="text-xs text-neutral-600 line-clamp-2">{r.description}</p>
                     ) : null}
-                    <div className="text-[10px] text-neutral-400 pt-1">
-                      {format(new Date(r.created_at), "dd MMM yyyy HH:mm")}
+
+                    {r.address ? (
+                      <div className="text-[11px] text-neutral-500 truncate">📍 {r.address}</div>
+                    ) : null}
+
+                    <div className="text-[10px] text-neutral-400">
+                      {format(new Date(r.created_at), "dd MMM HH:mm")}
                       {r.reporter_name ? ` · ${r.reporter_name}` : " · anónimo"}
                     </div>
+
+                    {onOpenDetail && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onOpenDetail(r.id);
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 mt-1 px-3 py-2 rounded-md text-white text-xs font-bold shadow-sm hover:opacity-90 transition"
+                        style={{ background: cat.color }}
+                      >
+                        Ver detalle completo →
+                      </button>
+                    )}
                   </div>
                 </Popup>
               </Marker>
