@@ -38,16 +38,16 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between gap-2 h-14">
           <Link to="/" className="flex items-center gap-2 min-w-0">
-            <div className="relative">
-              <AlertTriangle className="h-7 w-7 text-vzla-yellow" />
-            </div>
-            <div className="min-w-0">
-              <div className="font-bold text-base sm:text-lg leading-tight truncate">
-                Venezuela <span className="text-vzla-red">Se Levanta</span>
-              </div>
-              <div className="text-[10px] text-header-foreground/60 leading-tight hidden sm:block">
+            <span className="animate-heartbeat">
+              <Logo size={34} withWordmark={false} variant="light" />
+            </span>
+            <div className="min-w-0 flex flex-col leading-tight">
+              <span className="font-display text-base sm:text-lg tracking-tight truncate">
+                Venezuela <span className="text-[color:var(--sunrise)]">Se Levanta</span>
+              </span>
+              <span className="text-[10px] text-header-foreground/60 leading-tight hidden sm:block">
                 venezuelaselevanta.info
-              </div>
+              </span>
             </div>
           </Link>
 
