@@ -5,20 +5,46 @@ import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports, useMissing } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users, RefreshCw } from "lucide-react";
 import { PushSubscribeButton } from "@/components/PushSubscribeButton";
 import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
 import { ReportDetailSheet } from "@/components/ReportDetailSheet";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { ReportListSkeleton } from "@/components/skeletons";
+import { EmptyState } from "@/components/EmptyState";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { toast } from "sonner";
+
+type TrustMode = "all" | "verified" | "trusted";
+type TimeWindow = "all" | "24h" | "7d";
+
+const HERO_DISMISS_KEY = "vsl-hero-dismissed";
+
+function parseList(v: unknown): string[] {
+  if (typeof v !== "string" || !v.trim()) return [];
+  return v.split(",").map((s) => s.trim()).filter(Boolean);
+}
+function joinList(xs: string[]): string | undefined {
+  return xs.length ? xs.join(",") : undefined;
+}
 
 export const Route = createFileRoute("/")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>) => ({
-    report: typeof search.report === "string" ? search.report : undefined,
-    missing: typeof search.missing === "string" ? search.missing : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const trustV = search.trust === "verified" || search.trust === "trusted" ? search.trust : undefined;
+    const tV = search.t === "24h" || search.t === "7d" ? search.t : undefined;
+    return {
+      report: typeof search.report === "string" ? search.report : undefined,
+      missing: typeof search.missing === "string" ? search.missing : undefined,
+      cat: typeof search.cat === "string" ? search.cat : undefined,
+      urg: typeof search.urg === "string" ? search.urg : undefined,
+      trust: trustV as TrustMode | undefined,
+      t: tV as TimeWindow | undefined,
+      q: typeof search.q === "string" && search.q ? search.q : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
@@ -30,18 +56,40 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const HERO_DISMISS_KEY = "vsl-hero-dismissed";
-
 function HomePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { reports, loading } = useReports();
-  const { missing } = useMissing();
-  const [active, setActive] = useState<string[]>([]);
-  const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
-  const [urgencies, setUrgencies] = useState<string[]>([]);
-  const [timeWindow, setTimeWindow] = useState<"all" | "24h" | "7d">("all");
-  const [search2, setSearch2] = useState("");
+  const { reports, loading, refetch } = useReports();
+  const { missing, refetch: refetchMissing } = useMissing();
+
+  // Filter state derived from URL search params (persistent + shareable).
+  const active = useMemo(() => parseList(search.cat), [search.cat]);
+  const urgencies = useMemo(() => parseList(search.urg), [search.urg]);
+  const trust: TrustMode = search.trust ?? "all";
+  const timeWindow: TimeWindow = search.t ?? "all";
+  const search2 = search.q ?? "";
+
+  type SearchShape = {
+    report?: string; missing?: string;
+    cat?: string; urg?: string;
+    trust?: TrustMode; t?: TimeWindow; q?: string;
+  };
+  const setSearch = (
+    patch: Partial<{ cat: string[]; urg: string[]; trust: TrustMode; t: TimeWindow; q: string }>,
+  ) => {
+    navigate({
+      search: ((prev: SearchShape) => ({
+        ...prev,
+        cat: patch.cat !== undefined ? joinList(patch.cat) : prev.cat,
+        urg: patch.urg !== undefined ? joinList(patch.urg) : prev.urg,
+        trust: patch.trust !== undefined ? (patch.trust === "all" ? undefined : patch.trust) : prev.trust,
+        t: patch.t !== undefined ? (patch.t === "all" ? undefined : patch.t) : prev.t,
+        q: patch.q !== undefined ? (patch.q.trim() ? patch.q : undefined) : prev.q,
+      })) as never,
+      replace: true,
+    });
+  };
+
   const [showFilters, setShowFilters] = useState(false);
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -51,8 +99,10 @@ function HomePage() {
   const [focusMissing, setFocusMissing] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
-  const openDetail = (id: string) => navigate({ search: { report: id }, replace: false });
-  const closeDetail = () => navigate({ search: {}, replace: false });
+  const openDetail = (id: string) =>
+    navigate({ search: ((prev: SearchShape) => ({ ...prev, report: id })) as never, replace: false });
+  const closeDetail = () =>
+    navigate({ search: ((prev: SearchShape) => ({ ...prev, report: undefined })) as never, replace: false });
 
   // Sync ?missing=<id> -> focus rose marker + ensure layer visible
   useEffect(() => {
@@ -61,8 +111,7 @@ function HomePage() {
     if (m && m.last_seen_lat != null && m.last_seen_lng != null) {
       setShowMissing(true);
       setFocusMissing({ id: m.id, lat: m.last_seen_lat, lng: m.last_seen_lng, nonce: Date.now() });
-      // Clear the URL param so re-clicking the same card re-focuses
-      navigate({ search: { report: search.report }, replace: true });
+      navigate({ search: ((prev: SearchShape) => ({ ...prev, missing: undefined })) as never, replace: true });
     }
   }, [search.missing, missing, navigate]);
 
@@ -75,9 +124,9 @@ function HomePage() {
   };
 
   const toggle = (slug: string) =>
-    setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
+    setSearch({ cat: active.includes(slug) ? active.filter((s) => s !== slug) : [...active, slug] });
   const toggleUrgency = (u: string) =>
-    setUrgencies((cur) => (cur.includes(u) ? cur.filter((s) => s !== u) : [...cur, u]));
+    setSearch({ urg: urgencies.includes(u) ? urgencies.filter((s) => s !== u) : [...urgencies, u] });
 
   const visible = useMemo(() => {
     const q = search2.trim().toLowerCase();
@@ -110,6 +159,15 @@ function HomePage() {
     (trust !== "all" ? 1 : 0) +
     (timeWindow !== "all" ? 1 : 0) +
     (search2 ? 1 : 0);
+
+  // Pull-to-refresh on the lateral list
+  const onPullRefresh = async () => {
+    await Promise.all([refetch(), refetchMissing()]);
+    toast.success("Lista actualizada");
+  };
+  const ptr = usePullToRefresh<HTMLElement>({ onRefresh: onPullRefresh });
+
+
 
   return (
     <div className="flex flex-col">
@@ -189,7 +247,7 @@ function HomePage() {
             <div className="pointer-events-auto flex-1 overflow-x-auto no-scrollbar">
               <div className="flex gap-1.5 pr-2">
                 <button
-                  onClick={() => setActive([])}
+                  onClick={() => setSearch({ cat: [] })}
                   className={cn(
                     "shrink-0 text-[11px] px-2.5 py-1.5 rounded-full font-semibold border whitespace-nowrap",
                     active.length === 0
@@ -218,7 +276,7 @@ function HomePage() {
                 })}
                 <span className="shrink-0 w-px self-stretch bg-border/60 mx-0.5" aria-hidden />
                 <button
-                  onClick={() => setTrust((t) => (t === "verified" ? "all" : "verified"))}
+                  onClick={() => setSearch({ trust: trust === "verified" ? "all" : "verified" })}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
                     trust === "verified"
@@ -230,7 +288,7 @@ function HomePage() {
                   <BadgeCheck className="h-3 w-3" /> Verificados
                 </button>
                 <button
-                  onClick={() => setTrust((t) => (t === "trusted" ? "all" : "trusted"))}
+                  onClick={() => setSearch({ trust: trust === "trusted" ? "all" : "trusted" })}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
                     trust === "trusted"
@@ -302,7 +360,7 @@ function HomePage() {
                   <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     value={search2}
-                    onChange={(e) => setSearch2(e.target.value)}
+                    onChange={(e) => setSearch({ q: e.target.value })}
                     placeholder="Título, descripción o dirección..."
                     className="w-full pl-7 pr-2 py-1.5 rounded-md border border-input bg-background text-xs"
                   />
@@ -339,7 +397,7 @@ function HomePage() {
                   ] as const).map((t) => (
                     <button
                       key={t.k}
-                      onClick={() => setTimeWindow(t.k)}
+                      onClick={() => setSearch({ t: t.k })}
                       className={cn(
                         "text-[10px] px-2 py-1 rounded-full font-semibold border transition",
                         timeWindow === t.k
@@ -355,7 +413,7 @@ function HomePage() {
               {activeFilterCount > 0 && (
                 <button
                   onClick={() => {
-                    setActive([]); setUrgencies([]); setTrust("all"); setTimeWindow("all"); setSearch2("");
+                    setSearch({ cat: [], urg: [], trust: "all", t: "all", q: "" });
                   }}
                   className="w-full text-[11px] py-1.5 rounded-md bg-muted hover:bg-muted/70 font-semibold"
                 >
@@ -408,8 +466,9 @@ function HomePage() {
 
         {/* Sidebar (desktop) / Bottom sheet (mobile) */}
         <aside
+          ref={ptr.ref as React.RefObject<HTMLElement>}
           className={cn(
-            "border-l border-border bg-card",
+            "border-l border-border bg-card relative",
             // Desktop: standard sidebar
             "lg:w-80 lg:overflow-y-auto",
             // Mobile: fixed bottom sheet that slides up
@@ -419,6 +478,20 @@ function HomePage() {
           )}
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
+          {(ptr.pull > 0 || ptr.refreshing) && (
+            <div
+              className="ptr-indicator"
+              style={{ height: Math.max(28, ptr.pull), transition: ptr.refreshing ? "height 0.2s" : undefined }}
+            >
+              {ptr.refreshing ? (
+                <span className="flex items-center gap-1.5"><span className="ptr-spinner" /> Actualizando…</span>
+              ) : ptr.pull >= ptr.threshold ? (
+                <span className="flex items-center gap-1.5"><RefreshCw className="h-3 w-3" /> Suelta para actualizar</span>
+              ) : (
+                <span className="flex items-center gap-1.5 opacity-70"><ChevronDown className="h-3 w-3" /> Desliza para actualizar</span>
+              )}
+            </div>
+          )}
           <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
             <div>
               <h2 className="font-bold text-sm">Reportes recientes</h2>
@@ -434,71 +507,103 @@ function HomePage() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <ul className="divide-y divide-border">
-            {visible.slice(0, 30).map((r) => {
-              const cat = CATEGORY_MAP[r.category];
-              const cred = getCredibility(r);
-              return (
-                <li key={r.id} className="relative flex items-stretch">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
-                      setSheetOpen(false);
-                    }}
-                    className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
-                        style={{ background: cat?.color, color: "white" }}
-                      >
-                        {cat?.emoji}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-sm truncate">{r.title}</span>
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
-                            style={{ background: cred.bg, color: cred.fg }}
-                            title={cred.label}
-                          >
-                            {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
-                            {cred.short}
-                          </span>
+          {loading && visible.length === 0 ? (
+            <ReportListSkeleton count={6} />
+          ) : (
+            <ul className="divide-y divide-border">
+              {visible.slice(0, 30).map((r) => {
+                const cat = CATEGORY_MAP[r.category];
+                const cred = getCredibility(r);
+                return (
+                  <li key={r.id} className="relative flex items-stretch">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                        setSheetOpen(false);
+                      }}
+                      className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
+                          style={{ background: cat?.color, color: "white" }}
+                        >
+                          {cat?.emoji}
                         </div>
-                        {r.address && (
-                          <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
-                        )}
-                        <div className="flex items-center gap-1 mt-1 flex-wrap">
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
-                            style={{ background: URGENCY_LABELS[r.urgency].color }}
-                          >
-                            {URGENCY_LABELS[r.urgency].label}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
-                          </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-sm truncate">{r.title}</span>
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
+                              style={{ background: cred.bg, color: cred.fg }}
+                              title={cred.label}
+                            >
+                              {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
+                              {cred.short}
+                            </span>
+                          </div>
+                          {r.address && (
+                            <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
+                          )}
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
+                              style={{ background: URGENCY_LABELS[r.urgency].color }}
+                            >
+                              {URGENCY_LABELS[r.urgency].label}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                    </button>
+                    <div className="flex items-center pr-3">
+                      <WhatsAppShareButton report={r} variant="icon" />
                     </div>
-                  </button>
-                  <div className="flex items-center pr-3">
-                    <WhatsAppShareButton report={r} variant="icon" />
-                  </div>
+                  </li>
+                );
+              })}
+              {visible.length === 0 && !loading && (
+                <li className="p-4">
+                  <EmptyState
+                    emoji="🔎"
+                    title="Sin reportes que coincidan"
+                    description={
+                      activeFilterCount > 0
+                        ? "Prueba quitar algún filtro o limpia la búsqueda."
+                        : "Aún no hay reportes en esta área."
+                    }
+                    action={
+                      activeFilterCount > 0 ? (
+                        <button
+                          onClick={() => setSearch({ cat: [], urg: [], trust: "all", t: "all", q: "" })}
+                          className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                        >
+                          Limpiar filtros
+                        </button>
+                      ) : (
+                        <Link
+                          to="/reportar"
+                          className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                        >
+                          Iniciar un reporte
+                        </Link>
+                      )
+                    }
+                  />
                 </li>
-              );
-            })}
-            {visible.length === 0 && !loading && (
-              <li className="p-6 text-center text-xs text-muted-foreground">No hay reportes</li>
-            )}
-          </ul>
+              )}
+            </ul>
+          )}
         </aside>
       </div>
+
 
       <ReportDetailSheet
         reportId={openReportId}

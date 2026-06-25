@@ -178,6 +178,36 @@
   box-shadow: 0 4px 14px rgba(255, 107, 53, 0.45);
 }
 
+/* Dark-mode friendly popups */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+  background: var(--card);
+  color: var(--card-foreground);
+}
+.dark .leaflet-popup-content-wrapper { box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.dark .leaflet-popup-content .text-neutral-700 { color: color-mix(in oklab, var(--card-foreground) 80%, transparent); }
+.dark .leaflet-popup-content .text-neutral-600 { color: color-mix(in oklab, var(--card-foreground) 75%, transparent); }
+.dark .leaflet-popup-content .text-neutral-500 { color: color-mix(in oklab, var(--card-foreground) 65%, transparent); }
+.dark .leaflet-popup-content .text-neutral-400 { color: color-mix(in oklab, var(--card-foreground) 55%, transparent); }
+.dark .leaflet-popup-content .bg-neutral-200 { background: color-mix(in oklab, var(--card-foreground) 15%, transparent); color: var(--card-foreground); }
+.dark .leaflet-popup-close-button { color: var(--card-foreground) !important; }
+
+/* Pull-to-refresh indicator */
+.ptr-indicator {
+  position: absolute; left: 0; right: 0; top: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; color: var(--sunrise);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+@keyframes ptrSpin { to { transform: rotate(360deg); } }
+.ptr-spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid color-mix(in oklab, var(--sunrise) 30%, transparent);
+  border-top-color: var(--sunrise);
+  animation: ptrSpin 0.8s linear infinite;
+}
+
 /* Heartbeat animation for the brand logo */
 @keyframes heartbeat {
   0%, 70%, 100% { transform: scale(1); }
