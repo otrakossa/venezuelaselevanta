@@ -33,7 +33,7 @@ interface Props {
 export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
   const open = !!reportId;
   const { report, loading, notFound } = useReportDetail(reportId);
-  const { comments } = useReportComments(reportId);
+  const { comments, hasMore, loadMore, loadingMore } = useReportComments(reportId);
   const [lightbox, setLightbox] = useState<string | null>(null);
   const [author, setAuthor] = useState("");
   const [content, setContent] = useState("");
