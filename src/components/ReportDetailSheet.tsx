@@ -174,6 +174,11 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
 
 
               <div className="p-5 space-y-5 flex-1">
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <WhatsAppShareButton report={report} variant="full" />
+                </div>
+
                 {/* Rating */}
                 <ReportRating report={report} variant="full" />
 
