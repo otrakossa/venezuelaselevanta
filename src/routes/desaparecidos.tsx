@@ -43,10 +43,16 @@ function initials(name: string) {
 }
 
 function MissingPage() {
-  const { missing } = useMissing();
+  const { missing, refetch } = useMissing();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("missing");
   const [showForm, setShowForm] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  // Mark loaded once we have any data, or after first render tick.
+  useMemo(() => { if (missing.length > 0) setLoaded(true); }, [missing.length]);
+  const ptr = usePullToRefresh<HTMLDivElement>({
+    onRefresh: async () => { await refetch(); toast.success("Lista actualizada"); },
+  });
 
   const counts = useMemo(() => ({
     all: missing.length,
