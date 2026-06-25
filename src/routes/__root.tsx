@@ -13,6 +13,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/Header";
 import { BottomNav } from "@/components/BottomNav";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { Footer } from "@/components/Footer";
 
