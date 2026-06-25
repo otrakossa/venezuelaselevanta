@@ -6,6 +6,7 @@ import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/c
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
 import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search } from "lucide-react";
+import { PushSubscribeButton } from "@/components/PushSubscribeButton";
 import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
@@ -253,6 +254,7 @@ function HomePage() {
                     </span>
                   )}
                 </button>
+                <PushSubscribeButton />
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
