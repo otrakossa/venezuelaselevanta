@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/public/push/broadcast")({
 
         const { data: report, error: rErr } = await supabaseAdmin
           .from("reports")
-          .select("id, title, description, lat, lng, address, urgency, category_id")
+          .select("id, title, description, lat, lng, address, urgency")
           .eq("id", body.report_id)
           .maybeSingle();
 
