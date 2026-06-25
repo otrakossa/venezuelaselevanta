@@ -240,6 +240,21 @@ function HomePage() {
                   <Activity className="h-3 w-3" /> 🌍 Sismos USGS
                 </button>
                 <button
+                  onClick={() => setShowMissing((s) => !s)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    showMissing
+                      ? "bg-rose-500 text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Mostrar personas desaparecidas en el mapa"
+                >
+                  <Users className="h-3 w-3" /> Desaparecidos
+                  <span className="ml-0.5 bg-white/25 rounded-full px-1.5 text-[9px] font-bold">
+                    {missing.filter((m) => m.last_seen_lat != null && m.last_seen_lng != null && m.status === "missing").length}
+                  </span>
+                </button>
+                <button
                   onClick={() => setShowFilters((s) => !s)}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
