@@ -372,7 +372,7 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} showQuakes={showQuakes} missing={missing} showMissing={showMissing} />
+            <MapView reports={visible} focusReport={focusReport} focusMissing={focusMissing} onOpenDetail={openDetail} showQuakes={showQuakes} missing={missing} showMissing={showMissing} />
           </ClientOnly>
 
           {/* USGS Legend */}
