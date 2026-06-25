@@ -136,6 +136,11 @@ function AdminPage() {
                       {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
                   </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <span className="text-emerald-600 font-semibold">👍 {r.confirm_count ?? 0}</span>
+                    <span className="mx-1 text-muted-foreground">·</span>
+                    <span className="text-rose-600 font-semibold">👎 {r.dispute_count ?? 0}</span>
+                  </td>
                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{format(new Date(r.created_at), "dd/MM HH:mm")}</td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1 justify-end">
