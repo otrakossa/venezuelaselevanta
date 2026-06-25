@@ -272,3 +272,9 @@ function ReportDetailPage() {
     </div>
   );
 }
+
+function cnVerify(verified: boolean) {
+  return verified
+    ? "inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold hover:bg-emerald-600"
+    : "inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-emerald-500 text-emerald-700 font-semibold hover:bg-emerald-50";
+}
