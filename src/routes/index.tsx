@@ -466,8 +466,9 @@ function HomePage() {
 
         {/* Sidebar (desktop) / Bottom sheet (mobile) */}
         <aside
+          ref={ptr.ref as React.RefObject<HTMLElement>}
           className={cn(
-            "border-l border-border bg-card",
+            "border-l border-border bg-card relative",
             // Desktop: standard sidebar
             "lg:w-80 lg:overflow-y-auto",
             // Mobile: fixed bottom sheet that slides up
@@ -477,6 +478,20 @@ function HomePage() {
           )}
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
+          {(ptr.pull > 0 || ptr.refreshing) && (
+            <div
+              className="ptr-indicator"
+              style={{ height: Math.max(28, ptr.pull), transition: ptr.refreshing ? "height 0.2s" : undefined }}
+            >
+              {ptr.refreshing ? (
+                <span className="flex items-center gap-1.5"><span className="ptr-spinner" /> Actualizando…</span>
+              ) : ptr.pull >= ptr.threshold ? (
+                <span className="flex items-center gap-1.5"><RefreshCw className="h-3 w-3" /> Suelta para actualizar</span>
+              ) : (
+                <span className="flex items-center gap-1.5 opacity-70"><ChevronDown className="h-3 w-3" /> Desliza para actualizar</span>
+              )}
+            </div>
+          )}
           <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
             <div>
               <h2 className="font-bold text-sm">Reportes recientes</h2>
@@ -492,71 +507,103 @@ function HomePage() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <ul className="divide-y divide-border">
-            {visible.slice(0, 30).map((r) => {
-              const cat = CATEGORY_MAP[r.category];
-              const cred = getCredibility(r);
-              return (
-                <li key={r.id} className="relative flex items-stretch">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
-                      setSheetOpen(false);
-                    }}
-                    className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
-                        style={{ background: cat?.color, color: "white" }}
-                      >
-                        {cat?.emoji}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-sm truncate">{r.title}</span>
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
-                            style={{ background: cred.bg, color: cred.fg }}
-                            title={cred.label}
-                          >
-                            {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
-                            {cred.short}
-                          </span>
+          {loading && visible.length === 0 ? (
+            <ReportListSkeleton count={6} />
+          ) : (
+            <ul className="divide-y divide-border">
+              {visible.slice(0, 30).map((r) => {
+                const cat = CATEGORY_MAP[r.category];
+                const cred = getCredibility(r);
+                return (
+                  <li key={r.id} className="relative flex items-stretch">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                        setSheetOpen(false);
+                      }}
+                      className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <div
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
+                          style={{ background: cat?.color, color: "white" }}
+                        >
+                          {cat?.emoji}
                         </div>
-                        {r.address && (
-                          <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
-                        )}
-                        <div className="flex items-center gap-1 mt-1 flex-wrap">
-                          <span
-                            className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
-                            style={{ background: URGENCY_LABELS[r.urgency].color }}
-                          >
-                            {URGENCY_LABELS[r.urgency].label}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">
-                            · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
-                          </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-semibold text-sm truncate">{r.title}</span>
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
+                              style={{ background: cred.bg, color: cred.fg }}
+                              title={cred.label}
+                            >
+                              {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
+                              {cred.short}
+                            </span>
+                          </div>
+                          {r.address && (
+                            <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
+                          )}
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            <span
+                              className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
+                              style={{ background: URGENCY_LABELS[r.urgency].color }}
+                            >
+                              {URGENCY_LABELS[r.urgency].label}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                    </button>
+                    <div className="flex items-center pr-3">
+                      <WhatsAppShareButton report={r} variant="icon" />
                     </div>
-                  </button>
-                  <div className="flex items-center pr-3">
-                    <WhatsAppShareButton report={r} variant="icon" />
-                  </div>
+                  </li>
+                );
+              })}
+              {visible.length === 0 && !loading && (
+                <li className="p-4">
+                  <EmptyState
+                    emoji="🔎"
+                    title="Sin reportes que coincidan"
+                    description={
+                      activeFilterCount > 0
+                        ? "Prueba quitar algún filtro o limpia la búsqueda."
+                        : "Aún no hay reportes en esta área."
+                    }
+                    action={
+                      activeFilterCount > 0 ? (
+                        <button
+                          onClick={() => setSearch({ cat: [], urg: [], trust: "all", t: "all", q: "" })}
+                          className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                        >
+                          Limpiar filtros
+                        </button>
+                      ) : (
+                        <Link
+                          to="/reportar"
+                          className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                        >
+                          Iniciar un reporte
+                        </Link>
+                      )
+                    }
+                  />
                 </li>
-              );
-            })}
-            {visible.length === 0 && !loading && (
-              <li className="p-6 text-center text-xs text-muted-foreground">No hay reportes</li>
-            )}
-          </ul>
+              )}
+            </ul>
+          )}
         </aside>
       </div>
+
 
       <ReportDetailSheet
         reportId={openReportId}
