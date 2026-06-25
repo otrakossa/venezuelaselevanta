@@ -18,6 +18,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
+import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
+import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 
@@ -66,6 +68,16 @@ const ReportesIdRoute = ReportesIdRouteImport.update({
   path: '/reportes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReportsDotgeojsonRoute = ApiReportsDotgeojsonRouteImport.update({
+  id: '/api/reports.geojson',
+  path: '/api/reports.geojson',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
+  id: '/api/reports.csv',
+  path: '/api/reports.csv',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -87,6 +99,8 @@ export interface FileRoutesByFullPath {
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/api/reports.csv': typeof ApiReportsDotcsvRoute
+  '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -100,6 +114,8 @@ export interface FileRoutesByTo {
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/api/reports.csv': typeof ApiReportsDotcsvRoute
+  '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -114,6 +130,8 @@ export interface FileRoutesById {
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/api/reports.csv': typeof ApiReportsDotcsvRoute
+  '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -129,6 +147,8 @@ export interface FileRouteTypes {
     | '/donar'
     | '/estadisticas'
     | '/reportar'
+    | '/api/reports.csv'
+    | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/media/$'
     | '/api/public/telegram/webhook'
@@ -142,6 +162,8 @@ export interface FileRouteTypes {
     | '/donar'
     | '/estadisticas'
     | '/reportar'
+    | '/api/reports.csv'
+    | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/media/$'
     | '/api/public/telegram/webhook'
@@ -155,6 +177,8 @@ export interface FileRouteTypes {
     | '/donar'
     | '/estadisticas'
     | '/reportar'
+    | '/api/reports.csv'
+    | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/media/$'
     | '/api/public/telegram/webhook'
@@ -169,6 +193,8 @@ export interface RootRouteChildren {
   DonarRoute: typeof DonarRoute
   EstadisticasRoute: typeof EstadisticasRoute
   ReportarRoute: typeof ReportarRoute
+  ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
+  ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
@@ -239,6 +265,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/reports.geojson': {
+      id: '/api/reports.geojson'
+      path: '/api/reports.geojson'
+      fullPath: '/api/reports.geojson'
+      preLoaderRoute: typeof ApiReportsDotgeojsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reports.csv': {
+      id: '/api/reports.csv'
+      path: '/api/reports.csv'
+      fullPath: '/api/reports.csv'
+      preLoaderRoute: typeof ApiReportsDotcsvRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -265,6 +305,8 @@ const rootRouteChildren: RootRouteChildren = {
   DonarRoute: DonarRoute,
   EstadisticasRoute: EstadisticasRoute,
   ReportarRoute: ReportarRoute,
+  ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
+  ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,

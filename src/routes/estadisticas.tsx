@@ -3,7 +3,8 @@ import { useReports, useMissing } from "@/hooks/useReports";
 import { CATEGORIES, CATEGORY_MAP, STATUS_LABELS } from "@/lib/categories";
 import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell, PieChart, Pie, Legend } from "recharts";
-import { AlertCircle, Users, MapPin, Building } from "lucide-react";
+import { AlertCircle, Users, MapPin, Building, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/estadisticas")({
   ssr: false,
@@ -47,6 +48,22 @@ function StatsPage() {
       <div>
         <h1 className="text-2xl font-bold">Dashboard en tiempo real</h1>
         <p className="text-sm text-muted-foreground">Actualizado automáticamente con cada reporte.</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 bg-card border border-border rounded-lg p-3">
+        <Button asChild variant="secondary" size="sm">
+          <a href="/api/reports.geojson" target="_blank" rel="noopener noreferrer" download>
+            <Download className="h-4 w-4" /> GeoJSON
+          </a>
+        </Button>
+        <Button asChild variant="secondary" size="sm">
+          <a href="/api/reports.csv" target="_blank" rel="noopener noreferrer" download>
+            <Download className="h-4 w-4" /> CSV + HXL
+          </a>
+        </Button>
+        <span className="text-[11px] text-muted-foreground sm:ml-2">
+          Datos bajo licencia CC BY 4.0 · venezuelaselevanta.info
+        </span>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
