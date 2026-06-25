@@ -244,6 +244,7 @@ function HomePage() {
           <ul className="divide-y divide-border">
             {visible.slice(0, 30).map((r) => {
               const cat = CATEGORY_MAP[r.category];
+              const cred = getCredibility(r);
               return (
                 <li key={r.id}>
                   <button
@@ -264,7 +265,14 @@ function HomePage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-semibold text-sm truncate">{r.title}</span>
-                          {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
+                          <span
+                            className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
+                            style={{ background: cred.bg, color: cred.fg }}
+                            title={cred.label}
+                          >
+                            {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
+                            {cred.short}
+                          </span>
                         </div>
                         {r.address && (
                           <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
@@ -278,6 +286,9 @@ function HomePage() {
                           </span>
                           <span className="text-[10px] text-muted-foreground">
                             {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
                           </span>
                         </div>
                       </div>
