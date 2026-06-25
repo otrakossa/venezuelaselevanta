@@ -264,7 +264,8 @@ export function MapView({
           missing
             .filter((m) => m.last_seen_lat != null && m.last_seen_lng != null && m.status === "missing")
             .map((m) => {
-              const waText = `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n👤 ${m.name}${m.age ? ` (${m.age} años)` : ""}\n${m.last_seen_location ? `📍 ${m.last_seen_location}\n` : ""}${m.description ? `📝 ${m.description}\n` : ""}${m.contact_phone ? `📞 ${m.contact_phone}\n` : ""}\nhttps://venezuelaselevanta.info/desaparecidos`;
+              const directLink = (typeof window !== "undefined" ? window.location.origin : "https://venezuelaselevanta.info") + `/?missing=${m.id}`;
+              const waText = `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n👤 ${m.name}${m.age ? ` (${m.age} años)` : ""}\n${m.last_seen_location ? `📍 ${m.last_seen_location}\n` : ""}${m.description ? `📝 ${m.description}\n` : ""}${m.contact_phone ? `📞 ${m.contact_phone}\n` : ""}\n${directLink}`;
               return (
                 <Marker
                   key={`missing-${m.id}`}
