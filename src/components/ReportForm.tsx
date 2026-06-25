@@ -10,6 +10,8 @@ import type { Report } from "@/lib/types";
 import { enqueueReport } from "@/lib/offline-queue";
 import { uploadMany } from "@/lib/media-upload";
 import { reverseGeocode } from "@/lib/geocode";
+import { LocationSelect } from "./LocationSelect";
+import { detectStateFromAddress } from "@/lib/venezuela-divipol";
 
 const MAX_FILES = 4;
 const MAX_SIZE_MB = 10;
@@ -22,6 +24,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     category: "medical",
     description: "",
     address: "",
+    state: "",
+    municipality: "",
+    parish: "",
     urgency: "medium",
     reporter_name: "",
     affected_count: "",
@@ -48,7 +53,10 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       .then((addr) => {
         if (ctrl.signal.aborted) return;
         if (addr) {
-          setForm((f) => ({ ...f, address: addr }));
+          setForm((f) => {
+            const detected = !f.state ? detectStateFromAddress(addr) : null;
+            return { ...f, address: addr, state: detected ?? f.state };
+          });
         } else {
           toast.info("No se detectó la dirección. Puedes escribirla manualmente.", { duration: 3000 });
         }
@@ -117,6 +125,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const resetForm = () => {
     setForm({
       title: "", category: "medical", description: "", address: "",
+      state: "", municipality: "", parish: "",
       urgency: "medium", reporter_name: "", affected_count: "", status: "active",
     });
     setCoords(null);
@@ -154,6 +163,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       urgency: form.urgency,
       status: form.status,
       address: form.address.trim() || null,
+      state: form.state || null,
+      municipality: form.municipality || null,
+      parish: form.parish.trim() || null,
       lat: coords.lat,
       lng: coords.lng,
       reporter_name: form.reporter_name.trim() || null,
@@ -236,6 +248,13 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
             maxLength={200}
           />
         </div>
+
+        <LocationSelect
+          state={form.state}
+          municipality={form.municipality}
+          parish={form.parish}
+          onChange={(v) => setForm({ ...form, ...v })}
+        />
 
         {/* Photo + Location actions */}
         <div className="grid grid-cols-2 gap-2">

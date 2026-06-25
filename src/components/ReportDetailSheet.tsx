@@ -211,6 +211,25 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
                           Ubicación
                         </div>
                         <div className="text-sm break-words">{report.address}</div>
+                        {(report.state || report.municipality || report.parish) && (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {report.state && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--sky)]/15 text-[color:var(--sky)] font-semibold">
+                                {report.state}
+                              </span>
+                            )}
+                            {report.municipality && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--sunrise)]/15 text-[color:var(--sunrise)] font-semibold">
+                                {report.municipality}
+                              </span>
+                            )}
+                            {report.parish && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[color:var(--gold)]/20 text-[color:var(--midnight)] font-semibold">
+                                {report.parish}
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {onFocusMap && isValidCoords(report.lat, report.lng) && (
                           <button
                             onClick={() => {

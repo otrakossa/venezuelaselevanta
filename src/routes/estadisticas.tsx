@@ -107,6 +107,25 @@ function StatsPage() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    // Top estados y municipios usando campos DIVIPOL
+    const stateMap = new Map<string, number>();
+    const muniMap = new Map<string, number>();
+    reports.forEach((r) => {
+      if (r.state) stateMap.set(r.state, (stateMap.get(r.state) ?? 0) + 1);
+      if (r.state && r.municipality) {
+        const k = `${r.municipality} — ${r.state}`;
+        muniMap.set(k, (muniMap.get(k) ?? 0) + 1);
+      }
+    });
+    const topStates = Array.from(stateMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+    const topMunicipalities = Array.from(muniMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
     // Urgencia por categoría (stacked)
     const urgencyByCategory = CATEGORIES.slice(0, 6).map((c) => {
       const rs = reports.filter((r) => r.category === c.slug);
@@ -124,7 +143,7 @@ function StatsPage() {
     return {
       total, active, attending, resolved, critical, help, rescue, missingActive,
       verified, last24h, delta24h, quakes24h, maxMag, days, last7, byCategory,
-      byStatus, topZones, urgencyByCategory, resolveRate,
+      byStatus, topZones, topStates, topMunicipalities, urgencyByCategory, resolveRate,
     };
   }, [reports, missingCounts, quakes]);
 
@@ -308,6 +327,46 @@ function StatsPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* DIVIPOL: estados y municipios */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        {([
+          { title: "Top estados (DIVIPOL)", data: stats.topStates, gradient: "linear-gradient(90deg, var(--sky), var(--sunrise))" },
+          { title: "Top municipios (DIVIPOL)", data: stats.topMunicipalities, gradient: "linear-gradient(90deg, var(--gold), var(--sunrise))" },
+        ] as const).map((panel) => (
+          <div key={panel.title} className="bg-card border border-border rounded-2xl p-4">
+            <h3 className="font-display text-base mb-3">{panel.title}</h3>
+            {panel.data.length === 0 ? (
+              <div className="text-xs text-muted-foreground py-8 text-center">
+                Aún no hay reportes con estado/municipio. Aparecerán cuando los nuevos reportes seleccionen su DIVIPOL.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {panel.data.map((z, i) => {
+                  const max = panel.data[0].count || 1;
+                  const pct = (z.count / max) * 100;
+                  return (
+                    <div key={z.name}>
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="truncate flex items-center gap-1.5 min-w-0">
+                          <span className="w-4 h-4 rounded-full bg-[var(--midnight)] text-[10px] text-[var(--cream)] grid place-items-center shrink-0">
+                            {i + 1}
+                          </span>
+                          <span className="truncate">{z.name}</span>
+                        </span>
+                        <span className="font-semibold tabular-nums shrink-0">{z.count}</span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: panel.gradient }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Urgencia × categoría + Sismos */}

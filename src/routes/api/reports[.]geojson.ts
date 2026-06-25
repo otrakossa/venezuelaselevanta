@@ -40,7 +40,8 @@ export const Route = createFileRoute("/api/reports.geojson")({
             properties: {
               id: r.id, title: r.title, description: r.description,
               category: r.category, urgency: r.urgency, status: r.status,
-              address: r.address, reporter_name: r.reporter_name,
+              address: r.address, state: r.state, municipality: r.municipality, parish: r.parish,
+              reporter_name: r.reporter_name,
               affected_count: r.affected_count, verified: r.verified,
               confirm_count: r.confirm_count, dispute_count: r.dispute_count,
               created_at: r.created_at,

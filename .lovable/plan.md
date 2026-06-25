@@ -1,25 +1,52 @@
-## Problema
+## Objetivo
+Capturar la división político-territorial (Estado, Municipio, Parroquia) en cada reporte —y también en personas desaparecidas— para poder filtrar y graficar por esos niveles en estadísticas.
 
-El botón flotante `+` (FAB para "Reportar") en la barra inferior móvil no responde al tap en algunos dispositivos.
+## 1. Base de datos (migración)
+Agregar a las tablas `reports` y `missing_persons`:
+- `state` (text) — Estado
+- `municipality` (text) — Municipio
+- `parish` (text) — Parroquia
 
-## Causa
+Sin cambios en RLS (heredan políticas actuales). Índices simples sobre `state` para acelerar agregaciones.
 
-En `src/components/BottomNav.tsx`, dentro del `<Link to="/reportar">` hay un `<span>` decorativo con `animate-ping` posicionado `absolute inset-0` SIN `pointer-events-none`. En móvil (especialmente Safari iOS y algunos WebView de Android), ese span animado con transform/scale intercepta el touch y el `<Link>` nunca recibe el evento de navegación. En desktop el cursor "click" igual llega al ancla, por eso no se reproduce ahí.
+## 2. Formulario de reporte (`ReportForm.tsx`)
+Tres campos nuevos con selects en cascada:
+- Estado → carga lista fija de los 24 estados de Venezuela (+ Distrito Capital).
+- Municipio → se filtra por estado seleccionado.
+- Parroquia → se filtra por municipio.
 
-Además, el icono `<Plus>` interno usa `relative` pero también podría beneficiarse de `pointer-events-none` para forzar que el tap siempre lo capture el `<Link>`.
+Datos cargados desde un nuevo archivo `src/lib/venezuela-divipol.ts` (dataset estático JSON con estados/municipios/parroquias oficiales).
 
-## Cambios
+Autocompletado: si el usuario usa "mi ubicación" y el geocoder devuelve `address`, intentar precargar Estado/Municipio matcheando contra el dataset (best-effort, editable).
 
-Archivo único: `src/components/BottomNav.tsx`
+Campos opcionales pero recomendados (no obligatorios para no romper flujo offline ni Telegram).
 
-1. Agregar `pointer-events-none` y `aria-hidden` al span del `animate-ping`.
-2. Agregar `pointer-events-none` al `<Plus>` para que cualquier tap, incluso sobre el SVG, sea capturado por el `<Link>` padre.
-3. Agregar `touch-manipulation` al `<Link>` para eliminar el retardo de 300ms y mejorar respuesta táctil.
+## 3. Formulario de personas desaparecidas
+Mismos tres campos en la creación de `missing_persons`.
 
-No se tocan otros componentes ni el z-index/posicionamiento. El comportamiento visual (efecto ping pulsante) se mantiene idéntico.
+## 4. Vistas
+- **Detalle de reporte** (`ReportDetailSheet`) y **popup del mapa**: mostrar línea "Estado · Municipio · Parroquia" arriba de la dirección.
+- **Tarjeta de la lista lateral**: badge pequeño con el Estado.
 
-## Verificación
+## 5. Estadísticas (`/estadisticas`)
+Añadir nuevos widgets:
+- Top 10 Estados con más reportes (barras horizontales).
+- Top 10 Municipios.
+- Filtro global por Estado que recalcula los KPIs existentes.
+- Mini desglose por urgencia dentro del estado seleccionado.
 
-- Probar en móvil real (o emulación táctil) que tocar el `+` navega a `/reportar`.
-- Confirmar que el anillo de "ping" sigue animándose visualmente.
-- Revisar que la navegación funcione tanto con el FAB cerrado como con el bottom sheet de la lista de reportes abierto.
+## 6. Open data
+Incluir `state`, `municipality`, `parish` como columnas/propiedades en:
+- `GET /api/reports.csv` (con etiquetas HXL `#adm1+name`, `#adm2+name`, `#adm3+name`).
+- `GET /api/reports.geojson` (dentro de `properties`).
+
+## 7. Datos existentes
+Backfill best-effort opcional: ejecutar una pasada que, donde `address` contenga el nombre de un estado conocido, rellene `state`. Municipio/Parroquia se quedan vacíos hasta que el usuario los edite.
+
+---
+
+### Notas técnicas
+- Dataset DIVIPOL completo (≈335 municipios, ≈1.150 parroquias) se sirve como JSON estático bundleado; ~80 KB gzip.
+- Tipos TS regenerados tras la migración.
+- Sin breaking changes: los campos son `null`-ables.
+- Realtime sigue funcionando sin cambios.

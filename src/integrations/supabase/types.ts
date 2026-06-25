@@ -87,12 +87,15 @@ export type Database = {
           last_seen_lat: number | null
           last_seen_lng: number | null
           last_seen_location: string | null
+          municipality: string | null
           name: string
+          parish: string | null
           photo_url: string | null
           report_date: string
           source_id: string | null
           source_label: string | null
           source_url: string | null
+          state: string | null
           status: string
           updated_at: string
         }
@@ -108,12 +111,15 @@ export type Database = {
           last_seen_lat?: number | null
           last_seen_lng?: number | null
           last_seen_location?: string | null
+          municipality?: string | null
           name: string
+          parish?: string | null
           photo_url?: string | null
           report_date?: string
           source_id?: string | null
           source_label?: string | null
           source_url?: string | null
+          state?: string | null
           status?: string
           updated_at?: string
         }
@@ -129,12 +135,15 @@ export type Database = {
           last_seen_lat?: number | null
           last_seen_lng?: number | null
           last_seen_location?: string | null
+          municipality?: string | null
           name?: string
+          parish?: string | null
           photo_url?: string | null
           report_date?: string
           source_id?: string | null
           source_label?: string | null
           source_url?: string | null
+          state?: string | null
           status?: string
           updated_at?: string
         }
@@ -284,8 +293,11 @@ export type Database = {
           lng: number
           media_thumbs: string[]
           media_urls: string[]
+          municipality: string | null
+          parish: string | null
           photo_url: string | null
           reporter_name: string | null
+          state: string | null
           status: string
           title: string
           updated_at: string
@@ -310,8 +322,11 @@ export type Database = {
           lng: number
           media_thumbs?: string[]
           media_urls?: string[]
+          municipality?: string | null
+          parish?: string | null
           photo_url?: string | null
           reporter_name?: string | null
+          state?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -336,8 +351,11 @@ export type Database = {
           lng?: number
           media_thumbs?: string[]
           media_urls?: string[]
+          municipality?: string | null
+          parish?: string | null
           photo_url?: string | null
           reporter_name?: string | null
+          state?: string | null
           status?: string
           title?: string
           updated_at?: string
