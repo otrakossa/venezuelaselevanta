@@ -162,8 +162,8 @@ function HomePage() {
                       <span className="font-semibold text-xs truncate">{r.title}</span>
                       {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
                     </div>
-                    {r.location_text && (
-                      <div className="text-[10px] text-muted-foreground truncate">📍 {r.location_text}</div>
+                    {r.address && (
+                      <div className="text-[10px] text-muted-foreground truncate">📍 {r.address}</div>
                     )}
                     <div className="flex items-center gap-1 mt-1">
                       <span

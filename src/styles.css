@@ -44,10 +44,10 @@
 
   --color-header: var(--header);
   --color-header-foreground: var(--header-foreground);
-  --color-urgency-critico: var(--urgency-critico);
-  --color-urgency-alto: var(--urgency-alto);
-  --color-urgency-medio: var(--urgency-medio);
-  --color-urgency-bajo: var(--urgency-bajo);
+  --color-urgency-critical: var(--urgency-critical);
+  --color-urgency-high: var(--urgency-high);
+  --color-urgency-medium: var(--urgency-medium);
+  --color-urgency-low: var(--urgency-low);
 
   --font-sans: "Hind", system-ui, -apple-system, sans-serif;
   --font-display: "Archivo Black", "Hind", system-ui, sans-serif;
@@ -86,10 +86,10 @@
   --header: var(--midnight);
   --header-foreground: #FFF8F0;
 
-  --urgency-critico: #FF3D2E;
-  --urgency-alto: #FF6B35;
-  --urgency-medio: #FFC93C;
-  --urgency-bajo: #1A8FE3;
+  --urgency-critical: #FF3D2E;
+  --urgency-high: #FF6B35;
+  --urgency-medium: #FFC93C;
+  --urgency-low: #1A8FE3;
 }
 
 .dark {

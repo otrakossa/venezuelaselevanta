@@ -80,7 +80,7 @@ export function MapView({
         >
           {filtered.map((r) => {
             const cat = CATEGORY_MAP[r.category] ?? CATEGORIES[0];
-            const pulse = r.urgency === "critico" && r.status === "activo";
+            const pulse = r.urgency === "critical" && r.status === "active";
             return (
               <Marker
                 key={r.id}
@@ -102,8 +102,8 @@ export function MapView({
                     {r.description ? (
                       <p className="text-xs text-neutral-600">{r.description}</p>
                     ) : null}
-                    {r.location_text ? (
-                      <div className="text-[11px] text-neutral-500">📍 {r.location_text}</div>
+                    {r.address ? (
+                      <div className="text-[11px] text-neutral-500">📍 {r.address}</div>
                     ) : null}
                     <div className="flex flex-wrap gap-1 pt-1">
                       <span

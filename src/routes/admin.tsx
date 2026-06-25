@@ -107,7 +107,7 @@ function AdminPage() {
                       <span className="font-semibold truncate">{r.title}</span>
                       {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate">{r.location_text}</div>
+                    <div className="text-[10px] text-muted-foreground truncate">{r.address}</div>
                   </td>
                   <td className="px-3 py-2"><span className="inline-flex items-center gap-1">{cat?.emoji}<span className="hidden md:inline">{cat?.name}</span></span></td>
                   <td className="px-3 py-2">

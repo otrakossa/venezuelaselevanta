@@ -13,13 +13,12 @@ export function useReports() {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (mounted && data) setReports(data as Report[]);
+        if (mounted && data) setReports(data as unknown as Report[]);
         setLoading(false);
       });
 
     const ch = supabase
       .channel(`reports-rt-${Math.random().toString(36).slice(2)}`)
-
       .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, (payload) => {
         setReports((prev) => {
           if (payload.eventType === "INSERT") return [payload.new as Report, ...prev];
@@ -47,13 +46,12 @@ export function useMissing() {
     supabase
       .from("missing_persons")
       .select("*")
-      .order("created_at", { ascending: false })
+      .order("report_date", { ascending: false })
       .then(({ data }) => {
-        if (mounted && data) setMissing(data as MissingPerson[]);
+        if (mounted && data) setMissing(data as unknown as MissingPerson[]);
       });
     const ch = supabase
       .channel(`missing-rt-${Math.random().toString(36).slice(2)}`)
-
       .on("postgres_changes", { event: "*", schema: "public", table: "missing_persons" }, (payload) => {
         setMissing((prev) => {
           if (payload.eventType === "INSERT") return [payload.new as MissingPerson, ...prev];
