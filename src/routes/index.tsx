@@ -534,7 +534,7 @@ function HomePage() {
             <div>
               <h2 className="font-bold text-sm">Reportes recientes</h2>
               <p className="text-[11px] text-muted-foreground">
-                {loading ? "Cargando..." : `${visible.length} incidentes`}
+                {loading ? "Cargando..." : `${feed.length} registros`}
               </p>
             </div>
             <button
