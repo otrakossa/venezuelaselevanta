@@ -56,7 +56,7 @@ export const organizations: Organization[] = [
     name: "Codex Tecnología",
     description: "Desarrollo, infraestructura y mantenimiento",
     url: "https://codextecnologia.com",
-    logo: "https://www.google.com/s2/favicons?domain=codextecnologia.com&sz=128",
+    logo: "/__l5e/assets-v1/e986dcb5-f378-470a-8fc9-9f935dcceb8f/logo-codex.png",
   },
 ];
 
