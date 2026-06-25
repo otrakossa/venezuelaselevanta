@@ -7,8 +7,9 @@ import type { MissingPerson, MissingStatus } from "@/lib/types";
 import { toast } from "sonner";
 import {
   Search, UserPlus, UserCheck, MapPin, Phone, Mail, User,
-  CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake,
+  CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair,
 } from "lucide-react";
+import { geocodeAddress } from "@/lib/geocode";
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
