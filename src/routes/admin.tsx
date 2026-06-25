@@ -93,6 +93,11 @@ function AdminPage() {
           <option value="">Todos los estados</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <select className={select} value={filters.verified} onChange={(e) => setFilters({ ...filters, verified: e.target.value })}>
+          <option value="">Verificación: todos</option>
+          <option value="yes">Solo verificados</option>
+          <option value="no">Solo sin verificar</option>
+        </select>
       </div>
 
       <div className="bg-card border border-border rounded-lg overflow-x-auto">
@@ -103,6 +108,7 @@ function AdminPage() {
               <th className="px-3 py-2">Categoría</th>
               <th className="px-3 py-2">Urgencia</th>
               <th className="px-3 py-2">Estado</th>
+              <th className="px-3 py-2">Votos</th>
               <th className="px-3 py-2">Fecha</th>
               <th className="px-3 py-2 text-right">Acciones</th>
             </tr>
