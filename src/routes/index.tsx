@@ -5,9 +5,10 @@ import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck } from "lucide-react";
 import heroImage from "@/assets/hero-amanecer.jpg";
 import { cn } from "@/lib/utils";
+import { getCredibility } from "@/lib/credibility";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -27,6 +28,7 @@ const HERO_DISMISS_KEY = "vsl-hero-dismissed";
 function HomePage() {
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
+  const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
@@ -42,10 +44,17 @@ function HomePage() {
   const toggle = (slug: string) =>
     setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
 
-  const visible = useMemo(
-    () => (active.length === 0 ? reports : reports.filter((r) => active.includes(r.category))),
-    [reports, active],
-  );
+  const visible = useMemo(() => {
+    return reports.filter((r) => {
+      if (active.length > 0 && !active.includes(r.category)) return false;
+      if (trust === "verified" && !r.verified) return false;
+      if (trust === "trusted") {
+        const c = getCredibility(r);
+        if (c.level !== "verified" && c.level !== "trusted") return false;
+      }
+      return true;
+    });
+  }, [reports, active, trust]);
 
   return (
     <div className="flex flex-col">
