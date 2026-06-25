@@ -18,6 +18,21 @@ export interface Report {
   media_thumbs: string[] | null;
   affected_count: number | null;
   verified: boolean;
+  verified_by: string | null;
+  verified_at: string | null;
+  confirm_count: number;
+  dispute_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export type VoteKind = "confirm" | "dispute";
+
+export interface ReportVote {
+  id: string;
+  report_id: string;
+  device_id: string;
+  vote: VoteKind;
   created_at: string;
   updated_at: string;
 }

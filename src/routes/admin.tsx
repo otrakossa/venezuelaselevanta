@@ -14,9 +14,9 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userId } = useAuth();
   const { reports } = useReports();
-  const [filters, setFilters] = useState({ category: "", urgency: "", status: "" });
+  const [filters, setFilters] = useState({ category: "", urgency: "", status: "", verified: "" });
 
   const filtered = useMemo(
     () =>
@@ -24,7 +24,9 @@ function AdminPage() {
         (r) =>
           (!filters.category || r.category === filters.category) &&
           (!filters.urgency || r.urgency === filters.urgency) &&
-          (!filters.status || r.status === filters.status),
+          (!filters.status || r.status === filters.status) &&
+          (!filters.verified ||
+            (filters.verified === "yes" ? r.verified : !r.verified)),
       ),
     [reports, filters],
   );
@@ -45,7 +47,15 @@ function AdminPage() {
   }
 
   const verify = async (id: string, verified: boolean) => {
-    const { error } = await supabase.from("reports").update({ verified: !verified }).eq("id", id);
+    const next = !verified;
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        verified: next,
+        verified_by: next ? userId : null,
+        verified_at: next ? new Date().toISOString() : null,
+      })
+      .eq("id", id);
     if (error) toast.error(error.message);
   };
   const setStatus = async (id: string, status: string) => {
@@ -83,6 +93,11 @@ function AdminPage() {
           <option value="">Todos los estados</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
+        <select className={select} value={filters.verified} onChange={(e) => setFilters({ ...filters, verified: e.target.value })}>
+          <option value="">Verificación: todos</option>
+          <option value="yes">Solo verificados</option>
+          <option value="no">Solo sin verificar</option>
+        </select>
       </div>
 
       <div className="bg-card border border-border rounded-lg overflow-x-auto">
@@ -93,6 +108,7 @@ function AdminPage() {
               <th className="px-3 py-2">Categoría</th>
               <th className="px-3 py-2">Urgencia</th>
               <th className="px-3 py-2">Estado</th>
+              <th className="px-3 py-2">Votos</th>
               <th className="px-3 py-2">Fecha</th>
               <th className="px-3 py-2 text-right">Acciones</th>
             </tr>
@@ -119,6 +135,11 @@ function AdminPage() {
                     <select value={r.status} onChange={(e) => setStatus(r.id, e.target.value)} className={select}>
                       {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <span className="text-emerald-600 font-semibold">👍 {r.confirm_count ?? 0}</span>
+                    <span className="mx-1 text-muted-foreground">·</span>
+                    <span className="text-rose-600 font-semibold">👎 {r.dispute_count ?? 0}</span>
                   </td>
                   <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">{format(new Date(r.created_at), "dd/MM HH:mm")}</td>
                   <td className="px-3 py-2">

@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Report } from "@/lib/types";
 import { CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { format } from "date-fns";
-import { ArrowLeft, MapPin, User, Users, AlertTriangle, Share2 } from "lucide-react";
+import { ArrowLeft, MapPin, User, Users, AlertTriangle, Share2, BadgeCheck } from "lucide-react";
+import { ReportRating } from "@/components/ReportRating";
+import { getCredibility } from "@/lib/credibility";
+import { useAuth } from "@/hooks/useReports";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/reportes/$id")({
   ssr: false,
@@ -16,6 +20,7 @@ const VIDEO_RE = /\.(mp4|mov|webm|m4v)(\?|$)/i;
 function ReportDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const { isAuthenticated, userId } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -34,10 +39,38 @@ function ReportDetailPage() {
         else setReport(data as unknown as Report);
         setLoading(false);
       });
+
+    const ch = supabase
+      .channel(`report-detail-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "reports", filter: `id=eq.${id}` },
+        (payload) => {
+          setReport(payload.new as unknown as Report);
+        },
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      supabase.removeChannel(ch);
     };
   }, [id]);
+
+  const toggleVerify = async () => {
+    if (!report) return;
+    const next = !report.verified;
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        verified: next,
+        verified_by: next ? userId : null,
+        verified_at: next ? new Date().toISOString() : null,
+      })
+      .eq("id", report.id);
+    if (error) toast.error(error.message);
+    else toast.success(next ? "Marcado como verificado" : "Verificación retirada");
+  };
 
   if (loading) {
     return (
@@ -107,16 +140,51 @@ function ReportDetailPage() {
             {urgency.label}
           </span>
           <span className="text-xs px-2 py-1 rounded bg-muted font-semibold">{status}</span>
-          {report.verified && (
-            <span className="text-xs px-2 py-1 rounded bg-emerald-500 text-white font-semibold">✓ Verificado</span>
-          )}
+          {(() => {
+            const c = getCredibility(report);
+            return (
+              <span
+                className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-semibold"
+                style={{ background: c.bg, color: c.fg }}
+                title={c.label}
+              >
+                {c.level === "verified" && <BadgeCheck className="h-3.5 w-3.5" />}
+                {c.label}
+              </span>
+            );
+          })()}
         </div>
 
         <h1 className="font-display text-2xl sm:text-3xl leading-tight">{report.title}</h1>
         <div className="text-xs text-muted-foreground">
           Reportado {format(new Date(report.created_at), "dd MMM yyyy · HH:mm")}
+          {report.verified_at && (
+            <> · Verificado {format(new Date(report.verified_at), "dd MMM yyyy")}</>
+          )}
         </div>
       </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <h2 className="text-sm font-semibold">¿Puedes corroborar este reporte?</h2>
+            <p className="text-xs text-muted-foreground">
+              Tu voto ayuda a la comunidad a saber qué información es confiable. 1 voto por dispositivo.
+            </p>
+          </div>
+          {isAuthenticated && (
+            <button
+              onClick={toggleVerify}
+              className={cnVerify(report.verified)}
+            >
+              <BadgeCheck className="h-4 w-4" />
+              {report.verified ? "Quitar verificación" : "Marcar como verificado"}
+            </button>
+          )}
+        </div>
+        <ReportRating report={report} variant="full" showBadge={false} />
+      </div>
+
 
       {media.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
@@ -203,4 +271,10 @@ function ReportDetailPage() {
       )}
     </div>
   );
+}
+
+function cnVerify(verified: boolean) {
+  return verified
+    ? "inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold hover:bg-emerald-600"
+    : "inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-emerald-500 text-emerald-700 font-semibold hover:bg-emerald-50";
 }

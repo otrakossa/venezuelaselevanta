@@ -5,9 +5,10 @@ import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck } from "lucide-react";
 import heroImage from "@/assets/hero-amanecer.jpg";
 import { cn } from "@/lib/utils";
+import { getCredibility } from "@/lib/credibility";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -27,6 +28,7 @@ const HERO_DISMISS_KEY = "vsl-hero-dismissed";
 function HomePage() {
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
+  const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
@@ -42,10 +44,17 @@ function HomePage() {
   const toggle = (slug: string) =>
     setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
 
-  const visible = useMemo(
-    () => (active.length === 0 ? reports : reports.filter((r) => active.includes(r.category))),
-    [reports, active],
-  );
+  const visible = useMemo(() => {
+    return reports.filter((r) => {
+      if (active.length > 0 && !active.includes(r.category)) return false;
+      if (trust === "verified" && !r.verified) return false;
+      if (trust === "trusted") {
+        const c = getCredibility(r);
+        if (c.level !== "verified" && c.level !== "trusted") return false;
+      }
+      return true;
+    });
+  }, [reports, active, trust]);
 
   return (
     <div className="flex flex-col">
@@ -152,6 +161,31 @@ function HomePage() {
                     </button>
                   );
                 })}
+                <span className="shrink-0 w-px self-stretch bg-border/60 mx-0.5" aria-hidden />
+                <button
+                  onClick={() => setTrust((t) => (t === "verified" ? "all" : "verified"))}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    trust === "verified"
+                      ? "bg-[color:var(--gold)] text-[color:var(--midnight)] border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Solo reportes verificados oficialmente"
+                >
+                  <BadgeCheck className="h-3 w-3" /> Verificados
+                </button>
+                <button
+                  onClick={() => setTrust((t) => (t === "trusted" ? "all" : "trusted"))}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    trust === "trusted"
+                      ? "bg-emerald-500 text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Verificados + confiables por la comunidad (≥70%)"
+                >
+                  <ShieldCheck className="h-3 w-3" /> Confiables
+                </button>
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
@@ -210,6 +244,7 @@ function HomePage() {
           <ul className="divide-y divide-border">
             {visible.slice(0, 30).map((r) => {
               const cat = CATEGORY_MAP[r.category];
+              const cred = getCredibility(r);
               return (
                 <li key={r.id}>
                   <button
@@ -230,7 +265,14 @@ function HomePage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-semibold text-sm truncate">{r.title}</span>
-                          {r.verified && <span className="text-[9px] bg-emerald-500 text-white px-1 rounded">✓</span>}
+                          <span
+                            className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
+                            style={{ background: cred.bg, color: cred.fg }}
+                            title={cred.label}
+                          >
+                            {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
+                            {cred.short}
+                          </span>
                         </div>
                         {r.address && (
                           <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
@@ -244,6 +286,9 @@ function HomePage() {
                           </span>
                           <span className="text-[10px] text-muted-foreground">
                             {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
                           </span>
                         </div>
                       </div>
