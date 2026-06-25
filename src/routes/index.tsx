@@ -45,6 +45,7 @@ function HomePage() {
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showQuakes, setShowQuakes] = useState(true);
+  const [showMissing, setShowMissing] = useState(true);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
