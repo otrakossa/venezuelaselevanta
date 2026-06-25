@@ -57,9 +57,14 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
 
 export type MissingCounts = { all: number; missing: number; found: number; deceased: number };
 
+const MISSING_PAGE = 300;
+
 export function useMissing() {
-  const [missing, setMissing] = useState<MissingPerson[]>([]);
+  const [records, setRecords] = useState<MissingPerson[]>([]);
   const [counts, setCounts] = useState<MissingCounts>({ all: 0, missing: 0, found: 0, deceased: 0 });
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const refetchCounts = useCallback(async () => {
     const [all, m, f, d] = await Promise.all([
@@ -76,31 +81,48 @@ export function useMissing() {
     });
   }, []);
 
-  const refetch = useCallback(async () => {
+  const fetchPage = useCallback(async (pageOffset: number, append: boolean) => {
     const { data } = await supabase
       .from("missing_persons")
       .select("*")
       .order("report_date", { ascending: false })
-      .limit(2000);
-    if (data) setMissing(data as unknown as MissingPerson[]);
+      .range(pageOffset, pageOffset + MISSING_PAGE - 1);
+    if (!data) return;
+    const items = data as unknown as MissingPerson[];
+    if (append) {
+      setRecords((prev) => [...prev, ...items]);
+    } else {
+      setRecords(items);
+    }
+    setHasMore(data.length === MISSING_PAGE);
+    setOffset(pageOffset + data.length);
+  }, []);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      await fetchPage(offset, true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, offset, fetchPage]);
+
+  const refetch = useCallback(async () => {
+    setOffset(0);
+    setHasMore(true);
+    await fetchPage(0, false);
     await refetchCounts();
-  }, [refetchCounts]);
+  }, [fetchPage, refetchCounts]);
 
   useEffect(() => {
     let mounted = true;
-    supabase
-      .from("missing_persons")
-      .select("*")
-      .order("report_date", { ascending: false })
-      .limit(2000)
-      .then(({ data }) => {
-        if (mounted && data) setMissing(data as unknown as MissingPerson[]);
-      });
+    fetchPage(0, false).then(() => { if (!mounted) return; });
     refetchCounts();
     const ch = supabase
       .channel(`missing-rt-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "missing_persons" }, (payload) => {
-        setMissing((prev) => {
+        setRecords((prev) => {
           if (payload.eventType === "INSERT") return [payload.new as MissingPerson, ...prev];
           if (payload.eventType === "UPDATE")
             return prev.map((r) => (r.id === (payload.new as MissingPerson).id ? (payload.new as MissingPerson) : r));
@@ -115,9 +137,11 @@ export function useMissing() {
       mounted = false;
       supabase.removeChannel(ch);
     };
-  }, [refetchCounts]);
-  return { missing, counts, refetch };
+  }, [fetchPage, refetchCounts]);
+
+  return { missing: records, counts, refetch, loadMore, hasMore, loadingMore };
 }
+
 
 export function useAuth() {
   const [userId, setUserId] = useState<string | null>(null);
