@@ -30,12 +30,18 @@ export const Route = createFileRoute("/")({
 const HERO_DISMISS_KEY = "vsl-hero-dismissed";
 
 function HomePage() {
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const { reports, loading } = useReports();
   const [active, setActive] = useState<string[]>([]);
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
+
+  const openReportId = search.report ?? null;
+  const openDetail = (id: string) => navigate({ search: { report: id }, replace: false });
+  const closeDetail = () => navigate({ search: {}, replace: false });
 
   useEffect(() => {
     if (localStorage.getItem(HERO_DISMISS_KEY) === "1") setShowHero(false);
