@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { AlertTriangle, Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut } from "lucide-react";
+import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
 import { supabase } from "@/integrations/supabase/client";
