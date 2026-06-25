@@ -47,6 +47,7 @@ export interface MapViewProps {
   pickedLocation?: { lat: number; lng: number } | null;
   height?: string;
   focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
+  focusMissing?: { id: string; lat: number; lng: number; nonce: number } | null;
   onOpenDetail?: (id: string) => void;
   showQuakes?: boolean;
   missing?: MissingPerson[];
@@ -82,12 +83,14 @@ export function MapView({
   pickedLocation,
   height = "100%",
   focusReport,
+  focusMissing,
   onOpenDetail,
   showQuakes = true,
   missing = [],
   showMissing = true,
 }: MapViewProps) {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const missingMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const { data: quakes = [] } = useUSGSQuakes(showQuakes);
   const filtered = useMemo(
     () =>
@@ -111,6 +114,7 @@ export function MapView({
         />
         {onMapClick ? <ClickPicker onPick={onMapClick} /> : null}
         <FocusController target={focusReport ?? null} markersRef={markersRef} />
+        <FocusController target={focusMissing ?? null} markersRef={missingMarkersRef} />
         {pickedLocation ? (
           <Marker
             position={[pickedLocation.lat, pickedLocation.lng]}
@@ -266,6 +270,10 @@ export function MapView({
                   key={`missing-${m.id}`}
                   position={[m.last_seen_lat as number, m.last_seen_lng as number]}
                   icon={createMissingIcon(m.name)}
+                  ref={(instance) => {
+                    if (instance) missingMarkersRef.current.set(m.id, instance);
+                    else missingMarkersRef.current.delete(m.id);
+                  }}
                 >
                   <Popup maxWidth={260} minWidth={240}>
                     <div className="w-[240px] space-y-2">
