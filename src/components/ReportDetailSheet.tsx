@@ -104,45 +104,73 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
             </div>
           )}
 
-          {report && cat && (
+          {report && cat && (() => {
+            const heroImage = (() => {
+              const candidates = [
+                ...(report.media_thumbs ?? []),
+                ...(report.media_urls ?? []),
+                report.photo_url,
+              ].filter(Boolean) as string[];
+              return candidates.find((u) => !VIDEO_RE.test(u)) ?? null;
+            })();
+            return (
             <>
               {/* Header */}
               <div
-                className="p-5 pb-4 text-white relative"
+                className="relative text-white overflow-hidden"
                 style={{
                   background: `linear-gradient(135deg, ${cat.color} 0%, var(--midnight) 140%)`,
                 }}
               >
-                <div className="flex items-center gap-1.5 flex-wrap mb-3">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-white/20 backdrop-blur font-semibold">
-                    <span>{cat.emoji}</span> {cat.name}
-                  </span>
-                  <span
-                    className="text-[11px] px-2 py-1 rounded-full font-bold"
-                    style={{ background: URGENCY_LABELS[report.urgency].color, color: "white" }}
+                {heroImage && (
+                  <>
+                    <img
+                      src={heroImage}
+                      alt={report.title}
+                      className="absolute inset-0 w-full h-full object-cover opacity-70"
+                      loading="lazy"
+                    />
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background: `linear-gradient(180deg, ${cat.color}55 0%, rgba(13,43,69,0.85) 100%)`,
+                      }}
+                    />
+                  </>
+                )}
+                <div className={cn("relative p-5 pb-4", heroImage && "pt-32")}>
+                  <div className="flex items-center gap-1.5 flex-wrap mb-3">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-white/20 backdrop-blur font-semibold">
+                      <span>{cat.emoji}</span> {cat.name}
+                    </span>
+                    <span
+                      className="text-[11px] px-2 py-1 rounded-full font-bold"
+                      style={{ background: URGENCY_LABELS[report.urgency].color, color: "white" }}
+                    >
+                      {URGENCY_LABELS[report.urgency].label}
+                    </span>
+                    <span className="text-[11px] px-2 py-1 rounded-full bg-white/15 font-semibold">
+                      {STATUS_LABELS[report.status]}
+                    </span>
+                  </div>
+                  <h2 className="font-display text-2xl leading-tight pr-8 drop-shadow-sm">{report.title}</h2>
+                  <div className="text-[11px] text-white/85 mt-2 flex items-center gap-2 flex-wrap">
+                    <span>
+                      {formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: es })}
+                    </span>
+                    <span>·</span>
+                    <span>{format(new Date(report.created_at), "dd MMM yyyy HH:mm")}</span>
+                  </div>
+                  <button
+                    onClick={share}
+                    className="absolute top-4 right-12 p-2 rounded-full bg-white/15 hover:bg-white/25 transition"
+                    aria-label="Compartir"
                   >
-                    {URGENCY_LABELS[report.urgency].label}
-                  </span>
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-white/15 font-semibold">
-                    {STATUS_LABELS[report.status]}
-                  </span>
+                    <Share2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <h2 className="font-display text-2xl leading-tight pr-8">{report.title}</h2>
-                <div className="text-[11px] text-white/80 mt-2 flex items-center gap-2 flex-wrap">
-                  <span>
-                    {formatDistanceToNow(new Date(report.created_at), { addSuffix: true, locale: es })}
-                  </span>
-                  <span>·</span>
-                  <span>{format(new Date(report.created_at), "dd MMM yyyy HH:mm")}</span>
-                </div>
-                <button
-                  onClick={share}
-                  className="absolute top-4 right-12 p-2 rounded-full bg-white/15 hover:bg-white/25 transition"
-                  aria-label="Compartir"
-                >
-                  <Share2 className="h-4 w-4" />
-                </button>
               </div>
+
 
               <div className="p-5 space-y-5 flex-1">
                 {/* Rating */}
