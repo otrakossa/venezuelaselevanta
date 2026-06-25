@@ -7,6 +7,7 @@ import { Locate, Send, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import exifr from "exifr";
 import type { Report } from "@/lib/types";
+import { enqueueReport } from "@/lib/offline-queue";
 
 export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const [form, setForm] = useState({
@@ -53,12 +54,22 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     }
   };
 
+  const resetForm = () => {
+    setForm({
+      title: "", category: "medical", description: "", address: "",
+      urgency: "medium", reporter_name: "", affected_count: "", status: "active",
+    });
+    setCoords(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!coords) return toast.error("Selecciona una ubicación o usa 📍 Mi ubicación");
     if (!form.title.trim()) return toast.error("Ingresa un título");
     setSubmitting(true);
-    const { error } = await supabase.from("reports").insert({
+    const payload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
       category: form.category,
@@ -69,18 +80,32 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       lng: coords.lng,
       reporter_name: form.reporter_name.trim() || null,
       affected_count: form.affected_count ? Number(form.affected_count) : null,
-    });
+    };
+
+    const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+    if (isOffline) {
+      await enqueueReport(payload);
+      window.dispatchEvent(new Event("queue:changed"));
+      setSubmitting(false);
+      if (navigator.vibrate) navigator.vibrate(20);
+      toast.success("📥 Sin conexión: reporte guardado. Se enviará al volver la señal.");
+      resetForm();
+      return;
+    }
+
+    const { error } = await supabase.from("reports").insert(payload);
     setSubmitting(false);
-    if (error) return toast.error("Error: " + error.message);
+    if (error) {
+      // Network/transient failure → queue it instead of losing it
+      await enqueueReport(payload);
+      window.dispatchEvent(new Event("queue:changed"));
+      toast.warning("Conexión inestable. Reporte guardado para reintentar.");
+      resetForm();
+      return;
+    }
     if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
     toast.success("✅ Reporte enviado. Gracias por ayudar.");
-    setForm({
-      title: "", category: "medical", description: "", address: "",
-      urgency: "medium", reporter_name: "", affected_count: "", status: "active",
-    });
-    setCoords(null);
-    setPhotoPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    resetForm();
   };
 
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring";
