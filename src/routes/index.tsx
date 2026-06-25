@@ -247,7 +247,7 @@ function HomePage() {
             <div className="pointer-events-auto flex-1 overflow-x-auto no-scrollbar">
               <div className="flex gap-1.5 pr-2">
                 <button
-                  onClick={() => setActive([])}
+                  onClick={() => setSearch({ cat: [] })}
                   className={cn(
                     "shrink-0 text-[11px] px-2.5 py-1.5 rounded-full font-semibold border whitespace-nowrap",
                     active.length === 0
@@ -276,7 +276,7 @@ function HomePage() {
                 })}
                 <span className="shrink-0 w-px self-stretch bg-border/60 mx-0.5" aria-hidden />
                 <button
-                  onClick={() => setTrust((t) => (t === "verified" ? "all" : "verified"))}
+                  onClick={() => setSearch({ trust: trust === "verified" ? "all" : "verified" })}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
                     trust === "verified"
@@ -288,7 +288,7 @@ function HomePage() {
                   <BadgeCheck className="h-3 w-3" /> Verificados
                 </button>
                 <button
-                  onClick={() => setTrust((t) => (t === "trusted" ? "all" : "trusted"))}
+                  onClick={() => setSearch({ trust: trust === "trusted" ? "all" : "trusted" })}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
                     trust === "trusted"
@@ -360,7 +360,7 @@ function HomePage() {
                   <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
                     value={search2}
-                    onChange={(e) => setSearch2(e.target.value)}
+                    onChange={(e) => setSearch({ q: e.target.value })}
                     placeholder="Título, descripción o dirección..."
                     className="w-full pl-7 pr-2 py-1.5 rounded-md border border-input bg-background text-xs"
                   />
@@ -397,7 +397,7 @@ function HomePage() {
                   ] as const).map((t) => (
                     <button
                       key={t.k}
-                      onClick={() => setTimeWindow(t.k)}
+                      onClick={() => setSearch({ t: t.k })}
                       className={cn(
                         "text-[10px] px-2 py-1 rounded-full font-semibold border transition",
                         timeWindow === t.k
@@ -413,7 +413,7 @@ function HomePage() {
               {activeFilterCount > 0 && (
                 <button
                   onClick={() => {
-                    setActive([]); setUrgencies([]); setTrust("all"); setTimeWindow("all"); setSearch2("");
+                    setSearch({ cat: [], urg: [], trust: "all", t: "all", q: "" });
                   }}
                   className="w-full text-[11px] py-1.5 rounded-md bg-muted hover:bg-muted/70 font-semibold"
                 >
