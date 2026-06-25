@@ -153,6 +153,44 @@ function HomePage() {
     });
   }, [reports, active, urgencies, trust, timeWindow, search2]);
 
+  // Combined feed: reports + geolocated missing persons, sorted by date desc.
+  type FeedItem =
+    | { kind: "report"; data: typeof visible[number]; sortDate: number }
+    | { kind: "missing"; data: typeof missing[number]; sortDate: number };
+  const feed = useMemo<FeedItem[]>(() => {
+    const q = search2.trim().toLowerCase();
+    const cutoff =
+      timeWindow === "24h"
+        ? Date.now() - 24 * 3600 * 1000
+        : timeWindow === "7d"
+          ? Date.now() - 7 * 24 * 3600 * 1000
+          : 0;
+    const reportItems: FeedItem[] = visible.map((r) => ({
+      kind: "report",
+      data: r,
+      sortDate: new Date(r.created_at).getTime(),
+    }));
+    const missingItems: FeedItem[] = showMissing
+      ? missing
+          .filter((m) => m.last_seen_lat != null && m.last_seen_lng != null)
+          .filter((m) => {
+            const t = new Date(m.report_date ?? m.created_at).getTime();
+            if (cutoff && t < cutoff) return false;
+            if (q) {
+              const hay = `${m.name} ${m.last_seen_location ?? ""} ${m.description ?? ""}`.toLowerCase();
+              if (!hay.includes(q)) return false;
+            }
+            return true;
+          })
+          .map((m) => ({
+            kind: "missing",
+            data: m,
+            sortDate: new Date(m.report_date ?? m.created_at).getTime(),
+          }))
+      : [];
+    return [...reportItems, ...missingItems].sort((a, b) => b.sortDate - a.sortDate);
+  }, [visible, missing, showMissing, timeWindow, search2]);
+
   const activeFilterCount =
     (active.length > 0 ? 1 : 0) +
     (urgencies.length > 0 ? 1 : 0) +
@@ -460,7 +498,7 @@ function HomePage() {
             className="lg:hidden absolute left-1/2 -translate-x-1/2 bottom-3 z-[450] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/95 border border-border shadow-md text-[11px] font-semibold"
           >
             {sheetOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-            {sheetOpen ? "Ocultar lista" : `${visible.length} reportes`}
+            {sheetOpen ? "Ocultar lista" : `${feed.length} registros`}
           </button>
         </div>
 
@@ -496,7 +534,7 @@ function HomePage() {
             <div>
               <h2 className="font-bold text-sm">Reportes recientes</h2>
               <p className="text-[11px] text-muted-foreground">
-                {loading ? "Cargando..." : `${visible.length} incidentes`}
+                {loading ? "Cargando..." : `${feed.length} registros`}
               </p>
             </div>
             <button
@@ -507,73 +545,144 @@ function HomePage() {
               <X className="h-4 w-4" />
             </button>
           </div>
-          {loading && visible.length === 0 ? (
+          {loading && feed.length === 0 ? (
             <ReportListSkeleton count={6} />
           ) : (
             <ul className="divide-y divide-border">
-              {visible.slice(0, 30).map((r) => {
-                const cat = CATEGORY_MAP[r.category];
-                const cred = getCredibility(r);
+              {feed.slice(0, 30).map((item) => {
+                if (item.kind === "report") {
+                  const r = item.data;
+                  const cat = CATEGORY_MAP[r.category];
+                  const cred = getCredibility(r);
+                  return (
+                    <li key={`r-${r.id}`} className="relative flex items-stretch">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                          setSheetOpen(false);
+                        }}
+                        className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
+                            style={{ background: cat?.color, color: "white" }}
+                          >
+                            {cat?.emoji}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-sm truncate">{r.title}</span>
+                              <span
+                                className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
+                                style={{ background: cred.bg, color: cred.fg }}
+                                title={cred.label}
+                              >
+                                {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
+                                {cred.short}
+                              </span>
+                            </div>
+                            {r.address && (
+                              <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
+                            )}
+                            <div className="flex items-center gap-1 mt-1 flex-wrap">
+                              <span
+                                className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
+                                style={{ background: URGENCY_LABELS[r.urgency].color }}
+                              >
+                                {URGENCY_LABELS[r.urgency].label}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                      <div className="flex items-center pr-3">
+                        <WhatsAppShareButton report={r} variant="icon" />
+                      </div>
+                    </li>
+                  );
+                }
+                // Missing person row
+                const m = item.data;
+                const statusColors: Record<string, string> = {
+                  missing: "#E11D48",
+                  reunited: "#10B981",
+                  found: "#1A8FE3",
+                };
+                const statusLabels: Record<string, string> = {
+                  missing: "Sin encontrar",
+                  reunited: "Reunido",
+                  found: "Encontrado",
+                };
+                const dateStr = format(new Date(m.report_date ?? m.created_at), "dd MMM HH:mm");
                 return (
-                  <li key={r.id} className="relative flex items-stretch">
+                  <li key={`m-${m.id}`} className="relative flex items-stretch">
                     <button
                       type="button"
                       onClick={() => {
-                        setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                        setShowMissing(true);
+                        setFocusMissing({
+                          id: m.id,
+                          lat: m.last_seen_lat as number,
+                          lng: m.last_seen_lng as number,
+                          nonce: Date.now(),
+                        });
                         setSheetOpen(false);
                       }}
                       className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
                     >
                       <div className="flex items-start gap-2.5">
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
-                          style={{ background: cat?.color, color: "white" }}
-                        >
-                          {cat?.emoji}
-                        </div>
+                        {m.photo_url ? (
+                          <img
+                            src={m.photo_url}
+                            alt={m.name}
+                            className="w-9 h-9 rounded-full object-cover shrink-0 shadow-sm ring-2 ring-rose-500"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm bg-rose-500 text-white">
+                            <Users className="h-4 w-4" />
+                          </div>
+                        )}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-semibold text-sm truncate">{r.title}</span>
-                            <span
-                              className="text-[9px] px-1.5 py-0.5 rounded font-semibold inline-flex items-center gap-0.5"
-                              style={{ background: cred.bg, color: cred.fg }}
-                              title={cred.label}
-                            >
-                              {cred.level === "verified" && <BadgeCheck className="h-2.5 w-2.5" />}
-                              {cred.short}
+                            <span className="font-semibold text-sm truncate">{m.name}</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded font-semibold bg-rose-100 text-rose-700">
+                              Desaparecido
                             </span>
                           </div>
-                          {r.address && (
-                            <div className="text-[11px] text-muted-foreground truncate">📍 {r.address}</div>
+                          {m.last_seen_location && (
+                            <div className="text-[11px] text-muted-foreground truncate">📍 {m.last_seen_location}</div>
                           )}
                           <div className="flex items-center gap-1 mt-1 flex-wrap">
                             <span
                               className="text-[9px] px-1.5 py-0.5 rounded text-white font-semibold"
-                              style={{ background: URGENCY_LABELS[r.urgency].color }}
+                              style={{ background: statusColors[m.status] ?? "#E11D48" }}
                             >
-                              {URGENCY_LABELS[r.urgency].label}
+                              {statusLabels[m.status] ?? m.status}
                             </span>
                             <span className="text-[10px] text-muted-foreground">
-                              {STATUS_LABELS[r.status]} · {format(new Date(r.created_at), "dd MMM HH:mm")}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              · 👍 {r.confirm_count ?? 0} · 👎 {r.dispute_count ?? 0}
+                              {dateStr}
+                              {m.age != null ? ` · ${m.age} años` : ""}
                             </span>
                           </div>
                         </div>
                       </div>
                     </button>
-                    <div className="flex items-center pr-3">
-                      <WhatsAppShareButton report={r} variant="icon" />
-                    </div>
                   </li>
                 );
               })}
-              {visible.length === 0 && !loading && (
+              {feed.length === 0 && !loading && (
                 <li className="p-4">
                   <EmptyState
                     emoji="🔎"
-                    title="Sin reportes que coincidan"
+                    title="Sin registros que coincidan"
                     description={
                       activeFilterCount > 0
                         ? "Prueba quitar algún filtro o limpia la búsqueda."
