@@ -39,21 +39,21 @@ export const Route = createFileRoute("/api/reports.csv")({
         }
 
         const headers = [
-          "id", "titulo", "descripcion", "categoria", "urgencia", "estado",
-          "latitud", "longitud", "direccion", "reportero", "personas_afectadas",
-          "verificado", "fecha_creacion",
+          "id", "titulo", "descripcion", "categoria", "urgencia", "estado_reporte",
+          "latitud", "longitud", "direccion", "estado", "municipio", "parroquia",
+          "reportero", "personas_afectadas", "verificado", "fecha_creacion",
         ];
         const hxl = [
           "#id", "#report+title", "#description", "#report+type", "#severity", "#status",
-          "#geo+lat", "#geo+lon", "#loc+name", "#contact+name", "#affected+num",
-          "#verified", "#date+created",
+          "#geo+lat", "#geo+lon", "#loc+name", "#adm1+name", "#adm2+name", "#adm3+name",
+          "#contact+name", "#affected+num", "#verified", "#date+created",
         ];
 
         const rows = data.map((r) =>
           [
             r.id, r.title, r.description, r.category, r.urgency, r.status,
-            r.lat, r.lng, r.address, r.reporter_name, r.affected_count,
-            r.verified, r.created_at,
+            r.lat, r.lng, r.address, r.state, r.municipality, r.parish,
+            r.reporter_name, r.affected_count, r.verified, r.created_at,
           ].map(csvCell).join(","),
         );
 
