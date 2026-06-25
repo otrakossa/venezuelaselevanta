@@ -153,6 +153,44 @@ function HomePage() {
     });
   }, [reports, active, urgencies, trust, timeWindow, search2]);
 
+  // Combined feed: reports + geolocated missing persons, sorted by date desc.
+  type FeedItem =
+    | { kind: "report"; data: typeof visible[number]; sortDate: number }
+    | { kind: "missing"; data: typeof missing[number]; sortDate: number };
+  const feed = useMemo<FeedItem[]>(() => {
+    const q = search2.trim().toLowerCase();
+    const cutoff =
+      timeWindow === "24h"
+        ? Date.now() - 24 * 3600 * 1000
+        : timeWindow === "7d"
+          ? Date.now() - 7 * 24 * 3600 * 1000
+          : 0;
+    const reportItems: FeedItem[] = visible.map((r) => ({
+      kind: "report",
+      data: r,
+      sortDate: new Date(r.created_at).getTime(),
+    }));
+    const missingItems: FeedItem[] = showMissing
+      ? missing
+          .filter((m) => m.last_seen_lat != null && m.last_seen_lng != null)
+          .filter((m) => {
+            const t = new Date(m.report_date ?? m.created_at).getTime();
+            if (cutoff && t < cutoff) return false;
+            if (q) {
+              const hay = `${m.name} ${m.last_seen_location ?? ""} ${m.description ?? ""}`.toLowerCase();
+              if (!hay.includes(q)) return false;
+            }
+            return true;
+          })
+          .map((m) => ({
+            kind: "missing",
+            data: m,
+            sortDate: new Date(m.report_date ?? m.created_at).getTime(),
+          }))
+      : [];
+    return [...reportItems, ...missingItems].sort((a, b) => b.sortDate - a.sortDate);
+  }, [visible, missing, showMissing, timeWindow, search2]);
+
   const activeFilterCount =
     (active.length > 0 ? 1 : 0) +
     (urgencies.length > 0 ? 1 : 0) +
