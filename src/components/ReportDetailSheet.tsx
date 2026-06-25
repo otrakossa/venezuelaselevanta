@@ -331,32 +331,45 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
                       Sé el primero en agregar información sobre este reporte.
                     </p>
                   ) : (
-                    <ul className="space-y-3">
-                      {comments.map((c) => {
-                        const name = c.author_name?.trim() || "Anónimo";
-                        const initial = name.charAt(0).toUpperCase();
-                        return (
-                          <li key={c.id} className="flex gap-2.5">
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
-                              style={{ background: "var(--midnight)" }}
-                            >
-                              {initial}
-                            </div>
-                            <div className="flex-1 min-w-0 rounded-lg bg-card border border-border p-2.5">
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-xs font-bold truncate">{name}</span>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: es })}
-                                </span>
+                    <>
+                      {hasMore && (
+                        <button
+                          type="button"
+                          onClick={loadMore}
+                          disabled={loadingMore}
+                          className="w-full text-xs text-[color:var(--sunrise)] font-semibold py-1 hover:underline disabled:opacity-50"
+                        >
+                          {loadingMore ? "Cargando…" : "Ver comentarios anteriores"}
+                        </button>
+                      )}
+                      <ul className="space-y-3">
+                        {comments.map((c) => {
+                          const name = c.author_name?.trim() || "Anónimo";
+                          const initial = name.charAt(0).toUpperCase();
+                          return (
+                            <li key={c.id} className="flex gap-2.5">
+                              <div
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+                                style={{ background: "var(--midnight)" }}
+                              >
+                                {initial}
                               </div>
-                              <p className="text-sm mt-0.5 whitespace-pre-wrap break-words">{c.content}</p>
-                            </div>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                              <div className="flex-1 min-w-0 rounded-lg bg-card border border-border p-2.5">
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-xs font-bold truncate">{name}</span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: es })}
+                                  </span>
+                                </div>
+                                <p className="text-sm mt-0.5 whitespace-pre-wrap break-words">{sanitizeText(c.content)}</p>
+                              </div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </>
                   )}
+
 
                   <div className="space-y-2 pt-1">
                     <input
