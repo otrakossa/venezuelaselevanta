@@ -53,7 +53,10 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       .then((addr) => {
         if (ctrl.signal.aborted) return;
         if (addr) {
-          setForm((f) => ({ ...f, address: addr }));
+          setForm((f) => {
+            const detected = !f.state ? detectStateFromAddress(addr) : null;
+            return { ...f, address: addr, state: detected ?? f.state };
+          });
         } else {
           toast.info("No se detectó la dirección. Puedes escribirla manualmente.", { duration: 3000 });
         }
