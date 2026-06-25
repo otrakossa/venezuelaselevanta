@@ -67,8 +67,10 @@ export function MapView({
   height = "100%",
   focusReport,
   onOpenDetail,
+  showQuakes = true,
 }: MapViewProps) {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const { data: quakes = [] } = useUSGSQuakes(showQuakes);
   const filtered = useMemo(
     () =>
       activeCategories && activeCategories.length > 0
