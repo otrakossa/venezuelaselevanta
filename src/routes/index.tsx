@@ -6,7 +6,7 @@ import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/c
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
 import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity } from "lucide-react";
-import heroImage from "@/assets/hero-amanecer.jpg";
+import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
 import { ReportDetailSheet } from "@/components/ReportDetailSheet";
