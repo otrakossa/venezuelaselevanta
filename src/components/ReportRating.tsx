@@ -92,6 +92,7 @@ export function ReportRating({ report, variant = "compact", showBadge = true }: 
       setDelta((d) => ({ confirm: d.confirm - cDelta, dispute: d.dispute - dDelta }));
       toast.error("No se pudo registrar tu valoración");
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   };
