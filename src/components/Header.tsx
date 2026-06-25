@@ -42,10 +42,10 @@ export function Header() {
             </div>
             <div className="min-w-0">
               <div className="font-bold text-base sm:text-lg leading-tight truncate">
-                Venezuela<span className="text-vzla-red">SOS</span>
+                Venezuela <span className="text-vzla-red">Se Levanta</span>
               </div>
               <div className="text-[10px] text-header-foreground/60 leading-tight hidden sm:block">
-                Mapa Colaborativo de Crisis
+                venezuelaselevanta.info
               </div>
             </div>
           </Link>

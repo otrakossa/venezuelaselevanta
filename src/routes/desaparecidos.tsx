@@ -9,7 +9,7 @@ export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Personas desaparecidas — VenezuelaSOS" },
+      { title: "Personas desaparecidas — Venezuela Se Levanta" },
       { name: "description", content: "Reporta y busca personas desaparecidas tras el terremoto en Venezuela." },
     ],
   }),

@@ -9,7 +9,7 @@ import { format } from "date-fns";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Admin — VenezuelaSOS" }] }),
+  head: () => ({ meta: [{ title: "Admin — Venezuela Se Levanta" }] }),
   component: AdminPage,
 });
 

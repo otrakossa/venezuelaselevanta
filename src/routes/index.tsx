@@ -12,10 +12,10 @@ export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "VenezuelaSOS — Mapa Colaborativo de Crisis" },
+      { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
       { name: "description", content: "Plataforma ciudadana de respuesta al terremoto de Venezuela. Reporta y consulta incidentes en tiempo real." },
-      { property: "og:title", content: "VenezuelaSOS — Mapa Colaborativo de Crisis" },
-      { property: "og:description", content: "Mapa colaborativo de respuesta al terremoto en Venezuela." },
+      { property: "og:title", content: "Venezuela Se Levanta — venezuelaselevanta.info" },
+      { property: "og:description", content: "Venezuela Se Levanta: mapa colaborativo de respuesta al terremoto. venezuelaselevanta.info" },
     ],
   }),
   component: HomePage,
