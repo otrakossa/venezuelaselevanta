@@ -10,13 +10,13 @@ import type { Report } from "@/lib/types";
 export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const [form, setForm] = useState({
     title: "",
-    category: "heridos",
+    category: "medical",
     description: "",
-    location_text: "",
-    urgency: "medio",
+    address: "",
+    urgency: "medium",
     reporter_name: "",
     affected_count: "",
-    status: "activo",
+    status: "active",
   });
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -43,7 +43,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       category: form.category,
       urgency: form.urgency,
       status: form.status,
-      location_text: form.location_text.trim() || null,
+      address: form.address.trim() || null,
       lat: coords.lat,
       lng: coords.lng,
       reporter_name: form.reporter_name.trim() || null,
@@ -53,8 +53,8 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     if (error) return toast.error("Error: " + error.message);
     toast.success("Reporte enviado. Gracias por ayudar.");
     setForm({
-      title: "", category: "heridos", description: "", location_text: "",
-      urgency: "medio", reporter_name: "", affected_count: "", status: "activo",
+      title: "", category: "medical", description: "", address: "",
+      urgency: "medium", reporter_name: "", affected_count: "", status: "active",
     });
     setCoords(null);
   };
@@ -79,10 +79,10 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           <div>
             <label className={label}>Urgencia *</label>
             <select className={field} value={form.urgency} onChange={(e) => setForm({ ...form, urgency: e.target.value })}>
-              <option value="critico">🔴 Crítico</option>
-              <option value="alto">🟠 Alto</option>
-              <option value="medio">🟡 Medio</option>
-              <option value="bajo">🟢 Bajo</option>
+              <option value="critical">🔴 Crítico</option>
+              <option value="high">🟠 Alto</option>
+              <option value="medium">🟡 Medio</option>
+              <option value="low">🟢 Bajo</option>
             </select>
           </div>
         </div>
@@ -92,7 +92,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
         </div>
         <div>
           <label className={label}>Dirección (texto)</label>
-          <input className={field} value={form.location_text} onChange={(e) => setForm({ ...form, location_text: e.target.value })} placeholder="Ej: Av. Bolívar, Caracas" maxLength={200} />
+          <input className={field} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Ej: Av. Bolívar, Caracas" maxLength={200} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -107,9 +107,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
         <div>
           <label className={label}>Estado</label>
           <select className={field} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-            <option value="activo">Activo</option>
-            <option value="en_atencion">En atención</option>
-            <option value="resuelto">Resuelto</option>
+            <option value="active">Activo</option>
+            <option value="attending">En atención</option>
+            <option value="resolved">Resuelto</option>
           </select>
         </div>
 

@@ -31,7 +31,7 @@ export function Header() {
     localStorage.setItem("vsos-dark", next ? "1" : "0");
   };
 
-  const activeCount = reports.filter((r) => r.status === "activo").length;
+  const activeCount = reports.filter((r) => r.status === "active").length;
 
   return (
     <header className="bg-header text-header-foreground border-b-4 border-vzla-red sticky top-0 z-[1000]">

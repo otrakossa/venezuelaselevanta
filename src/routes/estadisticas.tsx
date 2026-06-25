@@ -21,10 +21,10 @@ function StatsPage() {
   const { missing } = useMissing();
 
   const stats = useMemo(() => {
-    const active = reports.filter((r) => r.status === "activo").length;
-    const help = reports.filter((r) => r.category === "ayuda" || r.category === "medico").length;
-    const rescue = reports.filter((r) => r.category === "atrapados").length;
-    const missingActive = missing.filter((m) => m.status === "desaparecido").length;
+    const active = reports.filter((r) => r.status === "active").length;
+    const help = reports.filter((r) => r.category === "shelter" || r.category === "hospital").length;
+    const rescue = reports.filter((r) => r.category === "rescue").length;
+    const missingActive = missing.filter((m) => m.status === "missing").length;
 
     const byCategory = CATEGORIES.map((c) => ({
       name: c.name.split(" ")[0],
@@ -33,10 +33,10 @@ function StatsPage() {
       color: c.color,
     }));
 
-    const byStatus = (["activo", "en_atencion", "resuelto"] as const).map((s) => ({
+    const byStatus = (["active", "attending", "resolved"] as const).map((s) => ({
       name: STATUS_LABELS[s],
       value: reports.filter((r) => r.status === s).length,
-      color: s === "activo" ? "#CF142B" : s === "en_atencion" ? "#EAB308" : "#16A34A",
+      color: s === "active" ? "#CF142B" : s === "attending" ? "#EAB308" : "#16A34A",
     }));
 
     return { active, help, rescue, missingActive, byCategory, byStatus };
@@ -95,7 +95,7 @@ function StatsPage() {
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium truncate">{r.title}</div>
-                  <div className="text-[10px] text-muted-foreground truncate">{r.location_text}</div>
+                  <div className="text-[10px] text-muted-foreground truncate">{r.address}</div>
                 </div>
                 <span className="text-[10px] text-muted-foreground shrink-0">{STATUS_LABELS[r.status]}</span>
               </div>
