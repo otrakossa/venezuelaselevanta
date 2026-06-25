@@ -43,6 +43,8 @@ export function OfflineBanner() {
   };
 
   useEffect(() => {
+    setMounted(true);
+    setOnline(typeof navigator === "undefined" ? true : navigator.onLine);
     refresh();
     // Attempt sync on mount in case items were left over from a previous session.
     void trySync();
