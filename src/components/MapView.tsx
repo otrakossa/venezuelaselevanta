@@ -270,6 +270,10 @@ export function MapView({
                   key={`missing-${m.id}`}
                   position={[m.last_seen_lat as number, m.last_seen_lng as number]}
                   icon={createMissingIcon(m.name)}
+                  ref={(instance) => {
+                    if (instance) missingMarkersRef.current.set(m.id, instance);
+                    else missingMarkersRef.current.delete(m.id);
+                  }}
                 >
                   <Popup maxWidth={260} minWidth={240}>
                     <div className="w-[240px] space-y-2">
