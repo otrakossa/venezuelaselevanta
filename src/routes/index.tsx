@@ -99,8 +99,10 @@ function HomePage() {
   const [focusMissing, setFocusMissing] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
-  const openDetail = (id: string) => navigate({ search: (prev) => ({ ...prev, report: id }), replace: false });
-  const closeDetail = () => navigate({ search: (prev) => ({ ...prev, report: undefined }), replace: false });
+  const openDetail = (id: string) =>
+    navigate({ search: ((prev: SearchShape) => ({ ...prev, report: id })) as never, replace: false });
+  const closeDetail = () =>
+    navigate({ search: ((prev: SearchShape) => ({ ...prev, report: undefined })) as never, replace: false });
 
   // Sync ?missing=<id> -> focus rose marker + ensure layer visible
   useEffect(() => {
@@ -109,7 +111,7 @@ function HomePage() {
     if (m && m.last_seen_lat != null && m.last_seen_lng != null) {
       setShowMissing(true);
       setFocusMissing({ id: m.id, lat: m.last_seen_lat, lng: m.last_seen_lng, nonce: Date.now() });
-      navigate({ search: (prev) => ({ ...prev, missing: undefined }), replace: true });
+      navigate({ search: ((prev: SearchShape) => ({ ...prev, missing: undefined })) as never, replace: true });
     }
   }, [search.missing, missing, navigate]);
 
