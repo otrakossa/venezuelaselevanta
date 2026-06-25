@@ -32,14 +32,37 @@ export interface MapViewProps {
   selectedId?: string | null;
 }
 
+function FocusController({
+  target,
+  markersRef,
+}: {
+  target: { id: string; lat: number; lng: number; nonce: number } | null;
+  markersRef: React.MutableRefObject<Map<string, L.Marker>>;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!target) return;
+    const targetZoom = Math.max(map.getZoom(), 13);
+    map.flyTo([target.lat, target.lng], targetZoom, { duration: 0.8 });
+    // Wait for the cluster group to settle so the marker exists at this zoom.
+    const t = window.setTimeout(() => {
+      const m = markersRef.current.get(target.id);
+      if (m) m.openPopup();
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [target, map, markersRef]);
+  return null;
+}
+
 export function MapView({
   reports,
   activeCategories,
   onMapClick,
   pickedLocation,
   height = "100%",
-  selectedId,
+  focusReport,
 }: MapViewProps) {
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const filtered = useMemo(
     () =>
       activeCategories && activeCategories.length > 0
