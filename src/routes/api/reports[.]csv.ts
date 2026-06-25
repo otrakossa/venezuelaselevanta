@@ -1,0 +1,104 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+function csvCell(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const s = String(value).replace(/"/g, '""');
+  return `"${s}"`;
+}
+
+export const Route = createFileRoute("/api/reports.csv")({
+  server: {
+    handlers: {
+      OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
+      GET: async () => {
+        const url = process.env.SUPABASE_URL!;
+        const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+        const supabase = createClient<Database>(url, key, {
+          auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+        });
+        const { data, error } = await supabase
+          .from("reports")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          return new Response(`error,${error.message}`, {
+            status: 500,
+            headers: { "Content-Type": "text/csv; charset=utf-8", ...CORS },
+          });
+        }
+
+        const headers = [
+          "id",
+          "titulo",
+          "descripcion",
+          "categoria",
+          "urgencia",
+          "estado",
+          "latitud",
+          "longitud",
+          "direccion",
+          "reportero",
+          "personas_afectadas",
+          "verificado",
+          "fecha_creacion",
+        ];
+        const hxl = [
+          "#id",
+          "#report+title",
+          "#description",
+          "#report+type",
+          "#severity",
+          "#status",
+          "#geo+lat",
+          "#geo+lon",
+          "#loc+name",
+          "#contact+name",
+          "#affected+num",
+          "#verified",
+          "#date+created",
+        ];
+
+        const rows = (data ?? []).map((r) =>
+          [
+            r.id,
+            r.title,
+            r.description,
+            r.category,
+            r.urgency,
+            r.status,
+            r.lat,
+            r.lng,
+            r.address,
+            r.reporter_name,
+            r.affected_count,
+            r.verified,
+            r.created_at,
+          ]
+            .map(csvCell)
+            .join(","),
+        );
+
+        const csv = [headers.join(","), hxl.join(","), ...rows].join("\n");
+
+        return new Response(csv, {
+          status: 200,
+          headers: {
+            "Content-Type": "text/csv; charset=utf-8",
+            "Content-Disposition": 'attachment; filename="venezuelaselevanta-reportes.csv"',
+            "Cache-Control": "public, max-age=300",
+            ...CORS,
+          },
+        });
+      },
+    },
+  },
+});
