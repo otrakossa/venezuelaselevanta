@@ -64,7 +64,7 @@ export function MapView({
         {pickedLocation ? (
           <Marker
             position={[pickedLocation.lat, pickedLocation.lng]}
-            icon={createIcon("#CF142B", "📍", true)}
+            icon={createIcon("#FF6B35", "📍", true)}
           />
         ) : null}
 
