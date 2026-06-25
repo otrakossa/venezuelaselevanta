@@ -5,11 +5,12 @@ import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity } from "lucide-react";
 import heroImage from "@/assets/hero-amanecer.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
 import { ReportDetailSheet } from "@/components/ReportDetailSheet";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 
 export const Route = createFileRoute("/")({
   ssr: false,
