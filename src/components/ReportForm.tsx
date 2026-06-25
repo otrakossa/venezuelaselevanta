@@ -125,6 +125,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const resetForm = () => {
     setForm({
       title: "", category: "medical", description: "", address: "",
+      state: "", municipality: "", parish: "",
       urgency: "medium", reporter_name: "", affected_count: "", status: "active",
     });
     setCoords(null);
@@ -162,6 +163,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       urgency: form.urgency,
       status: form.status,
       address: form.address.trim() || null,
+      state: form.state || null,
+      municipality: form.municipality || null,
+      parish: form.parish.trim() || null,
       lat: coords.lat,
       lng: coords.lng,
       reporter_name: form.reporter_name.trim() || null,
