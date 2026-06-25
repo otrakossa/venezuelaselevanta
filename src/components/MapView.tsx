@@ -9,6 +9,7 @@ import { getCredibility } from "@/lib/credibility";
 import { useUSGSQuakes, quakeColor } from "@/hooks/useUSGSQuakes";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Link } from "@tanstack/react-router";
+import { isValidCoords } from "@/lib/geo";
 
 const VZLA_CENTER: [number, number] = [9.5, -66.5];
 
