@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Heart, ExternalLink, Mail, Send, ArrowLeft, Users, Building2, Code2, HandHeart } from "lucide-react";
-import { team, collaborators, organizations, tech, CONTACT_EMAIL, TELEGRAM_BOT, type Person, type Organization } from "@/lib/credits";
+import { Heart, ExternalLink, Send, ArrowLeft, Users, Building2, Code2, HandHeart, MessageSquare } from "lucide-react";
+import { team, collaborators, organizations, tech, TELEGRAM_BOT, type Person, type Organization } from "@/lib/credits";
+import { ContactForm } from "@/components/ContactForm";
 import heroImage from "@/assets/hero-rescate.jpg";
 
 export const Route = createFileRoute("/creditos")({
@@ -64,10 +65,10 @@ function CreditsPage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href="#contacto"
               className="inline-flex items-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold rounded-full px-4 py-2 text-sm hover:opacity-90 transition-opacity"
             >
-              <Mail className="h-4 w-4" /> Quiero colaborar
+              <MessageSquare className="h-4 w-4" /> Quiero colaborar
             </a>
             <a
               href={TELEGRAM_BOT}
@@ -169,13 +170,24 @@ function CreditsPage() {
           </ul>
           <div className="mt-6">
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href="#contacto"
               className="inline-flex items-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold rounded-full px-5 py-2.5 text-sm hover:opacity-90 transition-opacity shadow-md"
             >
-              <Mail className="h-4 w-4" /> {CONTACT_EMAIL}
+              <MessageSquare className="h-4 w-4" /> Escríbenos
             </a>
           </div>
         </section>
+
+        {/* Formulario de contacto */}
+        <Section
+          icon={<MessageSquare className="h-5 w-5 text-[color:var(--sunrise)]" />}
+          title="Contacto"
+          subtitle="Envíanos un mensaje y te responderemos pronto."
+        >
+          <div id="contacto" className="scroll-mt-20">
+            <ContactForm />
+          </div>
+        </Section>
 
         <p className="text-center text-xs text-muted-foreground pb-4">
           Hecho con <Heart className="inline h-3 w-3 text-[color:var(--sunrise)]" /> en Venezuela ·{" "}
@@ -256,20 +268,39 @@ function PersonCard({ person, large }: { person: Person; large?: boolean }) {
 }
 
 function OrgCard({ org }: { org: Organization }) {
+  const initials = org.name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
   const content = (
-    <div className="rounded-xl border border-border bg-card p-4 h-full flex flex-col gap-2 hover:border-[color:var(--sunrise)]/50 hover:shadow-md transition-all">
+    <div className="rounded-xl border border-border bg-card p-4 h-full flex flex-col gap-3 hover:border-[color:var(--sunrise)]/50 hover:shadow-lg transition-all group">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-[color:var(--gold)]/20 text-[color:var(--midnight)] flex items-center justify-center font-display text-sm shrink-0">
+        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[color:var(--gold)]/30 to-[color:var(--sunrise)]/20 text-[color:var(--midnight)] flex items-center justify-center font-display text-sm shrink-0 overflow-hidden ring-1 ring-border group-hover:scale-105 transition-transform">
           {org.logo ? (
-            <img src={org.logo} alt={org.name} className="h-full w-full object-contain p-1" />
+            <img
+              src={org.logo}
+              alt={org.name}
+              className="h-full w-full object-contain p-1.5 bg-white"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none";
+              }}
+            />
           ) : (
-            org.name.slice(0, 2).toUpperCase()
+            initials
           )}
         </div>
-        <div className="font-semibold text-sm flex-1 min-w-0 truncate">{org.name}</div>
-        {org.url && <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />}
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-sm truncate">{org.name}</div>
+          {org.url && (
+            <div className="text-[11px] text-[color:var(--sky)] inline-flex items-center gap-0.5 truncate">
+              Visitar <ExternalLink className="h-2.5 w-2.5" />
+            </div>
+          )}
+        </div>
       </div>
-      {org.description && <p className="text-xs text-muted-foreground">{org.description}</p>}
+      {org.description && <p className="text-xs text-muted-foreground leading-relaxed">{org.description}</p>}
     </div>
   );
   return org.url ? (
