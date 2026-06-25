@@ -5,6 +5,8 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import { CATEGORY_MAP, CATEGORIES, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import type { Report } from "@/lib/types";
 import { format } from "date-fns";
+import { ReportRating } from "@/components/ReportRating";
+import { getCredibility } from "@/lib/credibility";
 
 const VZLA_CENTER: [number, number] = [9.5, -66.5];
 
@@ -191,11 +193,20 @@ export function MapView({
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-neutral-200 text-neutral-700">
                         {STATUS_LABELS[r.status]}
                       </span>
-                      {r.verified ? (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500 text-white">
-                          ✓ Verificado
-                        </span>
-                      ) : null}
+                      {(() => {
+                        const c = getCredibility(r);
+                        return (
+                          <span
+                            className="text-[10px] px-1.5 py-0.5 rounded font-semibold"
+                            style={{ background: c.bg, color: c.fg }}
+                          >
+                            {c.short}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                    <div className="pt-1">
+                      <ReportRating report={r} variant="compact" showBadge={false} />
                     </div>
                     {r.affected_count ? (
                       <div className="text-[11px] text-neutral-600 pt-1">
