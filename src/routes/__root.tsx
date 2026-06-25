@@ -16,6 +16,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { Footer } from "@/components/Footer";
+import { DeadQueueBanner } from "@/components/DeadQueueBanner";
 
 
 function NotFoundComponent() {
@@ -113,6 +114,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background flex flex-col">
         <Header />
+        <DeadQueueBanner />
         <OfflineBanner />
         <main className="flex-1">
           <Outlet />
