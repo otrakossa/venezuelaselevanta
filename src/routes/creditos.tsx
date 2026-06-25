@@ -65,10 +65,10 @@ function CreditsPage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href="#contacto"
               className="inline-flex items-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold rounded-full px-4 py-2 text-sm hover:opacity-90 transition-opacity"
             >
-              <Mail className="h-4 w-4" /> Quiero colaborar
+              <MessageSquare className="h-4 w-4" /> Quiero colaborar
             </a>
             <a
               href={TELEGRAM_BOT}
