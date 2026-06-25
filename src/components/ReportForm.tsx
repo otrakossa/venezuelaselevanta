@@ -10,6 +10,8 @@ import type { Report } from "@/lib/types";
 import { enqueueReport } from "@/lib/offline-queue";
 import { uploadMany } from "@/lib/media-upload";
 import { reverseGeocode } from "@/lib/geocode";
+import { LocationSelect } from "./LocationSelect";
+import { detectStateFromAddress } from "@/lib/venezuela-divipol";
 
 const MAX_FILES = 4;
 const MAX_SIZE_MB = 10;
@@ -22,6 +24,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     category: "medical",
     description: "",
     address: "",
+    state: "",
+    municipality: "",
+    parish: "",
     urgency: "medium",
     reporter_name: "",
     affected_count: "",
