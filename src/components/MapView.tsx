@@ -5,7 +5,6 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import { CATEGORY_MAP, CATEGORIES, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import type { Report } from "@/lib/types";
 import { format } from "date-fns";
-import { ReportRating } from "@/components/ReportRating";
 import { getCredibility } from "@/lib/credibility";
 
 const VZLA_CENTER: [number, number] = [9.5, -66.5];
