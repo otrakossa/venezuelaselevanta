@@ -170,7 +170,6 @@ function ReportDetailPage() {
         <div className="flex gap-2 pt-1">
           <Link
             to="/"
-            search={{ focus: report.id } as never}
             className="text-xs px-3 py-1.5 rounded-md bg-[color:var(--sky)] text-white font-semibold"
           >
             Ver en el mapa
