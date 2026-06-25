@@ -34,12 +34,15 @@ export function Header() {
   const activeCount = reports.filter((r) => r.status === "active").length;
 
   return (
-    <header className="bg-header text-header-foreground border-b-4 border-vzla-red sticky top-0 z-[1000]">
+    <header
+      className="bg-header text-header-foreground sticky top-0 z-[1000] border-b border-white/5"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between gap-2 h-14">
           <Link to="/" className="flex items-center gap-2 min-w-0">
-            <span className="animate-heartbeat">
-              <Logo size={34} withWordmark={false} variant="light" />
+            <span className="animate-heartbeat shrink-0">
+              <Logo size={30} withWordmark={false} variant="light" />
             </span>
             <div className="min-w-0 flex flex-col leading-tight">
               <span className="font-display text-base sm:text-lg tracking-tight truncate">
@@ -51,13 +54,13 @@ export function Header() {
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-1.5 bg-vzla-red/20 border border-vzla-red/40 rounded-full px-3 py-1">
+          <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-1.5 bg-[color:var(--sunrise)]/15 border border-[color:var(--sunrise)]/40 rounded-full px-2.5 py-1">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-vzla-red opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-vzla-red"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--sunrise)] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--sunrise)]" />
               </span>
-              <span className="text-xs font-semibold">{activeCount} activos</span>
+              <span className="text-[11px] font-semibold">{activeCount}</span>
             </div>
             <button
               onClick={toggleDark}
@@ -78,7 +81,8 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex gap-1 overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 pb-1.5">
+        {/* Desktop nav only — mobile uses BottomNav */}
+        <nav className="hidden lg:flex gap-1 pb-1.5">
           {NAV.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to;
@@ -87,9 +91,9 @@ export function Header() {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition-colors",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
                   active
-                    ? "bg-vzla-red text-white"
+                    ? "bg-[color:var(--sunrise)] text-white"
                     : "text-header-foreground/80 hover:bg-white/10",
                 )}
               >
@@ -101,9 +105,9 @@ export function Header() {
           <Link
             to="/admin"
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ml-auto",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ml-auto",
               pathname === "/admin"
-                ? "bg-vzla-blue text-white"
+                ? "bg-[color:var(--sky)] text-white"
                 : "text-header-foreground/80 hover:bg-white/10",
             )}
           >
@@ -115,3 +119,4 @@ export function Header() {
     </header>
   );
 }
+

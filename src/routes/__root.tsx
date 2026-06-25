@@ -11,7 +11,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Header } from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
 import { Toaster } from "@/components/ui/sonner";
+
 
 function NotFoundComponent() {
   return (
@@ -52,7 +54,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Venezuela Se Levanta — Mapa colaborativo de crisis" },
       { name: "description", content: "Venezuela Se Levanta — plataforma ciudadana de respuesta colaborativa al terremoto. Reporta, consulta y ayuda en tiempo real. venezuelaselevanta.info" },
       { name: "theme-color", content: "#FF6B35" },
@@ -102,8 +104,10 @@ function RootComponent() {
         <main className="flex-1">
           <Outlet />
         </main>
+        <BottomNav />
       </div>
       <Toaster />
+
     </QueryClientProvider>
   );
 }
