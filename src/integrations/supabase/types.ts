@@ -110,6 +110,66 @@ export type Database = {
         }
         Relationships: []
       }
+      push_config: {
+        Row: {
+          broadcast_secret: string | null
+          broadcast_url: string | null
+          id: boolean
+        }
+        Insert: {
+          broadcast_secret?: string | null
+          broadcast_url?: string | null
+          id?: boolean
+        }
+        Update: {
+          broadcast_secret?: string | null
+          broadcast_url?: string | null
+          id?: boolean
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          lat: number | null
+          lng: number | null
+          p256dh: string
+          radius_km: number
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          p256dh: string
+          radius_km?: number
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          p256dh?: string
+          radius_km?: number
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       report_comments: {
         Row: {
           author_name: string | null
