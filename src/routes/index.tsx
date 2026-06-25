@@ -247,7 +247,8 @@ function HomePage() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                    </div>
+                  </button>
                 </li>
               );
             })}
