@@ -3,24 +3,29 @@ import { createFileRoute } from "@tanstack/react-router";
 const SITE = "https://venezuelaselevanta.info";
 const STATIC_PATHS = ["/", "/reportar", "/desaparecidos", "/estadisticas", "/donar", "/creditos"];
 
+async function fetchReportsMeta(): Promise<{ id: string; updated_at: string }[]> {
+  const url = process.env.SUPABASE_URL!;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+  const res = await fetch(
+    `${url}/rest/v1/reports?select=id,updated_at&order=created_at.desc&limit=1000`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
-        const { createClient } = await import("@supabase/supabase-js");
-        const supabase = createClient(
-          process.env.SUPABASE_URL!,
-          process.env.SUPABASE_PUBLISHABLE_KEY!,
-          { auth: { persistSession: false, autoRefreshToken: false } },
-        );
-
-        const { data: reports } = await supabase
-          .from("reports")
-          .select("id, updated_at")
-          .order("created_at", { ascending: false })
-          .limit(1000);
-
         const now = new Date().toISOString();
+        let reports: { id: string; updated_at: string }[] = [];
+        try {
+          reports = await fetchReportsMeta();
+        } catch {
+          // serve static-only sitemap on error
+        }
+
         const urls = [
           ...STATIC_PATHS.map(
             (p) =>
@@ -28,10 +33,10 @@ export const Route = createFileRoute("/sitemap.xml")({
                 p === "/" ? "hourly" : "daily"
               }</changefreq></url>`,
           ),
-          ...(reports ?? []).map(
+          ...reports.map(
             (r) =>
               `<url><loc>${SITE}/reportes/${r.id}</loc><lastmod>${
-                (r.updated_at as string) ?? now
+                r.updated_at ?? now
               }</lastmod></url>`,
           ),
         ];
