@@ -53,11 +53,6 @@ export const tech: TechCredit[] = [
     url: "https://leafletjs.com/",
   },
   {
-    name: "Lovable Cloud",
-    description: "Backend, base de datos y autenticación",
-    url: "https://lovable.dev/",
-  },
-  {
     name: "shadcn/ui + Tailwind CSS",
     description: "Sistema de componentes y estilos",
     url: "https://ui.shadcn.com/",
