@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
 import { Route as EstadisticasRouteImport } from './routes/estadisticas'
 import { Route as DonarRouteImport } from './routes/donar'
@@ -21,8 +22,14 @@ import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
+import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportarRoute = ReportarRouteImport.update({
   id: '/reportar',
   path: '/reportar',
@@ -84,6 +91,11 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPushBroadcastRoute = ApiPublicPushBroadcastRouteImport.update({
+  id: '/api/public/push/broadcast',
+  path: '/api/public/push/broadcast',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
   id: '/api/public/media/$',
   path: '/api/public/media/$',
@@ -99,10 +111,12 @@ export interface FileRoutesByFullPath {
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
+  '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -114,10 +128,12 @@ export interface FileRoutesByTo {
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
+  '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
@@ -130,10 +146,12 @@ export interface FileRoutesById {
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
+  '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
@@ -147,10 +165,12 @@ export interface FileRouteTypes {
     | '/donar'
     | '/estadisticas'
     | '/reportar'
+    | '/sitemap.xml'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/media/$'
+    | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -162,10 +182,12 @@ export interface FileRouteTypes {
     | '/donar'
     | '/estadisticas'
     | '/reportar'
+    | '/sitemap.xml'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/media/$'
+    | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
@@ -177,10 +199,12 @@ export interface FileRouteTypes {
     | '/donar'
     | '/estadisticas'
     | '/reportar'
+    | '/sitemap.xml'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/media/$'
+    | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -193,15 +217,24 @@ export interface RootRouteChildren {
   DonarRoute: typeof DonarRoute
   EstadisticasRoute: typeof EstadisticasRoute
   ReportarRoute: typeof ReportarRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
+  ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reportar': {
       id: '/reportar'
       path: '/reportar'
@@ -286,6 +319,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/push/broadcast': {
+      id: '/api/public/push/broadcast'
+      path: '/api/public/push/broadcast'
+      fullPath: '/api/public/push/broadcast'
+      preLoaderRoute: typeof ApiPublicPushBroadcastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/media/$': {
       id: '/api/public/media/$'
       path: '/api/public/media/$'
@@ -305,10 +345,12 @@ const rootRouteChildren: RootRouteChildren = {
   DonarRoute: DonarRoute,
   EstadisticasRoute: EstadisticasRoute,
   ReportarRoute: ReportarRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
+  ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport
