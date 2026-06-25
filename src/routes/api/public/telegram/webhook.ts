@@ -129,11 +129,13 @@ async function cancelFlow(chatId: number) {
   await send(chatId, "❌ Reporte cancelado. Usa /reportar para empezar de nuevo.", removeKb());
 }
 
-// Download Telegram file via gateway and upload to Supabase storage.
-async function uploadTelegramFile(
+// Download a single Telegram file (by file_id) and upload it to storage.
+// Returns the public proxy URL or null on failure.
+async function downloadAndStore(
   fileId: string,
-  kind: "image" | "video",
-): Promise<{ url: string; type: string } | null> {
+  fallbackExt: string,
+  fallbackContentType: string,
+): Promise<string | null> {
   try {
     const infoRes = await tg("getFile", { file_id: fileId });
     if (!infoRes.ok) return null;
@@ -149,10 +151,8 @@ async function uploadTelegramFile(
     });
     if (!dl.ok) return null;
     const bytes = new Uint8Array(await dl.arrayBuffer());
-    const contentType =
-      dl.headers.get("content-type") ||
-      (kind === "video" ? "video/mp4" : "image/jpeg");
-    const ext = filePath.split(".").pop()?.toLowerCase() || (kind === "video" ? "mp4" : "jpg");
+    const contentType = dl.headers.get("content-type") || fallbackContentType;
+    const ext = filePath.split(".").pop()?.toLowerCase() || fallbackExt;
     const key = `telegram/${crypto.randomUUID()}.${ext}`;
 
     const db = await getAdmin();
@@ -163,16 +163,51 @@ async function uploadTelegramFile(
       console.error("storage upload", error);
       return null;
     }
-    return { url: `/api/public/media/${key}`, type: kind };
+    return `/api/public/media/${key}`;
   } catch (err) {
-    console.error("uploadTelegramFile", err);
+    console.error("downloadAndStore", err);
     return null;
   }
+}
+
+// Upload a Telegram photo: stores the highest-resolution version as the full
+// media, and the smallest as a fast-loading thumbnail.
+async function uploadTelegramPhoto(
+  sizes: { file_id: string; file_size?: number; width?: number; height?: number }[],
+): Promise<{ url: string; thumb: string } | null> {
+  if (sizes.length === 0) return null;
+  const sorted = [...sizes].sort(
+    (a, b) => (a.width ?? 0) * (a.height ?? 0) - (b.width ?? 0) * (b.height ?? 0),
+  );
+  const smallest = sorted[0];
+  const largest = sorted[sorted.length - 1];
+  const fullUrl = await downloadAndStore(largest.file_id, "jpg", "image/jpeg");
+  if (!fullUrl) return null;
+  // If only one size, reuse the full image as its own thumbnail.
+  if (smallest.file_id === largest.file_id) return { url: fullUrl, thumb: fullUrl };
+  const thumbUrl = await downloadAndStore(smallest.file_id, "jpg", "image/jpeg");
+  return { url: fullUrl, thumb: thumbUrl ?? fullUrl };
+}
+
+// Upload a Telegram video: stores the video plus its JPEG poster (if any) as
+// the thumbnail. Falls back to using the video URL itself when no poster.
+async function uploadTelegramVideo(video: {
+  file_id: string;
+  thumb?: { file_id: string };
+  thumbnail?: { file_id: string };
+}): Promise<{ url: string; thumb: string } | null> {
+  const fullUrl = await downloadAndStore(video.file_id, "mp4", "video/mp4");
+  if (!fullUrl) return null;
+  const thumbId = video.thumbnail?.file_id ?? video.thumb?.file_id;
+  let thumbUrl: string | null = null;
+  if (thumbId) thumbUrl = await downloadAndStore(thumbId, "jpg", "image/jpeg");
+  return { url: fullUrl, thumb: thumbUrl ?? fullUrl };
 }
 
 async function finalizeReport(chatId: number, draft: Record<string, unknown>, reporterName: string) {
   const db = await getAdmin();
   const mediaUrls = Array.isArray(draft.media_urls) ? (draft.media_urls as string[]) : [];
+  const mediaThumbs = Array.isArray(draft.media_thumbs) ? (draft.media_thumbs as string[]) : [];
   const { error } = await db.from("reports").insert({
     title: String(draft.title ?? "Reporte vía Telegram").slice(0, 120),
     description: (draft.description as string | undefined) ?? null,
@@ -185,6 +220,7 @@ async function finalizeReport(chatId: number, draft: Record<string, unknown>, re
     reporter_name: `${reporterName} (Telegram)`,
     photo_url: mediaUrls[0] ?? null,
     media_urls: mediaUrls,
+    media_thumbs: mediaThumbs,
   });
   await clearSession(chatId);
   if (error) {
@@ -216,7 +252,7 @@ async function processUpdate(update: Record<string, unknown>) {
     }
     if (cb.data.startsWith("urg:") && session.state === "awaiting_urgency") {
       const urg = cb.data.slice(4);
-      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg, media_urls: [] });
+      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg, media_urls: [], media_thumbs: [] });
       await send(
         chatId,
         "4/5 · ¿Quieres adjuntar <b>fotos y/o videos</b>?\n\nEnvía uno o varios (también funciona enviar un álbum). Cuando termines, pulsa «✅ Listo, continuar» o «⏭️ Omitir» si no tienes.",
@@ -272,17 +308,24 @@ async function processUpdate(update: Record<string, unknown>) {
     const current = Array.isArray(session.draft.media_urls)
       ? (session.draft.media_urls as string[])
       : [];
+    const currentThumbs = Array.isArray(session.draft.media_thumbs)
+      ? (session.draft.media_thumbs as string[])
+      : [];
 
     // Photo
     if (msg.photo && msg.photo.length > 0) {
-      const largest = msg.photo[msg.photo.length - 1];
-      const uploaded = await uploadTelegramFile(largest.file_id, "image");
+      const uploaded = await uploadTelegramPhoto(msg.photo);
       if (!uploaded) {
         await send(chatId, "⚠️ No se pudo subir la foto. Intenta de nuevo.", mediaKb(current.length > 0));
         return;
       }
       const next = [...current, uploaded.url];
-      await setSession(chatId, "awaiting_media", { ...session.draft, media_urls: next });
+      const nextThumbs = [...currentThumbs, uploaded.thumb];
+      await setSession(chatId, "awaiting_media", {
+        ...session.draft,
+        media_urls: next,
+        media_thumbs: nextThumbs,
+      });
       return send(
         chatId,
         `📎 ${next.length} adjunto${next.length === 1 ? "" : "s"}. Envía más o pulsa «✅ Listo, continuar».`,
@@ -292,13 +335,18 @@ async function processUpdate(update: Record<string, unknown>) {
     // Video
     if (msg.video) {
       await send(chatId, "⏳ Subiendo video…");
-      const uploaded = await uploadTelegramFile(msg.video.file_id, "video");
+      const uploaded = await uploadTelegramVideo(msg.video as never);
       if (!uploaded) {
         await send(chatId, "⚠️ No se pudo subir el video. Intenta de nuevo.", mediaKb(current.length > 0));
         return;
       }
       const next = [...current, uploaded.url];
-      await setSession(chatId, "awaiting_media", { ...session.draft, media_urls: next });
+      const nextThumbs = [...currentThumbs, uploaded.thumb];
+      await setSession(chatId, "awaiting_media", {
+        ...session.draft,
+        media_urls: next,
+        media_thumbs: nextThumbs,
+      });
       return send(
         chatId,
         `📎 ${next.length} adjunto${next.length === 1 ? "" : "s"}. Envía más o pulsa «✅ Listo, continuar».`,
@@ -316,7 +364,7 @@ async function processUpdate(update: Record<string, unknown>) {
     }
     // Skip (no media yet)
     if (text === "⏭️ Omitir foto/video" || text === "/omitir" || text === "-") {
-      await setSession(chatId, "awaiting_location", { ...session.draft, media_urls: [] });
+      await setSession(chatId, "awaiting_location", { ...session.draft, media_urls: [], media_thumbs: [] });
       return send(
         chatId,
         "5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",

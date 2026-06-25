@@ -1,0 +1,1 @@
+ALTER TABLE public.reports ADD COLUMN IF NOT EXISTS media_thumbs text[] NOT NULL DEFAULT '{}'::text[];
