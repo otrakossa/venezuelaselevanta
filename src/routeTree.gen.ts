@@ -21,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
+import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
@@ -85,6 +86,11 @@ const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
   path: '/api/reports.csv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
+  id: '/api/public/reports',
+  path: '/api/public/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/public/reports'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/public/reports'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/public/reports'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
@@ -221,6 +233,7 @@ export interface RootRouteChildren {
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
+  ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
@@ -312,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsDotcsvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/reports': {
+      id: '/api/public/reports'
+      path: '/api/public/reports'
+      fullPath: '/api/public/reports'
+      preLoaderRoute: typeof ApiPublicReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -349,6 +369,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
+  ApiPublicReportsRoute: ApiPublicReportsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
