@@ -48,10 +48,23 @@ function HomePage() {
   const [showQuakes, setShowQuakes] = useState(true);
   const [showMissing, setShowMissing] = useState(true);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
+  const [focusMissing, setFocusMissing] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
   const openDetail = (id: string) => navigate({ search: { report: id }, replace: false });
   const closeDetail = () => navigate({ search: {}, replace: false });
+
+  // Sync ?missing=<id> -> focus rose marker + ensure layer visible
+  useEffect(() => {
+    if (!search.missing) return;
+    const m = missing.find((x) => x.id === search.missing);
+    if (m && m.last_seen_lat != null && m.last_seen_lng != null) {
+      setShowMissing(true);
+      setFocusMissing({ id: m.id, lat: m.last_seen_lat, lng: m.last_seen_lng, nonce: Date.now() });
+      // Clear the URL param so re-clicking the same card re-focuses
+      navigate({ search: (prev) => ({ ...prev, missing: undefined }), replace: true });
+    }
+  }, [search.missing, missing, navigate]);
 
   useEffect(() => {
     if (localStorage.getItem(HERO_DISMISS_KEY) === "1") setShowHero(false);
