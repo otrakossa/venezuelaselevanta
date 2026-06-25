@@ -83,12 +83,14 @@ export function MapView({
   pickedLocation,
   height = "100%",
   focusReport,
+  focusMissing,
   onOpenDetail,
   showQuakes = true,
   missing = [],
   showMissing = true,
 }: MapViewProps) {
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const missingMarkersRef = useRef<Map<string, L.Marker>>(new Map());
   const { data: quakes = [] } = useUSGSQuakes(showQuakes);
   const filtered = useMemo(
     () =>
@@ -112,6 +114,7 @@ export function MapView({
         />
         {onMapClick ? <ClickPicker onPick={onMapClick} /> : null}
         <FocusController target={focusReport ?? null} markersRef={markersRef} />
+        <FocusController target={focusMissing ?? null} markersRef={missingMarkersRef} />
         {pickedLocation ? (
           <Marker
             position={[pickedLocation.lat, pickedLocation.lng]}
