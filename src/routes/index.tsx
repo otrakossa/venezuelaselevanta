@@ -9,9 +9,13 @@ import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, Bad
 import heroImage from "@/assets/hero-amanecer.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
+import { ReportDetailSheet } from "@/components/ReportDetailSheet";
 
 export const Route = createFileRoute("/")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    report: typeof search.report === "string" ? search.report : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
