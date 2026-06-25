@@ -33,7 +33,7 @@ const URGENCY_COLOR: Record<string, string> = {
 
 function StatsPage() {
   const { reports } = useReports();
-  const { missing } = useMissing();
+  const { missing, counts: missingCounts } = useMissing();
   const { data: quakes = [] } = useUSGSQuakes(true);
 
   const stats = useMemo(() => {
@@ -44,7 +44,7 @@ function StatsPage() {
     const critical = reports.filter((r) => r.urgency === "critical" || r.urgency === "high").length;
     const help = reports.filter((r) => r.category === "shelter" || r.category === "hospital").length;
     const rescue = reports.filter((r) => r.category === "rescue").length;
-    const missingActive = missing.filter((m) => m.status === "missing").length;
+    const missingActive = missingCounts.missing;
     const verified = reports.filter((r) => (r.confirm_count ?? 0) >= 3).length;
 
     const now = Date.now();
@@ -126,7 +126,7 @@ function StatsPage() {
       verified, last24h, delta24h, quakes24h, maxMag, days, last7, byCategory,
       byStatus, topZones, urgencyByCategory, resolveRate,
     };
-  }, [reports, missing, quakes]);
+  }, [reports, missingCounts, quakes]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 space-y-6">
@@ -164,7 +164,7 @@ function StatsPage() {
           </div>
         </div>
         <div className="px-5 sm:px-6 pb-3 text-[11px] text-muted-foreground">
-          {stats.total} reportes · {missing.length} fichas de desaparecidos · CC BY 4.0
+          {stats.total} reportes · {missingCounts.all.toLocaleString("es-VE")} fichas de desaparecidos · CC BY 4.0
         </div>
       </div>
 

@@ -43,7 +43,7 @@ function initials(name: string) {
 }
 
 function MissingPage() {
-  const { missing, refetch } = useMissing();
+  const { missing, counts, refetch } = useMissing();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("missing");
   const [showForm, setShowForm] = useState(false);
@@ -53,13 +53,6 @@ function MissingPage() {
   const ptr = usePullToRefresh<HTMLDivElement>({
     onRefresh: async () => { await refetch(); toast.success("Lista actualizada"); },
   });
-
-  const counts = useMemo(() => ({
-    all: missing.length,
-    missing: missing.filter((m) => m.status === "missing").length,
-    found: missing.filter((m) => m.status === "found").length,
-    deceased: missing.filter((m) => m.status === "deceased").length,
-  }), [missing]);
 
   const list = useMemo(() => {
     const needle = q.trim().toLowerCase();
