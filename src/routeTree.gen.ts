@@ -22,6 +22,7 @@ import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
+import { Route as ApiPrivateRevealSvcRouteImport } from './routes/api/private/reveal-svc'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
@@ -91,6 +92,11 @@ const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
   path: '/api/public/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPrivateRevealSvcRoute = ApiPrivateRevealSvcRouteImport.update({
+  id: '/api/private/reveal-svc',
+  path: '/api/private/reveal-svc',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/private/reveal-svc': typeof ApiPrivateRevealSvcRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/private/reveal-svc': typeof ApiPrivateRevealSvcRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/private/reveal-svc': typeof ApiPrivateRevealSvcRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/private/reveal-svc'
     | '/api/public/reports'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/private/reveal-svc'
     | '/api/public/reports'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/private/reveal-svc'
     | '/api/public/reports'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
+  ApiPrivateRevealSvcRoute: typeof ApiPrivateRevealSvcRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/private/reveal-svc': {
+      id: '/api/private/reveal-svc'
+      path: '/api/private/reveal-svc'
+      fullPath: '/api/private/reveal-svc'
+      preLoaderRoute: typeof ApiPrivateRevealSvcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
+  ApiPrivateRevealSvcRoute: ApiPrivateRevealSvcRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
@@ -377,13 +398,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
