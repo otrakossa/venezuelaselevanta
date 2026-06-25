@@ -198,6 +198,18 @@ function HomePage() {
                 >
                   <ShieldCheck className="h-3 w-3" /> Confiables
                 </button>
+                <button
+                  onClick={() => setShowQuakes((s) => !s)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    showQuakes
+                      ? "bg-[#DC2626] text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Mostrar sismos recientes (USGS)"
+                >
+                  <Activity className="h-3 w-3" /> 🌍 Sismos USGS
+                </button>
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
