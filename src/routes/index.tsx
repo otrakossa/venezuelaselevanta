@@ -1,23 +1,49 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClientOnly } from "@/components/ClientOnly";
 import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports, useMissing } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users, RefreshCw } from "lucide-react";
 import { PushSubscribeButton } from "@/components/PushSubscribeButton";
 import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
 import { ReportDetailSheet } from "@/components/ReportDetailSheet";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { ReportListSkeleton } from "@/components/skeletons";
+import { EmptyState } from "@/components/EmptyState";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { toast } from "sonner";
+
+type TrustMode = "all" | "verified" | "trusted";
+type TimeWindow = "all" | "24h" | "7d";
+
+const HERO_DISMISS_KEY = "vsl-hero-dismissed";
+
+function parseList(v: unknown): string[] {
+  if (typeof v !== "string" || !v.trim()) return [];
+  return v.split(",").map((s) => s.trim()).filter(Boolean);
+}
+function joinList(xs: string[]): string | undefined {
+  return xs.length ? xs.join(",") : undefined;
+}
 
 export const Route = createFileRoute("/")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
     report: typeof search.report === "string" ? search.report : undefined,
     missing: typeof search.missing === "string" ? search.missing : undefined,
+    cat: typeof search.cat === "string" ? search.cat : undefined,
+    urg: typeof search.urg === "string" ? search.urg : undefined,
+    trust: (["verified", "trusted"] as const).includes(search.trust as TrustMode)
+      ? (search.trust as TrustMode)
+      : undefined,
+    t: (["24h", "7d"] as const).includes(search.t as TimeWindow)
+      ? (search.t as TimeWindow)
+      : undefined,
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
   }),
   head: () => ({
     meta: [
@@ -30,18 +56,35 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const HERO_DISMISS_KEY = "vsl-hero-dismissed";
-
 function HomePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { reports, loading } = useReports();
-  const { missing } = useMissing();
-  const [active, setActive] = useState<string[]>([]);
-  const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
-  const [urgencies, setUrgencies] = useState<string[]>([]);
-  const [timeWindow, setTimeWindow] = useState<"all" | "24h" | "7d">("all");
-  const [search2, setSearch2] = useState("");
+  const { reports, loading, refetch } = useReports();
+  const { missing, refetch: refetchMissing } = useMissing();
+
+  // Filter state derived from URL search params (persistent + shareable).
+  const active = useMemo(() => parseList(search.cat), [search.cat]);
+  const urgencies = useMemo(() => parseList(search.urg), [search.urg]);
+  const trust: TrustMode = search.trust ?? "all";
+  const timeWindow: TimeWindow = search.t ?? "all";
+  const search2 = search.q ?? "";
+
+  const setSearch = (
+    patch: Partial<{ cat: string[]; urg: string[]; trust: TrustMode; t: TimeWindow; q: string }>,
+  ) => {
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        cat: patch.cat !== undefined ? joinList(patch.cat) : prev.cat,
+        urg: patch.urg !== undefined ? joinList(patch.urg) : prev.urg,
+        trust: patch.trust !== undefined ? (patch.trust === "all" ? undefined : patch.trust) : prev.trust,
+        t: patch.t !== undefined ? (patch.t === "all" ? undefined : patch.t) : prev.t,
+        q: patch.q !== undefined ? (patch.q.trim() ? patch.q : undefined) : prev.q,
+      }),
+      replace: true,
+    });
+  };
+
   const [showFilters, setShowFilters] = useState(false);
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -51,8 +94,8 @@ function HomePage() {
   const [focusMissing, setFocusMissing] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
-  const openDetail = (id: string) => navigate({ search: { report: id }, replace: false });
-  const closeDetail = () => navigate({ search: {}, replace: false });
+  const openDetail = (id: string) => navigate({ search: (prev) => ({ ...prev, report: id }), replace: false });
+  const closeDetail = () => navigate({ search: (prev) => ({ ...prev, report: undefined }), replace: false });
 
   // Sync ?missing=<id> -> focus rose marker + ensure layer visible
   useEffect(() => {
@@ -61,8 +104,7 @@ function HomePage() {
     if (m && m.last_seen_lat != null && m.last_seen_lng != null) {
       setShowMissing(true);
       setFocusMissing({ id: m.id, lat: m.last_seen_lat, lng: m.last_seen_lng, nonce: Date.now() });
-      // Clear the URL param so re-clicking the same card re-focuses
-      navigate({ search: { report: search.report }, replace: true });
+      navigate({ search: (prev) => ({ ...prev, missing: undefined }), replace: true });
     }
   }, [search.missing, missing, navigate]);
 
@@ -75,9 +117,9 @@ function HomePage() {
   };
 
   const toggle = (slug: string) =>
-    setActive((cur) => (cur.includes(slug) ? cur.filter((s) => s !== slug) : [...cur, slug]));
+    setSearch({ cat: active.includes(slug) ? active.filter((s) => s !== slug) : [...active, slug] });
   const toggleUrgency = (u: string) =>
-    setUrgencies((cur) => (cur.includes(u) ? cur.filter((s) => s !== u) : [...cur, u]));
+    setSearch({ urg: urgencies.includes(u) ? urgencies.filter((s) => s !== u) : [...urgencies, u] });
 
   const visible = useMemo(() => {
     const q = search2.trim().toLowerCase();
@@ -110,6 +152,15 @@ function HomePage() {
     (trust !== "all" ? 1 : 0) +
     (timeWindow !== "all" ? 1 : 0) +
     (search2 ? 1 : 0);
+
+  // Pull-to-refresh on the lateral list
+  const onPullRefresh = async () => {
+    await Promise.all([refetch(), refetchMissing()]);
+    toast.success("Lista actualizada");
+  };
+  const ptr = usePullToRefresh<HTMLElement>({ onRefresh: onPullRefresh });
+
+
 
   return (
     <div className="flex flex-col">
