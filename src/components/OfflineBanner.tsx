@@ -5,7 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { countQueued, flushQueue } from "@/lib/offline-queue";
 
 export function OfflineBanner() {
-  const [online, setOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
+  const [mounted, setMounted] = useState(false);
+  const [online, setOnline] = useState(true);
   const [queued, setQueued] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [restored, setRestored] = useState(false);
@@ -42,6 +43,8 @@ export function OfflineBanner() {
   };
 
   useEffect(() => {
+    setMounted(true);
+    setOnline(typeof navigator === "undefined" ? true : navigator.onLine);
     refresh();
     // Attempt sync on mount in case items were left over from a previous session.
     void trySync();
@@ -82,6 +85,8 @@ export function OfflineBanner() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!mounted) return null;
 
   if (!online) {
     return (
