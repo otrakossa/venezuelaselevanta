@@ -1,13 +1,20 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { ClientOnly } from "./ClientOnly";
 import { MapView } from "./MapView";
-import { Locate, Send, Camera, X } from "lucide-react";
+import { Locate, Send, Camera, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import exifr from "exifr";
 import type { Report } from "@/lib/types";
 import { enqueueReport } from "@/lib/offline-queue";
+import { uploadMany } from "@/lib/media-upload";
+import { reverseGeocode } from "@/lib/geocode";
+
+const MAX_FILES = 4;
+const MAX_SIZE_MB = 10;
+
+type Preview = { url: string; type: string; name: string };
 
 export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const [form, setForm] = useState({
@@ -21,9 +28,33 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     status: "active",
   });
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<Preview[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const [addressTouched, setAddressTouched] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const geocodeAbort = useRef<AbortController | null>(null);
+
+  // Auto reverse-geocode when coords change (and user hasn't manually edited address)
+  useEffect(() => {
+    if (!coords) return;
+    if (addressTouched && form.address.trim().length > 0) return;
+    geocodeAbort.current?.abort();
+    const ctrl = new AbortController();
+    geocodeAbort.current = ctrl;
+    setGeocoding(true);
+    reverseGeocode(coords.lat, coords.lng, ctrl.signal)
+      .then((addr) => {
+        if (ctrl.signal.aborted) return;
+        if (addr) setForm((f) => ({ ...f, address: addr }));
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setGeocoding(false);
+      });
+    return () => ctrl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coords?.lat, coords?.lng]);
 
   const geolocate = () => {
     if (!navigator.geolocation) return toast.error("Geolocalización no disponible");
@@ -39,19 +70,44 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     );
   };
 
-  const onPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setPhotoPreview(URL.createObjectURL(file));
-    try {
-      const gps = await exifr.gps(file);
-      if (gps?.latitude && gps?.longitude && !coords) {
-        setCoords({ lat: gps.latitude, lng: gps.longitude });
-        toast.success("📸 Ubicación extraída de la foto");
+  const onFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const incoming = Array.from(e.target.files ?? []);
+    if (incoming.length === 0) return;
+    const allowed: File[] = [];
+    for (const f of incoming) {
+      if (f.size > MAX_SIZE_MB * 1024 * 1024) {
+        toast.warning(`"${f.name}" supera ${MAX_SIZE_MB} MB y fue omitido`);
+        continue;
       }
-    } catch {
-      /* photo has no EXIF */
+      allowed.push(f);
     }
+    const merged = [...files, ...allowed].slice(0, MAX_FILES);
+    setFiles(merged);
+    setPreviews(
+      merged.map((f) => ({ url: URL.createObjectURL(f), type: f.type, name: f.name })),
+    );
+    // EXIF GPS from first image (if no coords yet)
+    const firstImage = allowed.find((f) => f.type.startsWith("image/"));
+    if (firstImage && !coords) {
+      try {
+        const gps = await exifr.gps(firstImage);
+        if (gps?.latitude && gps?.longitude) {
+          setCoords({ lat: gps.latitude, lng: gps.longitude });
+          toast.success("📸 Ubicación extraída de la foto");
+        }
+      } catch {
+        /* no exif */
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeFile = (idx: number) => {
+    const next = files.filter((_, i) => i !== idx);
+    setFiles(next);
+    setPreviews(
+      next.map((f) => ({ url: URL.createObjectURL(f), type: f.type, name: f.name })),
+    );
   };
 
   const resetForm = () => {
@@ -60,7 +116,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       urgency: "medium", reporter_name: "", affected_count: "", status: "active",
     });
     setCoords(null);
-    setPhotoPreview(null);
+    setFiles([]);
+    setPreviews([]);
+    setAddressTouched(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -69,6 +127,22 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     if (!coords) return toast.error("Selecciona una ubicación o usa 📍 Mi ubicación");
     if (!form.title.trim()) return toast.error("Ingresa un título");
     setSubmitting(true);
+
+    const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
+
+    // Upload media first (skip if offline → queue without media)
+    let mediaUrls: string[] = [];
+    if (!isOffline && files.length > 0) {
+      toast.loading(`Subiendo ${files.length} archivo${files.length > 1 ? "s" : ""}...`, { id: "up" });
+      try {
+        mediaUrls = await uploadMany(files);
+        toast.success(`Archivos subidos`, { id: "up" });
+      } catch (err) {
+        toast.error("No se pudieron subir los archivos", { id: "up" });
+      }
+    }
+
+    const photoUrl = mediaUrls.find((u) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u)) ?? null;
     const payload = {
       title: form.title.trim(),
       description: form.description.trim() || null,
@@ -80,9 +154,10 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       lng: coords.lng,
       reporter_name: form.reporter_name.trim() || null,
       affected_count: form.affected_count ? Number(form.affected_count) : null,
+      photo_url: photoUrl,
+      ...(mediaUrls.length > 0 ? { media_urls: mediaUrls } : {}),
     };
 
-    const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
     if (isOffline) {
       await enqueueReport(payload);
       window.dispatchEvent(new Event("queue:changed"));
@@ -96,7 +171,6 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     const { error } = await supabase.from("reports").insert(payload);
     setSubmitting(false);
     if (error) {
-      // Network/transient failure → queue it instead of losing it
       await enqueueReport(payload);
       window.dispatchEvent(new Event("queue:changed"));
       toast.warning("Conexión inestable. Reporte guardado para reintentar.");
@@ -110,6 +184,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
 
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring";
   const label = "text-xs font-semibold text-foreground mb-1 block";
+  const canAddMore = files.length < MAX_FILES;
 
   return (
     <form onSubmit={submit} className="grid lg:grid-cols-2 gap-4 pb-24 lg:pb-0">
@@ -140,8 +215,16 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           <textarea className={field} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={1000} />
         </div>
         <div>
-          <label className={label}>Dirección (texto)</label>
-          <input className={field} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Ej: Av. Bolívar, Caracas" maxLength={200} />
+          <label className={label}>
+            Dirección {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}
+          </label>
+          <input
+            className={field}
+            value={form.address}
+            onChange={(e) => { setForm({ ...form, address: e.target.value }); setAddressTouched(true); }}
+            placeholder={geocoding ? "Detectando dirección..." : "Ej: Av. Bolívar, Caracas"}
+            maxLength={200}
+          />
         </div>
 
         {/* Photo + Location actions */}
@@ -153,14 +236,20 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           >
             <Locate className="h-4 w-4" /> Mi ubicación
           </button>
-          <label className="flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-3 rounded-lg bg-muted text-foreground border border-border active:scale-[0.98] transition cursor-pointer">
-            <Camera className="h-4 w-4" /> {photoPreview ? "Cambiar foto" : "Foto"}
+          <label
+            className={`flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-3 rounded-lg bg-muted text-foreground border border-border active:scale-[0.98] transition cursor-pointer ${!canAddMore ? "opacity-50 pointer-events-none" : ""}`}
+          >
+            <Camera className="h-4 w-4" />
+            {files.length === 0
+              ? "Foto / video"
+              : `${files.length}/${MAX_FILES} · agregar`}
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/mp4,video/webm,video/quicktime"
               capture="environment"
-              onChange={onPhotoChange}
+              multiple
+              onChange={onFilesChange}
               className="hidden"
             />
           </label>
@@ -170,17 +259,25 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
             📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
           </div>
         )}
-        {photoPreview && (
-          <div className="relative w-full h-40 rounded-lg overflow-hidden border border-border">
-            <img src={photoPreview} alt="" className="w-full h-full object-cover" />
-            <button
-              type="button"
-              onClick={() => { setPhotoPreview(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-              className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 text-white"
-              aria-label="Quitar foto"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+        {previews.length > 0 && (
+          <div className="grid grid-cols-3 gap-2">
+            {previews.map((p, i) => (
+              <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                {p.type.startsWith("video/") ? (
+                  <video src={p.url} className="w-full h-full object-cover" muted />
+                ) : (
+                  <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white"
+                  aria-label="Quitar archivo"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
@@ -209,7 +306,8 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           disabled={submitting}
           className="hidden lg:flex w-full items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50"
         >
-          <Send className="h-4 w-4" /> {submitting ? "Enviando..." : "Enviar reporte"}
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {submitting ? "Enviando..." : "Enviar reporte"}
         </button>
       </div>
 
@@ -238,7 +336,8 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           disabled={submitting}
           className="w-full flex items-center justify-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold py-3 rounded-lg shadow-lg shadow-[color:var(--sunrise)]/30 active:scale-[0.99] transition disabled:opacity-60"
         >
-          <Send className="h-4 w-4" /> {submitting ? "Enviando..." : "Enviar reporte"}
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {submitting ? "Enviando..." : "Enviar reporte"}
         </button>
       </div>
     </form>
