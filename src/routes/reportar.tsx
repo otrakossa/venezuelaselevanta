@@ -18,7 +18,7 @@ function ReportPage() {
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6">
       <div className="mb-5">
-        <h1 className="text-2xl font-bold">Reportar un incidente</h1>
+        <h1 className="text-2xl font-bold">Iniciar un reporte</h1>
         <p className="text-sm text-muted-foreground">
           Tu reporte ayuda a coordinar la respuesta. No necesitas cuenta para reportar.
         </p>
