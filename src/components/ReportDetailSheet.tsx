@@ -211,7 +211,7 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
                           Ubicación
                         </div>
                         <div className="text-sm break-words">{report.address}</div>
-                        {onFocusMap && (
+                        {onFocusMap && isValidCoords(report.lat, report.lng) && (
                           <button
                             onClick={() => {
                               onFocusMap(report.lat, report.lng, report.id);
