@@ -29,7 +29,7 @@ export interface MapViewProps {
   onMapClick?: (lat: number, lng: number) => void;
   pickedLocation?: { lat: number; lng: number } | null;
   height?: string;
-  selectedId?: string | null;
+  focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
 }
 
 function FocusController({
