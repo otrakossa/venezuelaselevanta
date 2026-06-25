@@ -29,6 +29,7 @@ function HomePage() {
   const [active, setActive] = useState<string[]>([]);
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   useEffect(() => {
     if (localStorage.getItem(HERO_DISMISS_KEY) === "1") setShowHero(false);
@@ -165,7 +166,7 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} />
+            <MapView reports={visible} focusReport={focusReport} />
           </ClientOnly>
 
           {/* Mobile bottom-sheet handle for the recent reports list */}
@@ -210,8 +211,16 @@ function HomePage() {
             {visible.slice(0, 30).map((r) => {
               const cat = CATEGORY_MAP[r.category];
               return (
-                <li key={r.id} className="p-3 active:bg-muted/70 hover:bg-muted/50 transition">
-                  <div className="flex items-start gap-2.5">
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                      setSheetOpen(false);
+                    }}
+                    className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                  >
+                    <div className="flex items-start gap-2.5">
                     <div
                       className="w-9 h-9 rounded-full flex items-center justify-center text-base shrink-0 shadow-sm"
                       style={{ background: cat?.color, color: "white" }}
@@ -238,7 +247,8 @@ function HomePage() {
                         </span>
                       </div>
                     </div>
-                  </div>
+                    </div>
+                  </button>
                 </li>
               );
             })}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { useEffect, useMemo, useRef } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { CATEGORY_MAP, CATEGORIES, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
@@ -29,7 +29,29 @@ export interface MapViewProps {
   onMapClick?: (lat: number, lng: number) => void;
   pickedLocation?: { lat: number; lng: number } | null;
   height?: string;
-  selectedId?: string | null;
+  focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
+}
+
+function FocusController({
+  target,
+  markersRef,
+}: {
+  target: { id: string; lat: number; lng: number; nonce: number } | null;
+  markersRef: React.MutableRefObject<Map<string, L.Marker>>;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!target) return;
+    const targetZoom = Math.max(map.getZoom(), 13);
+    map.flyTo([target.lat, target.lng], targetZoom, { duration: 0.8 });
+    // Wait for the cluster group to settle so the marker exists at this zoom.
+    const t = window.setTimeout(() => {
+      const m = markersRef.current.get(target.id);
+      if (m) m.openPopup();
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [target, map, markersRef]);
+  return null;
 }
 
 export function MapView({
@@ -38,8 +60,9 @@ export function MapView({
   onMapClick,
   pickedLocation,
   height = "100%",
-  selectedId,
+  focusReport,
 }: MapViewProps) {
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const filtered = useMemo(
     () =>
       activeCategories && activeCategories.length > 0
@@ -61,6 +84,7 @@ export function MapView({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {onMapClick ? <ClickPicker onPick={onMapClick} /> : null}
+        <FocusController target={focusReport ?? null} markersRef={markersRef} />
         {pickedLocation ? (
           <Marker
             position={[pickedLocation.lat, pickedLocation.lng]}
@@ -86,6 +110,10 @@ export function MapView({
                 key={r.id}
                 position={[r.lat, r.lng]}
                 icon={createIcon(cat.color, cat.emoji, pulse)}
+                ref={(instance) => {
+                  if (instance) markersRef.current.set(r.id, instance);
+                  else markersRef.current.delete(r.id);
+                }}
               >
                 <Popup>
                   <div className="min-w-[220px] space-y-1">
