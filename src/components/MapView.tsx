@@ -31,6 +31,9 @@ function createMissingIcon(name: string) {
     iconAnchor: [16, 16],
     popupAnchor: [0, -16],
   });
+}
+
+
 
 function ClickPicker({ onPick }: { onPick: (lat: number, lng: number) => void }) {
   useMapEvents({ click: (e) => onPick(e.latlng.lat, e.latlng.lng) });
