@@ -14,6 +14,7 @@ export interface Report {
   lng: number;
   reporter_name: string | null;
   photo_url: string | null;
+  media_urls: string[] | null;
   affected_count: number | null;
   verified: boolean;
   created_at: string;
