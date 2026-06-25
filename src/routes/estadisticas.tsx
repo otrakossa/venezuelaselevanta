@@ -5,7 +5,7 @@ import { CATEGORIES, CATEGORY_MAP, STATUS_LABELS } from "@/lib/categories";
 import { useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell,
-  PieChart, Pie, AreaChart, Area, defs as _defs, Legend,
+  PieChart, Pie, AreaChart, Area, Legend,
 } from "recharts";
 import {
   AlertCircle, Users, MapPin, Building, Download, Activity,
