@@ -49,6 +49,8 @@ export interface MapViewProps {
   focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
   onOpenDetail?: (id: string) => void;
   showQuakes?: boolean;
+  missing?: MissingPerson[];
+  showMissing?: boolean;
 }
 
 function FocusController({
