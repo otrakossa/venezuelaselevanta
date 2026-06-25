@@ -3,11 +3,12 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap, useMapEve
 import L from "leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { CATEGORY_MAP, CATEGORIES, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
-import type { Report } from "@/lib/types";
+import type { Report, MissingPerson } from "@/lib/types";
 import { format } from "date-fns";
 import { getCredibility } from "@/lib/credibility";
 import { useUSGSQuakes, quakeColor } from "@/hooks/useUSGSQuakes";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
+import { Link } from "@tanstack/react-router";
 
 const VZLA_CENTER: [number, number] = [9.5, -66.5];
 
