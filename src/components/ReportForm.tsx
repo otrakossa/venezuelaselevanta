@@ -155,7 +155,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       reporter_name: form.reporter_name.trim() || null,
       affected_count: form.affected_count ? Number(form.affected_count) : null,
       photo_url: photoUrl,
-      media_urls: mediaUrls.length > 0 ? mediaUrls : null,
+      ...(mediaUrls.length > 0 ? { media_urls: mediaUrls } : {}),
     };
 
     if (isOffline) {
