@@ -34,6 +34,7 @@ export interface MapViewProps {
   height?: string;
   focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
   onOpenDetail?: (id: string) => void;
+  showQuakes?: boolean;
 }
 
 function FocusController({
