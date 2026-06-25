@@ -14,7 +14,137 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      categories: {
+        Row: {
+          color: string
+          description: string | null
+          icon: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color: string
+          description?: string | null
+          icon: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string
+          description?: string | null
+          icon?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      missing_persons: {
+        Row: {
+          age: number | null
+          contact_info: string | null
+          created_at: string
+          id: string
+          last_seen_location: string | null
+          lat: number | null
+          lng: number | null
+          name: string
+          photo_url: string | null
+          physical_description: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          last_seen_location?: string | null
+          lat?: number | null
+          lng?: number | null
+          name: string
+          photo_url?: string | null
+          physical_description?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          last_seen_location?: string | null
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          photo_url?: string | null
+          physical_description?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          affected_count: number | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          lat: number
+          lng: number
+          location_text: string | null
+          photo_url: string | null
+          reporter_name: string | null
+          status: string
+          title: string
+          updated_at: string
+          urgency: string
+          verified: boolean
+        }
+        Insert: {
+          affected_count?: number | null
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat: number
+          lng: number
+          location_text?: string | null
+          photo_url?: string | null
+          reporter_name?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          urgency?: string
+          verified?: boolean
+        }
+        Update: {
+          affected_count?: number | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          location_text?: string | null
+          photo_url?: string | null
+          reporter_name?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          urgency?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
