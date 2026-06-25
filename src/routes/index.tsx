@@ -210,7 +210,7 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} focusReport={focusReport} />
+            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} />
           </ClientOnly>
 
           {/* Mobile bottom-sheet handle for the recent reports list */}
@@ -260,7 +260,7 @@ function HomePage() {
                   <button
                     type="button"
                     onClick={() => {
-                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
+                      openDetail(r.id);
                       setSheetOpen(false);
                     }}
                     className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
@@ -313,6 +313,12 @@ function HomePage() {
           </ul>
         </aside>
       </div>
+
+      <ReportDetailSheet
+        reportId={openReportId}
+        onClose={closeDetail}
+        onFocusMap={(lat, lng, id) => setFocusReport({ id, lat, lng, nonce: Date.now() })}
+      />
     </div>
   );
 }
