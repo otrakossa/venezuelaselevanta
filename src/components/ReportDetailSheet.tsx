@@ -13,6 +13,8 @@ import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ClientOnly } from "@/components/ClientOnly";
+import { MiniMap } from "@/components/MiniMap";
 
 const VIDEO_RE = /\.(mp4|mov|webm|m4v)(\?|$)/i;
 
