@@ -70,7 +70,7 @@ export function MapView({
 
         <MarkerClusterGroup
           chunkedLoading
-          iconCreateFunction={(cluster: L.MarkerCluster) =>
+          iconCreateFunction={(cluster: { getChildCount: () => number }) =>
             L.divIcon({
               html: `<div class="marker-cluster-custom" style="width:40px;height:40px">${cluster.getChildCount()}</div>`,
               className: "",
