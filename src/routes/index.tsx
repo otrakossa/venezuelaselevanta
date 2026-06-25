@@ -492,7 +492,7 @@ function HomePage() {
               )}
             </div>
           )}
-          <div className="sticky top-0 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 border-b border-border px-4 py-3 flex items-center justify-between shadow-sm">
             <div>
               <h2 className="font-bold text-sm">Reportes recientes</h2>
               <p className="text-[11px] text-muted-foreground">
