@@ -255,6 +255,59 @@ export function MapView({
               </Popup>
             </CircleMarker>
           ))}
+
+        {showMissing &&
+          missing
+            .filter((m) => m.last_seen_lat != null && m.last_seen_lng != null && m.status === "missing")
+            .map((m) => {
+              const waText = `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n👤 ${m.name}${m.age ? ` (${m.age} años)` : ""}\n${m.last_seen_location ? `📍 ${m.last_seen_location}\n` : ""}${m.description ? `📝 ${m.description}\n` : ""}${m.contact_phone ? `📞 ${m.contact_phone}\n` : ""}\nhttps://venezuelaselevanta.info/desaparecidos`;
+              return (
+                <Marker
+                  key={`missing-${m.id}`}
+                  position={[m.last_seen_lat as number, m.last_seen_lng as number]}
+                  icon={createMissingIcon(m.name)}
+                >
+                  <Popup maxWidth={260} minWidth={240}>
+                    <div className="w-[240px] space-y-2">
+                      <div className="-mx-3 -mt-3 px-3 py-2 rounded-t flex items-center gap-2" style={{ background: "#f43f5e", color: "white" }}>
+                        {m.photo_url ? (
+                          <img src={m.photo_url} alt="" className="h-8 w-8 rounded-full object-cover border border-white/60" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
+                        ) : (
+                          <span className="h-8 w-8 rounded-full bg-white/20 grid place-items-center text-sm font-black">{(m.name?.[0] ?? "?").toUpperCase()}</span>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[10px] uppercase tracking-wide opacity-90 font-semibold leading-none">Desaparecida</div>
+                          <div className="font-bold text-[13px] truncate leading-tight mt-0.5">{m.name}{m.age ? ` · ${m.age}a` : ""}</div>
+                        </div>
+                      </div>
+                      {m.last_seen_location && (
+                        <div className="text-[11px] text-neutral-600 truncate">📍 {m.last_seen_location}</div>
+                      )}
+                      {m.description && (
+                        <p className="text-xs text-neutral-600 line-clamp-3">{m.description}</p>
+                      )}
+                      <div className="text-[10px] text-neutral-400">
+                        Reportada {format(new Date(m.report_date), "dd MMM HH:mm")}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <Link to="/desaparecidos" className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition">
+                          Ver ficha →
+                        </Link>
+                        <a
+                          href={`https://wa.me/?text=${encodeURIComponent(waText)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition"
+                          title="Difundir por WhatsApp"
+                        >
+                          Difundir
+                        </a>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
       </MapContainer>
     </div>
   );
