@@ -1,63 +1,37 @@
-# Plan: Web Push + quick wins
+## Objetivo
+Mostrar a las personas desaparecidas como marcadores en el mapa principal, usando `last_seen_lat` / `last_seen_lng` (campos que ya existen en la tabla `missing_persons`).
 
-Vamos a implementar la notificación push como feature principal, y empacar varias mejoras pequeñas que llevan poco tiempo pero suman calidad.
+## Cambios
 
----
+### 1. Captura de coordenadas al reportar
+- En `src/routes/desaparecidos.tsx` (formulario `MissingForm`):
+  - Al ingresar "Última ubicación conocida", llamar a `geocodeAddress()` (de `src/lib/geocode.ts`) para resolver lat/lng vía Nominatim.
+  - Botón "Usar mi ubicación actual" (geolocalización del navegador) como alternativa rápida.
+  - Mostrar pin verde de confirmación cuando hay coords; guardar `last_seen_lat` / `last_seen_lng` junto al resto del insert.
+  - Permitir publicar sin coords (queda solo en la lista, no en el mapa).
 
-## 1. Notificaciones push para reportes críticos cercanos (#4)
+### 2. Capa de desaparecidos en el mapa
+- En `src/components/MapView.tsx`:
+  - Aceptar nueva prop `missing: MissingPerson[]` (opcional).
+  - Renderizar marcadores con `L.divIcon` distinto (color rosa/rose + icono de persona) para diferenciarlos de los reportes.
+  - Popup compacto con foto/iniciales, nombre, edad, "visto por última vez", botón **Difundir WhatsApp** y botón **Ver detalle** → navega a `/desaparecidos` (o abre sheet ligero — opción mínima: link a la página).
+  - Filtrar solo los que tienen lat/lng no nulos y `status = 'missing'` por defecto.
 
-Cuando entra un reporte crítico, las personas suscritas dentro de un radio (default 10 km) reciben push aunque la app esté cerrada.
+### 3. Toggle en filtros del mapa
+- En `src/routes/index.tsx`:
+  - Usar `useMissing()` además de `useReports()`.
+  - Añadir un chip/toggle "👤 Desaparecidos" en el panel de filtros (encendido por defecto) que controla si la capa se pasa a `<MapView>`.
+  - Conteo en el chip (cantidad con coords).
 
-**Backend**
-- Migración:
-  - Tabla `push_subscriptions` (endpoint, p256dh, auth, lat, lng, radius_km, user_id opcional).
-  - Función `notify_critical_report()` + trigger AFTER INSERT en `reports` WHERE `urgency='critical'` que llama vía `pg_net` al endpoint público con el id del reporte.
-- Secrets: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `PUSH_BROADCAST_SECRET` (generados automáticamente).
-- Server route público `/api/public/push/broadcast` que:
-  - Verifica header secreto.
-  - Carga el reporte y suscripciones dentro del radio (haversine en SQL).
-  - Envía push con VAPID JWT firmado con Web Crypto (compatible Workers, sin lib Node-only).
-- Server fn pública `getVapidPublicKey()` para que el cliente la lea.
-
-**Frontend**
-- Extender `public/sw.js` (service worker que ya genera PWA) con handler `push` y `notificationclick`.
-- Componente `PushSubscribeButton` en el panel de filtros del mapa: "Avísame de emergencias cerca de mí" → pide permiso, geolocaliza, slider de radio (5/10/25 km), guarda suscripción.
-- Estado persistido en localStorage para mostrar el toggle como activo.
-
----
-
-## 2. SEO técnico básico (#5 parcial)
-
-- `public/robots.txt` con `Allow: /` y enlace al sitemap.
-- Server route `/sitemap.xml` generada dinámicamente con la home + páginas estáticas + últimos 1000 reportes.
-- Canonical tag en `__root.tsx` apuntando a `https://venezuelaselevanta.info`.
-
-## 3. Performance hints (#15 parcial)
-
-- `<link rel="preconnect">` a Supabase y tiles de OpenStreetMap en `__root.tsx`.
-- `React.memo` en los markers individuales del `MapView` para evitar re-render al cambiar filtros que no afectan a esos puntos.
-
-## 4. Accesibilidad rápida (#18 parcial)
-
-- `aria-live="polite"` en el contenedor de la lista de reportes para que lectores anuncien nuevos reportes que entran por realtime.
-- `focus-visible` consistente: anillo dorado en `:focus-visible` para todos los botones e inputs.
-
-## 5. Página desaparecidos — quick wins (#8 parcial)
-
-- Buscador por nombre con debounce 200ms.
-- Botón "Marcar como encontrado" (solo admin/moderator) que cambia `status='found'` con confirmación.
-
----
+### 4. Leyenda
+- Pequeña leyenda en el mapa (esquina inf-izq) indicando: 🔴 Reporte · 🟣 Sismo USGS · 🌸 Desaparecido.
 
 ## Detalles técnicos
+- `last_seen_lat` / `last_seen_lng` ya existen en `missing_persons`; no se requiere migración.
+- Geocoding reutiliza `src/lib/geocode.ts` (Nominatim, sin key).
+- Marcador divIcon con color `#f43f5e` (rose-500) y la inicial del nombre o ícono de usuario para distinguir a simple vista.
+- No se toca lógica de reportes ni de votación.
 
-- VAPID JWT se firma con `crypto.subtle.sign('ECDSA', ...)` para ser compatible con el runtime Worker (no usamos `web-push` que es Node-only).
-- El trigger `pg_net` envía solo `{ report_id }`; el endpoint hace la lectura para evitar inyección desde el payload.
-- Haversine en SQL: `2 * 6371 * asin(sqrt(...))`.
-- `push_subscriptions` con índice GIST sobre `(lat, lng)` para queries por radio (o índice simple si GIST no aplica sin PostGIS).
-
-## Fuera de scope
-
-- Onboarding de educación push (qué es, cómo desactivar) → más adelante.
-- Reintentos / cleanup de suscripciones inválidas (410 Gone) → loggeado pero no automatizado en esta iteración.
-- Métricas de entrega.
+## Fuera de alcance
+- Edición de coordenadas de desaparecidos existentes (los antiguos sin coords seguirán solo en la lista).
+- Backfill masivo de geocoding sobre registros ya creados (puede ofrecerse en un paso posterior).

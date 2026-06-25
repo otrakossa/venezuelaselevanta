@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@/components/ClientOnly";
 import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
-import { useReports } from "@/hooks/useReports";
+import { useReports, useMissing } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users } from "lucide-react";
 import { PushSubscribeButton } from "@/components/PushSubscribeButton";
 import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,7 @@ function HomePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { reports, loading } = useReports();
+  const { missing } = useMissing();
   const [active, setActive] = useState<string[]>([]);
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [urgencies, setUrgencies] = useState<string[]>([]);
@@ -44,6 +45,7 @@ function HomePage() {
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [showQuakes, setShowQuakes] = useState(true);
+  const [showMissing, setShowMissing] = useState(true);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
@@ -238,6 +240,21 @@ function HomePage() {
                   <Activity className="h-3 w-3" /> 🌍 Sismos USGS
                 </button>
                 <button
+                  onClick={() => setShowMissing((s) => !s)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    showMissing
+                      ? "bg-rose-500 text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Mostrar personas desaparecidas en el mapa"
+                >
+                  <Users className="h-3 w-3" /> Desaparecidos
+                  <span className="ml-0.5 bg-white/25 rounded-full px-1.5 text-[9px] font-bold">
+                    {missing.filter((m) => m.last_seen_lat != null && m.last_seen_lng != null && m.status === "missing").length}
+                  </span>
+                </button>
+                <button
                   onClick={() => setShowFilters((s) => !s)}
                   className={cn(
                     "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
@@ -341,7 +358,7 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} showQuakes={showQuakes} />
+            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} showQuakes={showQuakes} missing={missing} showMissing={showMissing} />
           </ClientOnly>
 
           {/* USGS Legend */}
