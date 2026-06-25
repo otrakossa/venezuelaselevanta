@@ -143,7 +143,7 @@ function StatsPage() {
     return {
       total, active, attending, resolved, critical, help, rescue, missingActive,
       verified, last24h, delta24h, quakes24h, maxMag, days, last7, byCategory,
-      byStatus, topZones, urgencyByCategory, resolveRate,
+      byStatus, topZones, topStates, topMunicipalities, urgencyByCategory, resolveRate,
     };
   }, [reports, missingCounts, quakes]);
 
