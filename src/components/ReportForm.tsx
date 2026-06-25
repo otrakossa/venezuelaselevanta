@@ -172,7 +172,13 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       return;
     }
 
-    const { error } = await supabase.from("reports").insert(payload);
+    const res = await fetch("/api/public/reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    const error = res.ok ? null : { message: data?.error ?? "Error al enviar el reporte" };
     setSubmitting(false);
     if (error) {
       await enqueueReport(payload);
