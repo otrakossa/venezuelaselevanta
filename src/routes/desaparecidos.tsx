@@ -319,8 +319,37 @@ function MissingForm({ onDone }: { onDone: () => void }) {
     contact_phone: "",
     contact_email: "",
   });
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoBusy, setGeoBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+  const doGeocode = async () => {
+    if (!f.last_seen_location.trim()) return toast.error("Escribe la ubicación primero");
+    setGeoBusy(true);
+    const hit = await geocodeAddress(f.last_seen_location);
+    setGeoBusy(false);
+    if (!hit) return toast.error("No se pudo localizar esa dirección");
+    setCoords({ lat: hit.lat, lng: hit.lng });
+    toast.success("Ubicación encontrada en el mapa");
+  };
+
+  const useMyLocation = () => {
+    if (!navigator.geolocation) return toast.error("Tu navegador no soporta geolocalización");
+    setGeoBusy(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoBusy(false);
+        toast.success("Usando tu ubicación actual");
+      },
+      (err) => {
+        setGeoBusy(false);
+        toast.error(err.message || "No se pudo obtener tu ubicación");
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -331,13 +360,15 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       age: f.age ? Number(f.age) : null,
       description: f.description.trim() || null,
       last_seen_location: f.last_seen_location.trim() || null,
+      last_seen_lat: coords?.lat ?? null,
+      last_seen_lng: coords?.lng ?? null,
       contact_name: f.contact_name.trim() || null,
       contact_phone: f.contact_phone.trim() || null,
       contact_email: f.contact_email.trim() || null,
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Reporte enviado");
+    toast.success(coords ? "Publicada y geolocalizada en el mapa" : "Reporte enviado");
     onDone();
   };
 
@@ -350,7 +381,45 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       <input className={field} placeholder="Nombre completo *" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required maxLength={100} />
       <input type="number" className={field} placeholder="Edad" value={f.age} onChange={(e) => setF({ ...f, age: e.target.value })} />
       <input className={`${field} sm:col-span-2`} placeholder="Descripción física (ropa, altura, señas)" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={500} />
-      <input className={`${field} sm:col-span-2`} placeholder="Última ubicación conocida" value={f.last_seen_location} onChange={(e) => setF({ ...f, last_seen_location: e.target.value })} maxLength={200} />
+      <div className="sm:col-span-2 space-y-2">
+        <input
+          className={field}
+          placeholder="Última ubicación conocida (ej: Av. Bolívar, Caracas)"
+          value={f.last_seen_location}
+          onChange={(e) => { setF({ ...f, last_seen_location: e.target.value }); setCoords(null); }}
+          maxLength={200}
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={doGeocode}
+            disabled={geoBusy || !f.last_seen_location.trim()}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-50 font-semibold"
+          >
+            {geoBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
+            Localizar dirección
+          </button>
+          <button
+            type="button"
+            onClick={useMyLocation}
+            disabled={geoBusy}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-50 font-semibold"
+          >
+            <Crosshair className="h-3.5 w-3.5" /> Mi ubicación
+          </button>
+          {coords && (
+            <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-700 font-semibold">
+              <MapPin className="h-3 w-3" /> Aparecerá en el mapa ({coords.lat.toFixed(3)}, {coords.lng.toFixed(3)})
+              <button type="button" onClick={() => setCoords(null)} className="ml-1 opacity-70 hover:opacity-100" aria-label="Quitar">
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+          {!coords && (
+            <span className="text-[11px] text-muted-foreground">Sin coordenadas → solo aparece en la lista.</span>
+          )}
+        </div>
+      </div>
       <input className={field} placeholder="Nombre del contacto" value={f.contact_name} onChange={(e) => setF({ ...f, contact_name: e.target.value })} maxLength={100} />
       <input className={field} placeholder="Teléfono del contacto" value={f.contact_phone} onChange={(e) => setF({ ...f, contact_phone: e.target.value })} maxLength={40} />
       <input type="email" className={`${field} sm:col-span-2`} placeholder="Email del contacto" value={f.contact_email} onChange={(e) => setF({ ...f, contact_email: e.target.value })} maxLength={150} />
