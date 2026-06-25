@@ -498,7 +498,7 @@ function HomePage() {
             className="lg:hidden absolute left-1/2 -translate-x-1/2 bottom-3 z-[450] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/95 border border-border shadow-md text-[11px] font-semibold"
           >
             {sheetOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
-            {sheetOpen ? "Ocultar lista" : `${visible.length} reportes`}
+            {sheetOpen ? "Ocultar lista" : `${feed.length} registros`}
           </button>
         </div>
 
