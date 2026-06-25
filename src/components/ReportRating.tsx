@@ -16,6 +16,7 @@ interface Props {
 export function ReportRating({ report, variant = "compact", showBadge = true }: Props) {
   const [myVote, setMyVote] = useState<VoteKind | null>(null);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   // local optimistic deltas (parent will refresh via realtime)
   const [delta, setDelta] = useState({ confirm: 0, dispute: 0 });
   const cred = getCredibility({
