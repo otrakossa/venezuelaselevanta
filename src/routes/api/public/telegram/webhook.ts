@@ -308,17 +308,24 @@ async function processUpdate(update: Record<string, unknown>) {
     const current = Array.isArray(session.draft.media_urls)
       ? (session.draft.media_urls as string[])
       : [];
+    const currentThumbs = Array.isArray(session.draft.media_thumbs)
+      ? (session.draft.media_thumbs as string[])
+      : [];
 
     // Photo
     if (msg.photo && msg.photo.length > 0) {
-      const largest = msg.photo[msg.photo.length - 1];
-      const uploaded = await uploadTelegramFile(largest.file_id, "image");
+      const uploaded = await uploadTelegramPhoto(msg.photo);
       if (!uploaded) {
         await send(chatId, "⚠️ No se pudo subir la foto. Intenta de nuevo.", mediaKb(current.length > 0));
         return;
       }
       const next = [...current, uploaded.url];
-      await setSession(chatId, "awaiting_media", { ...session.draft, media_urls: next });
+      const nextThumbs = [...currentThumbs, uploaded.thumb];
+      await setSession(chatId, "awaiting_media", {
+        ...session.draft,
+        media_urls: next,
+        media_thumbs: nextThumbs,
+      });
       return send(
         chatId,
         `📎 ${next.length} adjunto${next.length === 1 ? "" : "s"}. Envía más o pulsa «✅ Listo, continuar».`,
@@ -328,13 +335,18 @@ async function processUpdate(update: Record<string, unknown>) {
     // Video
     if (msg.video) {
       await send(chatId, "⏳ Subiendo video…");
-      const uploaded = await uploadTelegramFile(msg.video.file_id, "video");
+      const uploaded = await uploadTelegramVideo(msg.video as never);
       if (!uploaded) {
         await send(chatId, "⚠️ No se pudo subir el video. Intenta de nuevo.", mediaKb(current.length > 0));
         return;
       }
       const next = [...current, uploaded.url];
-      await setSession(chatId, "awaiting_media", { ...session.draft, media_urls: next });
+      const nextThumbs = [...currentThumbs, uploaded.thumb];
+      await setSession(chatId, "awaiting_media", {
+        ...session.draft,
+        media_urls: next,
+        media_thumbs: nextThumbs,
+      });
       return send(
         chatId,
         `📎 ${next.length} adjunto${next.length === 1 ? "" : "s"}. Envía más o pulsa «✅ Listo, continuar».`,
