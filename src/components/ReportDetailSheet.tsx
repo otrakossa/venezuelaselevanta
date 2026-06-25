@@ -9,6 +9,7 @@ import { es } from "date-fns/locale";
 import { CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReportDetail, useReportComments } from "@/hooks/useReportDetail";
 import { ReportRating } from "@/components/ReportRating";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -173,6 +174,11 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
 
 
               <div className="p-5 space-y-5 flex-1">
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <WhatsAppShareButton report={report} variant="full" />
+                </div>
+
                 {/* Rating */}
                 <ReportRating report={report} variant="full" />
 

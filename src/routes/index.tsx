@@ -5,11 +5,12 @@ import { MapView } from "@/components/MapView";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity } from "lucide-react";
 import heroImage from "@/assets/hero-amanecer.jpg";
 import { cn } from "@/lib/utils";
 import { getCredibility } from "@/lib/credibility";
 import { ReportDetailSheet } from "@/components/ReportDetailSheet";
+import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -37,6 +38,7 @@ function HomePage() {
   const [trust, setTrust] = useState<"all" | "verified" | "trusted">("all");
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [showQuakes, setShowQuakes] = useState(true);
   const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   const openReportId = search.report ?? null;
@@ -196,6 +198,18 @@ function HomePage() {
                 >
                   <ShieldCheck className="h-3 w-3" /> Confiables
                 </button>
+                <button
+                  onClick={() => setShowQuakes((s) => !s)}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    showQuakes
+                      ? "bg-[#DC2626] text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Mostrar sismos recientes (USGS)"
+                >
+                  <Activity className="h-3 w-3" /> 🌍 Sismos USGS
+                </button>
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
@@ -210,8 +224,29 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} />
+            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} showQuakes={showQuakes} />
           </ClientOnly>
+
+          {/* USGS Legend */}
+          {showQuakes && (
+            <div className="absolute left-2 bottom-16 lg:bottom-3 z-[400] bg-card/95 border border-border rounded-lg shadow-md p-2 text-[10px] backdrop-blur">
+              <div className="font-bold mb-1 text-[11px]">🌍 Sismos USGS</div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full" style={{ background: "#FFC93C", width: 10, height: 10, opacity: 0.7 }} />
+                  <span>M &lt; 4.0</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full" style={{ background: "#FF6B35", width: 14, height: 14, opacity: 0.7 }} />
+                  <span>M 4.0 – 5.5</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full" style={{ background: "#DC2626", width: 18, height: 18, opacity: 0.7 }} />
+                  <span>M ≥ 5.5</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mobile bottom-sheet handle for the recent reports list */}
           <button
@@ -256,14 +291,14 @@ function HomePage() {
               const cat = CATEGORY_MAP[r.category];
               const cred = getCredibility(r);
               return (
-                <li key={r.id}>
+                <li key={r.id} className="relative flex items-stretch">
                   <button
                     type="button"
                     onClick={() => {
                       openDetail(r.id);
                       setSheetOpen(false);
                     }}
-                    className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                    className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
                   >
                     <div className="flex items-start gap-2.5">
                       <div
@@ -304,6 +339,9 @@ function HomePage() {
                       </div>
                     </div>
                   </button>
+                  <div className="flex items-center pr-3">
+                    <WhatsAppShareButton report={r} variant="icon" />
+                  </div>
                 </li>
               );
             })}
