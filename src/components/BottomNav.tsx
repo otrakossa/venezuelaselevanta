@@ -38,13 +38,13 @@ export function BottomNav() {
               to="/reportar"
               aria-label="Reportar incidente"
               className={cn(
-                "relative -mt-7 h-16 w-16 rounded-full flex items-center justify-center",
+                "relative -mt-7 h-16 w-16 rounded-full flex items-center justify-center touch-manipulation",
                 "bg-[color:var(--sunrise)] text-white shadow-xl shadow-[color:var(--sunrise)]/45",
                 "ring-4 ring-card active:scale-95 transition-transform",
               )}
             >
-              <span className="absolute inset-0 rounded-full bg-[color:var(--sunrise)] opacity-50 animate-ping" />
-              <Plus className="h-7 w-7 relative" strokeWidth={2.5} />
+              <span aria-hidden className="pointer-events-none absolute inset-0 rounded-full bg-[color:var(--sunrise)] opacity-50 animate-ping" />
+              <Plus className="h-7 w-7 relative pointer-events-none" strokeWidth={2.5} />
             </Link>
           </div>
 
