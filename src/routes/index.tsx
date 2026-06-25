@@ -29,6 +29,7 @@ function HomePage() {
   const [active, setActive] = useState<string[]>([]);
   const [showHero, setShowHero] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [focusReport, setFocusReport] = useState<{ id: string; lat: number; lng: number; nonce: number } | null>(null);
 
   useEffect(() => {
     if (localStorage.getItem(HERO_DISMISS_KEY) === "1") setShowHero(false);
