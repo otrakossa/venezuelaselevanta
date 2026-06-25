@@ -166,7 +166,7 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} />
+            <MapView reports={visible} focusReport={focusReport} />
           </ClientOnly>
 
           {/* Mobile bottom-sheet handle for the recent reports list */}
