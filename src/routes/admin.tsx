@@ -14,9 +14,9 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userId } = useAuth();
   const { reports } = useReports();
-  const [filters, setFilters] = useState({ category: "", urgency: "", status: "" });
+  const [filters, setFilters] = useState({ category: "", urgency: "", status: "", verified: "" });
 
   const filtered = useMemo(
     () =>
@@ -24,7 +24,9 @@ function AdminPage() {
         (r) =>
           (!filters.category || r.category === filters.category) &&
           (!filters.urgency || r.urgency === filters.urgency) &&
-          (!filters.status || r.status === filters.status),
+          (!filters.status || r.status === filters.status) &&
+          (!filters.verified ||
+            (filters.verified === "yes" ? r.verified : !r.verified)),
       ),
     [reports, filters],
   );
@@ -45,7 +47,15 @@ function AdminPage() {
   }
 
   const verify = async (id: string, verified: boolean) => {
-    const { error } = await supabase.from("reports").update({ verified: !verified }).eq("id", id);
+    const next = !verified;
+    const { error } = await supabase
+      .from("reports")
+      .update({
+        verified: next,
+        verified_by: next ? userId : null,
+        verified_at: next ? new Date().toISOString() : null,
+      })
+      .eq("id", id);
     if (error) toast.error(error.message);
   };
   const setStatus = async (id: string, status: string) => {
