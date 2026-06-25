@@ -29,75 +29,89 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --color-vzla-red: var(--vzla-red);
-  --color-vzla-yellow: var(--vzla-yellow);
-  --color-vzla-blue: var(--vzla-blue);
+
+  /* Brand: Amanecer Caribe */
+  --color-sunrise: var(--sunrise);
+  --color-gold: var(--gold);
+  --color-sky: var(--sky);
+  --color-midnight: var(--midnight);
+  --color-cream: var(--cream);
+
+  /* Legacy alias tokens so existing components keep working */
+  --color-vzla-red: var(--sunrise);
+  --color-vzla-yellow: var(--gold);
+  --color-vzla-blue: var(--sky);
+
   --color-header: var(--header);
   --color-header-foreground: var(--header-foreground);
   --color-urgency-critico: var(--urgency-critico);
   --color-urgency-alto: var(--urgency-alto);
   --color-urgency-medio: var(--urgency-medio);
   --color-urgency-bajo: var(--urgency-bajo);
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --font-sans: "Hind", system-ui, -apple-system, sans-serif;
+  --font-display: "Archivo Black", "Hind", system-ui, sans-serif;
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  /* Venezuelan palette */
-  --vzla-red: oklch(0.55 0.22 25);       /* #CF142B */
-  --vzla-yellow: oklch(0.9 0.18 95);     /* #F4E511 */
-  --vzla-blue: oklch(0.32 0.15 265);     /* #00247D */
+  /* Amanecer Caribe palette */
+  --sunrise: #FF6B35;
+  --gold: #FFC93C;
+  --sky: #1A8FE3;
+  --midnight: #0D2B45;
+  --cream: #FFF8F0;
 
-  --background: oklch(0.99 0.005 240);
-  --foreground: oklch(0.18 0.02 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 250);
-  --primary: var(--vzla-red);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.01 250);
-  --secondary-foreground: oklch(0.2 0.02 250);
-  --muted: oklch(0.95 0.01 250);
-  --muted-foreground: oklch(0.45 0.02 250);
-  --accent: var(--vzla-blue);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.01 250);
-  --input: oklch(0.92 0.01 250);
-  --ring: var(--vzla-red);
+  --background: #FFF8F0;
+  --foreground: #0D2B45;
+  --card: #FFFFFF;
+  --card-foreground: #0D2B45;
+  --popover: #FFFFFF;
+  --popover-foreground: #0D2B45;
+  --primary: var(--sunrise);
+  --primary-foreground: #FFF8F0;
+  --secondary: #F2EBDE;
+  --secondary-foreground: #0D2B45;
+  --muted: #F4ECDD;
+  --muted-foreground: #5A6B7A;
+  --accent: var(--sky);
+  --accent-foreground: #FFF8F0;
+  --destructive: #D62828;
+  --destructive-foreground: #FFF8F0;
+  --border: #E8DCC4;
+  --input: #EFE4CE;
+  --ring: var(--sunrise);
 
-  --header: oklch(0.18 0.02 250);
-  --header-foreground: oklch(0.99 0 0);
+  --header: var(--midnight);
+  --header-foreground: #FFF8F0;
 
-  --urgency-critico: oklch(0.55 0.22 25);
-  --urgency-alto: oklch(0.65 0.19 45);
-  --urgency-medio: oklch(0.8 0.16 85);
-  --urgency-bajo: oklch(0.65 0.15 145);
+  --urgency-critico: #FF3D2E;
+  --urgency-alto: #FF6B35;
+  --urgency-medio: #FFC93C;
+  --urgency-bajo: #1A8FE3;
 }
 
 .dark {
-  --background: oklch(0.14 0.015 250);
-  --foreground: oklch(0.96 0.005 250);
-  --card: oklch(0.2 0.02 250);
-  --card-foreground: oklch(0.96 0.005 250);
-  --popover: oklch(0.2 0.02 250);
-  --popover-foreground: oklch(0.96 0.005 250);
-  --primary: oklch(0.65 0.22 25);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.25 0.02 250);
-  --secondary-foreground: oklch(0.96 0.005 250);
-  --muted: oklch(0.25 0.02 250);
-  --muted-foreground: oklch(0.7 0.02 250);
-  --accent: oklch(0.5 0.15 265);
-  --accent-foreground: oklch(0.99 0 0);
-  --border: oklch(0.3 0.02 250);
-  --input: oklch(0.28 0.02 250);
-  --ring: oklch(0.65 0.22 25);
-  --header: oklch(0.1 0.02 250);
-  --header-foreground: oklch(0.99 0 0);
+  --background: #081826;
+  --foreground: #FFF8F0;
+  --card: #0D2B45;
+  --card-foreground: #FFF8F0;
+  --popover: #0D2B45;
+  --popover-foreground: #FFF8F0;
+  --primary: #FF8855;
+  --primary-foreground: #0D2B45;
+  --secondary: #143655;
+  --secondary-foreground: #FFF8F0;
+  --muted: #143655;
+  --muted-foreground: #A8BACD;
+  --accent: #2DA8FF;
+  --accent-foreground: #08111A;
+  --border: #1E4569;
+  --input: #163958;
+  --ring: #FF8855;
+  --header: #050E17;
+  --header-foreground: #FFF8F0;
 }
 
 @layer base {
@@ -106,7 +120,20 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
   }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Subtle warm radial background behind the app shell */
+.bg-amanecer {
+  background-image:
+    radial-gradient(120% 80% at 80% -10%, rgba(255, 201, 60, 0.25), transparent 60%),
+    radial-gradient(100% 70% at 0% 0%, rgba(255, 107, 53, 0.18), transparent 55%),
+    radial-gradient(140% 100% at 50% 110%, rgba(26, 143, 227, 0.15), transparent 60%);
 }
 
 /* Leaflet popups + custom markers */
@@ -115,7 +142,7 @@
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; border-radius: 50%;
   border: 3px solid white; color: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  box-shadow: 0 4px 12px rgba(13, 43, 69, 0.35);
   font-size: 16px; font-weight: 700;
 }
 .crisis-marker.pulse::after {
@@ -128,7 +155,17 @@
   100% { transform: scale(1.8); opacity: 0; }
 }
 .marker-cluster-custom {
-  background: var(--color-vzla-red); color: white;
+  background: linear-gradient(135deg, var(--color-sunrise), #E0451F);
+  color: white;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-weight: 700; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-weight: 800; border: 3px solid white;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.45);
 }
+
+/* Heartbeat animation for the brand logo */
+@keyframes heartbeat {
+  0%, 70%, 100% { transform: scale(1); }
+  10%, 30% { transform: scale(1.06); }
+  20% { transform: scale(0.97); }
+}
+.animate-heartbeat { animation: heartbeat 2.4s ease-in-out infinite; transform-origin: center; }
