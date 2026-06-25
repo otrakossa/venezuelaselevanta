@@ -213,19 +213,20 @@ function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFou
 
       {/* Photo / avatar */}
       <div className={`relative h-40 bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ${s.ring}`}>
-        {person.photo_url ? (
+        <div className="absolute inset-0 grid place-items-center">
+          <div className="h-20 w-20 rounded-full bg-card border-2 border-border grid place-items-center text-2xl font-black text-muted-foreground">
+            {initials(person.name) || <User className="h-8 w-8" />}
+          </div>
+        </div>
+        {person.photo_url && (
           <img
             src={person.photo_url}
             alt={person.name}
             loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
             className="absolute inset-0 w-full h-full object-cover"
           />
-        ) : (
-          <div className="absolute inset-0 grid place-items-center">
-            <div className="h-20 w-20 rounded-full bg-card border-2 border-border grid place-items-center text-2xl font-black text-muted-foreground">
-              {initials(person.name) || <User className="h-8 w-8" />}
-            </div>
-          </div>
         )}
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-2 left-3 right-3 text-white">
