@@ -1,0 +1,20 @@
+name: Deploy a producción
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy en VPS
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH y deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            bash /var/www/venezuelaselevanta/deploy.sh
