@@ -159,7 +159,7 @@ function AdminPage() {
           { k: "pending", label: "Pendientes", icon: <Clock className="h-3.5 w-3.5" /> },
           { k: "all", label: "Todos", icon: <Eye className="h-3.5 w-3.5" /> },
           { k: "hidden", label: "Ocultos", icon: <EyeOff className="h-3.5 w-3.5" /> },
-        ] as { k: Tab; label: string; icon: JSX.Element }[]).map((t) => (
+        ] as { k: Tab; label: string; icon: React.ReactNode }[]).map((t) => (
           <button
             key={t.k}
             onClick={() => { setTab(t.k); clearSel(); }}
