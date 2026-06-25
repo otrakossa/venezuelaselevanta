@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Report } from "@/lib/types";
 import { CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { format } from "date-fns";
-import { ArrowLeft, MapPin, User, Users, AlertTriangle, Share2 } from "lucide-react";
+import { ArrowLeft, MapPin, User, Users, AlertTriangle, Share2, BadgeCheck } from "lucide-react";
+import { ReportRating } from "@/components/ReportRating";
+import { getCredibility } from "@/lib/credibility";
+import { useAuth } from "@/hooks/useReports";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/reportes/$id")({
   ssr: false,
