@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -14,77 +12,49 @@ function csvCell(value: unknown): string {
   return `"${s}"`;
 }
 
+async function fetchReports() {
+  const url = process.env.SUPABASE_URL!;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+  const res = await fetch(
+    `${url}/rest/v1/reports?select=*&order=created_at.desc`,
+    { headers: { apikey: key, Authorization: `Bearer ${key}` } },
+  );
+  if (!res.ok) throw new Error(await res.text());
+  return res.json() as Promise<Record<string, unknown>[]>;
+}
+
 export const Route = createFileRoute("/api/reports.csv")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       GET: async () => {
-        const url = process.env.SUPABASE_URL!;
-        const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
-        const supabase = createClient<Database>(url, key, {
-          auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-        });
-        const { data, error } = await supabase
-          .from("reports")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          return new Response(`error,${error.message}`, {
+        let data: Record<string, unknown>[];
+        try {
+          data = await fetchReports();
+        } catch (err) {
+          return new Response(`error,${String(err)}`, {
             status: 500,
             headers: { "Content-Type": "text/csv; charset=utf-8", ...CORS },
           });
         }
 
         const headers = [
-          "id",
-          "titulo",
-          "descripcion",
-          "categoria",
-          "urgencia",
-          "estado",
-          "latitud",
-          "longitud",
-          "direccion",
-          "reportero",
-          "personas_afectadas",
-          "verificado",
-          "fecha_creacion",
+          "id", "titulo", "descripcion", "categoria", "urgencia", "estado",
+          "latitud", "longitud", "direccion", "reportero", "personas_afectadas",
+          "verificado", "fecha_creacion",
         ];
         const hxl = [
-          "#id",
-          "#report+title",
-          "#description",
-          "#report+type",
-          "#severity",
-          "#status",
-          "#geo+lat",
-          "#geo+lon",
-          "#loc+name",
-          "#contact+name",
-          "#affected+num",
-          "#verified",
-          "#date+created",
+          "#id", "#report+title", "#description", "#report+type", "#severity", "#status",
+          "#geo+lat", "#geo+lon", "#loc+name", "#contact+name", "#affected+num",
+          "#verified", "#date+created",
         ];
 
-        const rows = (data ?? []).map((r) =>
+        const rows = data.map((r) =>
           [
-            r.id,
-            r.title,
-            r.description,
-            r.category,
-            r.urgency,
-            r.status,
-            r.lat,
-            r.lng,
-            r.address,
-            r.reporter_name,
-            r.affected_count,
-            r.verified,
-            r.created_at,
-          ]
-            .map(csvCell)
-            .join(","),
+            r.id, r.title, r.description, r.category, r.urgency, r.status,
+            r.lat, r.lng, r.address, r.reporter_name, r.affected_count,
+            r.verified, r.created_at,
+          ].map(csvCell).join(","),
         );
 
         const csv = [headers.join(","), hxl.join(","), ...rows].join("\n");
