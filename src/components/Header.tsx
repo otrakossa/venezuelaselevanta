@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
@@ -103,9 +103,21 @@ export function Header() {
             );
           })}
           <Link
-            to="/admin"
+            to="/creditos"
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ml-auto",
+              pathname === "/creditos"
+                ? "bg-[color:var(--gold)] text-[color:var(--midnight)]"
+                : "text-header-foreground/80 hover:bg-white/10",
+            )}
+          >
+            <Heart className="h-3.5 w-3.5" />
+            Créditos
+          </Link>
+          <Link
+            to="/admin"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
               pathname === "/admin"
                 ? "bg-[color:var(--sky)] text-white"
                 : "text-header-foreground/80 hover:bg-white/10",

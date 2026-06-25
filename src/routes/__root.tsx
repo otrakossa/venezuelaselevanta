@@ -109,6 +109,11 @@ function RootComponent() {
         <main className="flex-1">
           <Outlet />
         </main>
+        <footer className="lg:hidden text-center text-[11px] text-muted-foreground py-3 px-4">
+          <a href="/creditos" className="hover:text-[color:var(--sunrise)] transition-colors">
+            Créditos y colaboradores · venezuelaselevanta.info
+          </a>
+        </footer>
         <BottomNav />
       </div>
       <Toaster />
