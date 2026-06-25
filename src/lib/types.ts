@@ -22,6 +22,9 @@ export interface Report {
   verified_at: string | null;
   confirm_count: number;
   dispute_count: number;
+  hidden?: boolean;
+  hidden_reason?: string | null;
+  hidden_at?: string | null;
   created_at: string;
   updated_at: string;
 }
