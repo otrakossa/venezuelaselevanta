@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMissing } from "@/hooks/useReports";
@@ -7,7 +7,7 @@ import type { MissingPerson, MissingStatus } from "@/lib/types";
 import { toast } from "sonner";
 import {
   Search, UserPlus, UserCheck, MapPin, Phone, Mail, User,
-  CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair,
+  CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, MapIcon,
 } from "lucide-react";
 import { geocodeAddress } from "@/lib/geocode";
 
