@@ -170,13 +170,24 @@ function CreditsPage() {
           </ul>
           <div className="mt-6">
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href="#contacto"
               className="inline-flex items-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold rounded-full px-5 py-2.5 text-sm hover:opacity-90 transition-opacity shadow-md"
             >
-              <Mail className="h-4 w-4" /> {CONTACT_EMAIL}
+              <MessageSquare className="h-4 w-4" /> Escríbenos
             </a>
           </div>
         </section>
+
+        {/* Formulario de contacto */}
+        <Section
+          icon={<MessageSquare className="h-5 w-5 text-[color:var(--sunrise)]" />}
+          title="Contacto"
+          subtitle="Envíanos un mensaje y te responderemos pronto."
+        >
+          <div id="contacto" className="scroll-mt-20">
+            <ContactForm />
+          </div>
+        </Section>
 
         <p className="text-center text-xs text-muted-foreground pb-4">
           Hecho con <Heart className="inline h-3 w-3 text-[color:var(--sunrise)]" /> en Venezuela ·{" "}
