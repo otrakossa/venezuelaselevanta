@@ -85,10 +85,10 @@ export function MapView({
         center={VZLA_CENTER}
         zoom={6}
         scrollWheelZoom
+        attributionControl={false}
         style={{ height: "100%", width: "100%" }}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {onMapClick ? <ClickPicker onPick={onMapClick} /> : null}
