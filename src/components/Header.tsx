@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
@@ -103,9 +103,21 @@ export function Header() {
             );
           })}
           <Link
+            to="/donar"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-bold whitespace-nowrap transition-all ml-auto shadow-md",
+              pathname === "/donar"
+                ? "bg-[color:var(--sunrise)] text-white ring-2 ring-[color:var(--sunrise)]/40"
+                : "bg-[color:var(--sunrise)] text-white hover:opacity-90 hover:scale-105",
+            )}
+          >
+            <HandHeart className="h-3.5 w-3.5" />
+            Donar
+          </Link>
+          <Link
             to="/creditos"
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors ml-auto",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
               pathname === "/creditos"
                 ? "bg-[color:var(--gold)] text-[color:var(--midnight)]"
                 : "text-header-foreground/80 hover:bg-white/10",
