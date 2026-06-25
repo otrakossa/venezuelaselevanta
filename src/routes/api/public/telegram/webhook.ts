@@ -88,7 +88,7 @@ async function getSession(chatId: number) {
 async function setSession(chatId: number, state: string, draft: Record<string, unknown>) {
   const db = await getAdmin();
   await db.from("telegram_sessions").upsert({
-    chat_id: chatId, state, draft, updated_at: new Date().toISOString(),
+    chat_id: chatId, state, draft: draft as never, updated_at: new Date().toISOString(),
   });
 }
 
