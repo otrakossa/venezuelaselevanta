@@ -35,6 +35,11 @@ export const collaborators: Person[] = [
 
 export const organizations: Organization[] = [
   {
+    name: "Fundación Casa del Bosque",
+    description: "Organización aliada",
+    url: "https://x.com/fcbosque",
+  },
+  {
     name: "Tu organización aliada",
     description: "¿Quieres aparecer aquí? Escríbenos.",
     url: "mailto:contacto@venezuelaselevanta.info",
