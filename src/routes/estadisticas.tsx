@@ -481,6 +481,3 @@ function timeAgo(ts: number): string {
   const d = Math.floor(h / 24);
   return `hace ${d} d`;
 }
-
-// silence unused import in some bundler configs
-void _defs;
