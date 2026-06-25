@@ -47,6 +47,12 @@ export const organizations: Organization[] = [
     logo: "https://www.google.com/s2/favicons?domain=activistasxsl.org&sz=128",
   },
   {
+    name: "Venezuela Te Busca",
+    description: "Plataforma colaborativa de búsqueda de personas desaparecidas",
+    url: "https://venezuelatebusca.com",
+    logo: "https://www.google.com/s2/favicons?domain=venezuelatebusca.com&sz=128",
+  },
+  {
     name: "Codex Tecnología",
     description: "Desarrollo, infraestructura y mantenimiento",
     url: "https://codextecnologia.com",
