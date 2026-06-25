@@ -32,19 +32,19 @@ function joinList(xs: string[]): string | undefined {
 
 export const Route = createFileRoute("/")({
   ssr: false,
-  validateSearch: (search: Record<string, unknown>) => ({
-    report: typeof search.report === "string" ? search.report : undefined,
-    missing: typeof search.missing === "string" ? search.missing : undefined,
-    cat: typeof search.cat === "string" ? search.cat : undefined,
-    urg: typeof search.urg === "string" ? search.urg : undefined,
-    trust: (["verified", "trusted"] as const).includes(search.trust as TrustMode)
-      ? (search.trust as TrustMode)
-      : undefined,
-    t: (["24h", "7d"] as const).includes(search.t as TimeWindow)
-      ? (search.t as TimeWindow)
-      : undefined,
-    q: typeof search.q === "string" && search.q ? search.q : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>) => {
+    const trustV = search.trust === "verified" || search.trust === "trusted" ? search.trust : undefined;
+    const tV = search.t === "24h" || search.t === "7d" ? search.t : undefined;
+    return {
+      report: typeof search.report === "string" ? search.report : undefined,
+      missing: typeof search.missing === "string" ? search.missing : undefined,
+      cat: typeof search.cat === "string" ? search.cat : undefined,
+      urg: typeof search.urg === "string" ? search.urg : undefined,
+      trust: trustV as TrustMode | undefined,
+      t: tV as TimeWindow | undefined,
+      q: typeof search.q === "string" && search.q ? search.q : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
