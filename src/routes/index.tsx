@@ -17,6 +17,7 @@ export const Route = createFileRoute("/")({
   ssr: false,
   validateSearch: (search: Record<string, unknown>) => ({
     report: typeof search.report === "string" ? search.report : undefined,
+    missing: typeof search.missing === "string" ? search.missing : undefined,
   }),
   head: () => ({
     meta: [
