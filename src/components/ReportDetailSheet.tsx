@@ -373,7 +373,8 @@ export function ReportDetailSheet({ reportId, onClose, onFocusMap }: Props) {
                 </section>
               </div>
             </>
-          )}
+            );
+          })()}
         </SheetContent>
       </Sheet>
 
