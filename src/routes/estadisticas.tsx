@@ -107,6 +107,25 @@ function StatsPage() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
+    // Top estados y municipios usando campos DIVIPOL
+    const stateMap = new Map<string, number>();
+    const muniMap = new Map<string, number>();
+    reports.forEach((r) => {
+      if (r.state) stateMap.set(r.state, (stateMap.get(r.state) ?? 0) + 1);
+      if (r.state && r.municipality) {
+        const k = `${r.municipality} — ${r.state}`;
+        muniMap.set(k, (muniMap.get(k) ?? 0) + 1);
+      }
+    });
+    const topStates = Array.from(stateMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+    const topMunicipalities = Array.from(muniMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
     // Urgencia por categoría (stacked)
     const urgencyByCategory = CATEGORIES.slice(0, 6).map((c) => {
       const rs = reports.filter((r) => r.category === c.slug);
