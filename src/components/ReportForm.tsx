@@ -47,7 +47,11 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     reverseGeocode(coords.lat, coords.lng, ctrl.signal)
       .then((addr) => {
         if (ctrl.signal.aborted) return;
-        if (addr) setForm((f) => ({ ...f, address: addr }));
+        if (addr) {
+          setForm((f) => ({ ...f, address: addr }));
+        } else {
+          toast.info("No se detectó la dirección. Puedes escribirla manualmente.", { duration: 3000 });
+        }
       })
       .finally(() => {
         if (!ctrl.signal.aborted) setGeocoding(false);
