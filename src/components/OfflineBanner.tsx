@@ -5,7 +5,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { countQueued, flushQueue } from "@/lib/offline-queue";
 
 export function OfflineBanner() {
-  const [online, setOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
+  const [mounted, setMounted] = useState(false);
+  const [online, setOnline] = useState(true);
   const [queued, setQueued] = useState(0);
   const [syncing, setSyncing] = useState(false);
   const [restored, setRestored] = useState(false);
