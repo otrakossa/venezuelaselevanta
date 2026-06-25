@@ -15,6 +15,12 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ClientOnly } from "@/components/ClientOnly";
 import { MiniMap } from "@/components/MiniMap";
+import { isValidCoords } from "@/lib/geo";
+
+function sanitizeText(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+}
 
 const VIDEO_RE = /\.(mp4|mov|webm|m4v)(\?|$)/i;
 
