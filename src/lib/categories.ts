@@ -1,8 +1,11 @@
-import { UserX, HeartPulse, Siren, HandHelping, Building2, MapPin, Construction, Cross, type LucideIcon } from "lucide-react";
+import {
+  UserX, HeartPulse, Siren, HandHelping, Building2, MapPin, Construction, Cross,
+  type LucideIcon,
+} from "lucide-react";
 
 export type CategorySlug =
-  | "desaparecidos" | "heridos" | "atrapados" | "ayuda"
-  | "infraestructura" | "encuentro" | "vias" | "medico";
+  | "missing" | "medical" | "rescue" | "shelter"
+  | "infrastructure" | "evacuation" | "blocked_road" | "hospital";
 
 export interface CategoryMeta {
   slug: CategorySlug;
@@ -13,14 +16,14 @@ export interface CategoryMeta {
 }
 
 export const CATEGORIES: CategoryMeta[] = [
-  { slug: "desaparecidos", name: "Personas desaparecidas", color: "#DC2626", icon: UserX, emoji: "🔴" },
-  { slug: "heridos", name: "Heridos / Médico urgente", color: "#EA580C", icon: HeartPulse, emoji: "🟠" },
-  { slug: "atrapados", name: "Atrapados / Rescate", color: "#EAB308", icon: Siren, emoji: "🟡" },
-  { slug: "ayuda", name: "Ayuda / Refugio", color: "#2563EB", icon: HandHelping, emoji: "🔵" },
-  { slug: "infraestructura", name: "Infraestructura dañada", color: "#9333EA", icon: Building2, emoji: "🟣" },
-  { slug: "encuentro", name: "Punto de encuentro", color: "#16A34A", icon: MapPin, emoji: "🟢" },
-  { slug: "vias", name: "Vías bloqueadas", color: "#374151", icon: Construction, emoji: "⚫" },
-  { slug: "medico", name: "Centro médico", color: "#EC4899", icon: Cross, emoji: "🩺" },
+  { slug: "missing",        name: "Personas desaparecidas",          color: "#DC2626", icon: UserX,        emoji: "🔴" },
+  { slug: "medical",        name: "Heridos / Necesidad médica",      color: "#EA580C", icon: HeartPulse,   emoji: "🟠" },
+  { slug: "rescue",         name: "Personas atrapadas / Rescate",    color: "#CA8A04", icon: Siren,        emoji: "🟡" },
+  { slug: "shelter",        name: "Distribución de ayuda / Refugio", color: "#2563EB", icon: HandHelping,  emoji: "🔵" },
+  { slug: "infrastructure", name: "Infraestructura dañada",          color: "#7C3AED", icon: Building2,    emoji: "🟣" },
+  { slug: "evacuation",     name: "Punto de encuentro / Evacuación", color: "#16A34A", icon: MapPin,       emoji: "🟢" },
+  { slug: "blocked_road",   name: "Vías bloqueadas",                 color: "#374151", icon: Construction, emoji: "⚫" },
+  { slug: "hospital",       name: "Centro médico / Hospital",        color: "#DB2777", icon: Cross,        emoji: "🩺" },
 ];
 
 export const CATEGORY_MAP: Record<string, CategoryMeta> = Object.fromEntries(
@@ -28,14 +31,20 @@ export const CATEGORY_MAP: Record<string, CategoryMeta> = Object.fromEntries(
 );
 
 export const URGENCY_LABELS: Record<string, { label: string; color: string }> = {
-  critico: { label: "Crítico", color: "var(--color-urgency-critico)" },
-  alto: { label: "Alto", color: "var(--color-urgency-alto)" },
-  medio: { label: "Medio", color: "var(--color-urgency-medio)" },
-  bajo: { label: "Bajo", color: "var(--color-urgency-bajo)" },
+  critical: { label: "Crítico", color: "var(--color-urgency-critical)" },
+  high:     { label: "Alto",    color: "var(--color-urgency-high)" },
+  medium:   { label: "Medio",   color: "var(--color-urgency-medium)" },
+  low:      { label: "Bajo",    color: "var(--color-urgency-low)" },
 };
 
 export const STATUS_LABELS: Record<string, string> = {
-  activo: "Activo",
-  en_atencion: "En atención",
-  resuelto: "Resuelto",
+  active:    "Activo",
+  attending: "En atención",
+  resolved:  "Resuelto",
+};
+
+export const MISSING_STATUS_LABELS: Record<string, string> = {
+  missing:  "Buscando",
+  found:    "Encontrada",
+  deceased: "Fallecida",
 };
