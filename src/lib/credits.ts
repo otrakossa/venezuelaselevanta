@@ -40,6 +40,11 @@ export const organizations: Organization[] = [
     url: "https://x.com/fcbosque",
   },
   {
+    name: "Activistas por el Software Libre",
+    description: "Organización aliada",
+    url: "https://activistasxsl.org/",
+  },
+  {
     name: "Tu organización aliada",
     description: "¿Quieres aparecer aquí? Escríbenos.",
     url: "mailto:contacto@venezuelaselevanta.info",
