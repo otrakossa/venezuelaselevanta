@@ -291,14 +291,14 @@ function HomePage() {
               const cat = CATEGORY_MAP[r.category];
               const cred = getCredibility(r);
               return (
-                <li key={r.id}>
+                <li key={r.id} className="relative flex items-stretch">
                   <button
                     type="button"
                     onClick={() => {
                       openDetail(r.id);
                       setSheetOpen(false);
                     }}
-                    className="w-full text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
+                    className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
                   >
                     <div className="flex items-start gap-2.5">
                       <div
@@ -339,6 +339,9 @@ function HomePage() {
                       </div>
                     </div>
                   </button>
+                  <div className="flex items-center pr-3">
+                    <WhatsAppShareButton report={r} variant="icon" />
+                  </div>
                 </li>
               );
             })}
