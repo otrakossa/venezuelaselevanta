@@ -265,7 +265,7 @@ export function MapView({
 
         {showMissing &&
           missing
-            .filter((m) => m.last_seen_lat != null && m.last_seen_lng != null && m.status === "missing")
+            .filter((m) => m.status === "missing" && isValidCoords(m.last_seen_lat, m.last_seen_lng))
             .map((m) => {
               const directLink = (typeof window !== "undefined" ? window.location.origin : "https://venezuelaselevanta.info") + `/?missing=${m.id}`;
               const waText = `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n👤 ${m.name}${m.age ? ` (${m.age} años)` : ""}\n${m.last_seen_location ? `📍 ${m.last_seen_location}\n` : ""}${m.description ? `📝 ${m.description}\n` : ""}${m.contact_phone ? `📞 ${m.contact_phone}\n` : ""}\n${directLink}`;
