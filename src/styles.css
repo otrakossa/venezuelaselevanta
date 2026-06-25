@@ -116,17 +116,26 @@
 
 @layer base {
   * { border-color: var(--color-border); }
+  html, body { overscroll-behavior-y: none; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
+    -webkit-tap-highlight-color: transparent;
   }
   h1, h2, h3, .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
   }
+  /* App-chrome: no text selection on nav surfaces */
+  header, nav { -webkit-user-select: none; user-select: none; }
 }
+
+/* Hide scrollbars on horizontal chip rows */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
 
 /* Subtle warm radial background behind the app shell */
 .bg-amanecer {
