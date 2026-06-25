@@ -176,26 +176,67 @@ export function MapView({
                       {r.reporter_name ? ` · ${r.reporter_name}` : " · anónimo"}
                     </div>
 
-                    {onOpenDetail && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          onOpenDetail(r.id);
-                        }}
-                        className="w-full inline-flex items-center justify-center gap-1.5 mt-1 px-3 py-2 rounded-md text-white text-xs font-bold shadow-sm hover:opacity-90 transition"
-                        style={{ background: cat.color }}
-                      >
-                        Ver detalle completo →
-                      </button>
-                    )}
+                    <div className="flex gap-1.5 items-stretch mt-1">
+                      {onOpenDetail && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onOpenDetail(r.id);
+                          }}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-white text-xs font-bold shadow-sm hover:opacity-90 transition"
+                          style={{ background: cat.color }}
+                        >
+                          Ver detalle →
+                        </button>
+                      )}
+                      <WhatsAppShareButton report={r} variant="icon" />
+                    </div>
                   </div>
                 </Popup>
               </Marker>
             );
           })}
         </MarkerClusterGroup>
+
+        {showQuakes &&
+          quakes.map((q) => (
+            <CircleMarker
+              key={q.id}
+              center={[q.lat, q.lng]}
+              radius={Math.max(4, q.mag * 4)}
+              pathOptions={{
+                color: "#ffffff",
+                weight: 1,
+                fillColor: quakeColor(q.mag),
+                fillOpacity: 0.5,
+              }}
+            >
+              <Popup>
+                <div className="w-[220px] space-y-1">
+                  <div className="font-bold text-sm">
+                    M {q.mag.toFixed(1)} · Sismo
+                  </div>
+                  <div className="text-xs text-neutral-700">{q.place}</div>
+                  <div className="text-[11px] text-neutral-500">
+                    Profundidad: {q.depth?.toFixed(1)} km
+                  </div>
+                  <div className="text-[11px] text-neutral-500">
+                    {new Date(q.time).toUTCString()}
+                  </div>
+                  <a
+                    href={q.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-[11px] text-[color:var(--sunrise)] font-semibold hover:underline"
+                  >
+                    Ver en USGS →
+                  </a>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
       </MapContainer>
     </div>
   );
