@@ -44,9 +44,10 @@ export function ReportRating({ report, variant = "compact", showBadge = true }: 
   }, [report.id]);
 
   const cast = async (vote: VoteKind) => {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     const deviceId = getDeviceId();
-    if (!deviceId) return;
+    if (!deviceId) { busyRef.current = false; return; }
     setBusy(true);
     const prev = myVote;
 
