@@ -252,7 +252,7 @@ async function processUpdate(update: Record<string, unknown>) {
     }
     if (cb.data.startsWith("urg:") && session.state === "awaiting_urgency") {
       const urg = cb.data.slice(4);
-      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg, media_urls: [] });
+      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg, media_urls: [], media_thumbs: [] });
       await send(
         chatId,
         "4/5 · ¿Quieres adjuntar <b>fotos y/o videos</b>?\n\nEnvía uno o varios (también funciona enviar un álbum). Cuando termines, pulsa «✅ Listo, continuar» o «⏭️ Omitir» si no tienes.",
