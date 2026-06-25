@@ -1,62 +1,95 @@
-## Identidad gráfica "Venezuela Se Levanta"
+# Plan: Reportes multi-canal + experiencia mobile tipo app nativa
 
-### Concepto
-**"Amanecer sobre el Ávila"** — Un nuevo día que se levanta sobre el país. Calidez del amanecer caribe + solidez del azul profundo de la noche que termina. Símbolo: el mapa de Venezuela contenido dentro de un corazón con un pulso/latido que lo recorre.
+Objetivo: que reportar sea rápido, posible sin señal y desde múltiples canales; y que la app en móvil se sienta como una aplicación nativa (no como una web encogida).
 
-### Paleta (paleta "Amanecer Caribe")
-| Token | Hex | Uso |
-|---|---|---|
-| `--sunrise` | `#FF6B35` | Color principal / urgencia / acciones |
-| `--gold` | `#FFC93C` | Acento / destacados / alertas medias |
-| `--sky` | `#1A8FE3` | Secundario / enlaces / información |
-| `--midnight` | `#0D2B45` | Fondo del header, textos, modo oscuro |
-| `--cream` | `#FFF8F0` | Fondo cálido del modo claro |
+---
 
-Reemplazará los tokens actuales `--vzla-red/yellow/blue` y los colores semánticos de shadcn (`--primary`, `--background`, `--header`, etc.) manteniendo la estructura existente del design system.
+## 1. Experiencia mobile tipo app nativa
 
-### Tipografía
-- **Titulares:** Archivo Black (peso bold, presencia de cartel ciudadano).
-- **Cuerpo:** Hind (legible, humana, multi-peso).
-- Carga vía `<link>` en `__root.tsx` (ya hay preconnect a Google Fonts). Reemplaza la Inter actual.
+Rediseño mobile-first manteniendo el desktop intacto.
 
-### Logo "Corazón-Venezuela"
-SVG vectorial creado a mano, dos versiones:
-- **Full color:** silueta del mapa de Venezuela formando un corazón, con una línea de pulso/latido horizontal en gradiente `sunrise → gold`. Sobre el corazón, un pequeño sol que asoma.
-- **Monocromo:** versión en blanco para fondo oscuro y en `midnight` para fondo claro.
-- **Favicon:** versión simplificada (solo corazón + pulso) en `public/favicon.svg`.
+**Chrome de la app**
+- Header colapsable: en mobile se reduce a un top bar mínimo (logo + acción de auth) con `safe-area-inset-top` para notch.
+- **Bottom navigation bar** fija con 4 destinos: Mapa · Reportes · Desaparecidos · Stats. Iconos grandes (44px touch target), activos con el color Sunrise.
+- **FAB central (Floating Action Button) "+ Reportar"** sobre la bottom bar, color amanecer con glow, abre el form como bottom sheet.
+- Gestos: pull-to-refresh en listas, swipe horizontal entre tabs opcional.
+- `viewport-fit=cover`, `theme-color` dinámico, status bar translúcido, sin scroll horizontal jamás.
+- Tipografía y spacing escalados: títulos un punto más chicos en mobile, padding generoso, líneas táctiles ≥44px.
 
-Archivos:
-- `src/components/brand/Logo.tsx` — componente React parametrizable (tamaño, variante color/mono/blanco, con o sin wordmark).
-- `public/favicon.svg` — favicon vectorial.
-- Se actualiza el `<link rel="icon">` en `__root.tsx`.
+**Pantallas clave reescritas**
+- **Mapa (home):** ocupa 100% de viewport. El hero "amanecer" pasa a ser una *card* colapsable arriba (dismiss persistido en localStorage). Filtros de categoría en chips horizontales scrolleables sobre el mapa. Geolocalización del usuario con botón flotante "📍 Mi ubicación".
+- **Reportar:** se vuelve un **bottom sheet de 3 pasos** (Categoría grande con emoji · Ubicación con mapa táctil + GPS + foto con EXIF · Detalles). Botones grandes, validación inline, "Enviar" sticky abajo.
+- **Listas (reportes/desaparecidos):** cards full-width con foto a la izquierda, info clave grande, badge de urgencia con color. Skeleton loaders.
+- **Stats:** grid 2x2 de números grandes tipo dashboard de app.
 
-### Hero / portada ilustrada
-Imagen generada (premium) para la home: ilustración estilo editorial cálido con siluetas de montañas/tepuyes al fondo, un sol naranja-dorado naciendo, siluetas de personas con manos alzadas en primer plano, paleta amanecer caribe estricta. Guardada en `src/assets/hero-amanecer.jpg`.
+**Detalles de feel "nativo"**
+- Transiciones de ruta suaves (fade/slide) con `view-transition-api` cuando esté disponible.
+- Haptic feedback (`navigator.vibrate`) en acciones clave (envío de reporte, confirmar).
+- Toasts tipo iOS desde arriba, no desde abajo (evita chocar con bottom nav).
+- Sin selección de texto en chrome de la app (`user-select: none` en nav/header).
+- Splash screens y theme-color combinando con la paleta amanecer.
 
-Se añade un bloque hero ligero **encima del mapa en `/`** (overlay traslúcido, no rompe el flujo del mapa) con:
-- Logo grande + wordmark "Venezuela Se Levanta"
-- Tagline: "Juntos mapeamos. Juntos nos levantamos."
-- CTA primario "Reportar" / secundario "Ver mapa"
-- Se cierra/colapsa al hacer scroll o tras unos segundos, para no estorbar al mapa.
+---
 
-### Póster / Open Graph (1200×630)
-Imagen generada para compartir en redes: logo + wordmark sobre composición del hero, dominio `venezuelaselevanta.info` visible. Guardada como `src/assets/og-cover.jpg` y referenciada en `__root.tsx` y rutas principales como `og:image` / `twitter:image`.
+## 2. PWA instalable + offline queue
 
-### Aplicación al sitio existente
-- `src/styles.css`: nuevos tokens de color, mapeo a `--primary`, `--background`, `--header`, `--vzla-*` (mantengo los nombres `vzla-*` apuntando a los nuevos colores para no romper componentes), nueva familia tipográfica.
-- `src/routes/__root.tsx`: links a Archivo Black + Hind, favicon SVG, og:image global.
-- `src/components/Header.tsx`: sustituir el `<AlertTriangle>` + texto por `<Logo />`. Mantener layout, navegación, contador "activos", modo oscuro tal cual.
-- `src/components/MapView.tsx`: tonos de marcadores y pulse en `sunrise/gold/sky` (mantiene la lógica de urgencia, solo cambia hex).
-- `src/routes/index.tsx`: insertar el hero overlay descrito arriba.
-- Rutas internas (`reportar`, `desaparecidos`, `estadisticas`, `admin`, `auth`): heredan automáticamente la nueva paleta y tipografía; sin cambios estructurales.
+- `vite-plugin-pwa` con `generateSW`, guards de preview de Lovable (no registra en `id-preview--*` ni dev).
+- `manifest.webmanifest` con name "Venezuela Se Levanta", short_name "VSL", display `standalone`, theme_color sunrise, icons 192/512/maskable, screenshots para Android.
+- Iconos PWA generados (logo corazón-Venezuela sobre fondo amanecer).
+- **Cache strategy:**
+  - HTML → NetworkFirst
+  - Assets hashed → CacheFirst
+  - Tiles de OpenStreetMap → StaleWhileRevalidate (cap 200 tiles, 7 días) para que el mapa funcione offline en la última zona vista.
+- **Offline queue para reportes:** cuando el usuario envía sin conexión, el reporte se guarda en IndexedDB (`idb` lib) en una cola `pending_reports`. Un Background Sync (`sync` event) o un retry al detectar `online` los manda a Supabase y notifica al usuario ("3 reportes enviados al recuperar señal").
+- Banner "Sin conexión — tu reporte se enviará automáticamente" cuando `navigator.onLine === false`.
+- Botón "Instalar app" en el menú cuando el navegador dispara `beforeinstallprompt`.
 
-### Lo que NO cambia
-- Esquema de base de datos, hooks, lógica de reportes, real-time, rutas, funcionalidades, copy general (solo branding visual).
-- Layout y componentes de las páginas internas.
+---
 
-### Detalles técnicos
-- Fuentes vía `<link>` en `__root.tsx` (no `@import` en CSS — Lightning CSS no resuelve URLs remotas).
-- Imágenes hero y OG generadas con `imagegen` calidad `premium` (texto legible en OG) y guardadas bajo `src/assets/`.
-- Logo como componente SVG inline para que herede `currentColor` y se anime sin peticiones extra.
+## 3. Mejoras al formulario actual
 
-¿Procedo con esta dirección?
+- **Geolocalización 1-tap:** botón "📍 Usar mi ubicación actual" con `navigator.geolocation` de alta precisión; muestra precisión en metros.
+- **Cámara nativa:** `<input type="file" accept="image/*" capture="environment">` para abrir la cámara directamente en móvil.
+- **EXIF GPS:** al subir foto, extraer coords con `exifr` y pre-llenar lat/lng si el form aún no tiene ubicación.
+- **Subida de fotos a Supabase Storage** (bucket público `report-photos` con RLS de insert público, max 5MB, conversión a webp en cliente con `browser-image-compression`).
+- **Web Share Target:** registrar la PWA como destino de "Compartir" para que desde Google Maps o WhatsApp se pueda compartir una ubicación que abra el form pre-llenado.
+- Validación mejorada con feedback inmediato; el botón "Enviar" muestra estado (idle/sending/queued/sent).
+
+---
+
+## 4. Telegram Bot como canal de reporte
+
+Bot que recibe mensajes y los inserta en `reports`.
+
+- Conectar **Telegram via connector** de Lovable (`standard_connectors--connect telegram`).
+- Crear webhook público en `src/routes/api/public/telegram/webhook.ts` que:
+  1. Verifica `X-Telegram-Bot-Api-Secret-Token` (derivado por SHA-256 del `TELEGRAM_API_KEY`).
+  2. Parsea el `update`: acepta texto, ubicación (`message.location`) y foto.
+  3. Si hay foto, hace `getFile` y la sube a Supabase Storage.
+  4. Detecta categoría por palabras clave o pregunta con teclado inline (botones: 🔴 Desaparecido, 🟠 Médico, 🟡 Rescate, etc.).
+  5. Inserta en `reports` con `reporter_name = "Telegram: @username"`, `verified=false`.
+  6. Responde al usuario "✅ Reporte recibido, ID #abc123. Verás aparecer un pin en el mapa".
+- Comandos: `/start` (instrucciones), `/reportar` (asistente paso a paso), `/desaparecido` (nombre + foto + lugar → `missing_persons`).
+- Registro del webhook con el URL público estable `project--<id>-dev.lovable.app/api/public/telegram/webhook`.
+- En la home, banner "📱 También puedes reportar por Telegram: @VenezuelaSeLevantaBot" (o el handle que el usuario elija).
+
+---
+
+## 5. Cambios en la base de datos
+
+Migración pequeña:
+- Bucket de Storage `report-photos` (público read, insert público).
+- Bucket `missing-photos` (idem).
+- Columna `source text default 'web'` en `reports` y `missing_persons` para distinguir origen (`web` / `telegram` / `pwa-offline`).
+- (Opcional) Tabla `telegram_messages` con `update_id` PK para idempotencia, si el bot la necesita.
+
+---
+
+## Orden de implementación sugerido
+
+1. **Rediseño mobile** (bottom nav + FAB + bottom sheet + chrome nativo) — impacto inmediato visible.
+2. **Form mejorado** (geolocalización, cámara, fotos a Storage, EXIF).
+3. **PWA instalable + offline queue de reportes + cache de tiles**.
+4. **Telegram bot** (conectar connector, webhook, comandos).
+
+¿Avanzo con los 4 pasos en orden, o prefieres priorizar alguno primero (por ejemplo sólo el rediseño mobile + PWA, y dejar Telegram para una segunda iteración)?
