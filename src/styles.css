@@ -130,6 +130,13 @@
   }
   /* App-chrome: no text selection on nav surfaces */
   header, nav { -webkit-user-select: none; user-select: none; }
+  /* Consistent, accessible focus ring across the app */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  button:focus:not(:focus-visible), a:focus:not(:focus-visible) { outline: none; }
 }
 
 /* Hide scrollbars on horizontal chip rows */
