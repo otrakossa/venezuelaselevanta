@@ -47,6 +47,7 @@ export interface MapViewProps {
   pickedLocation?: { lat: number; lng: number } | null;
   height?: string;
   focusReport?: { id: string; lat: number; lng: number; nonce: number } | null;
+  focusMissing?: { id: string; lat: number; lng: number; nonce: number } | null;
   onOpenDetail?: (id: string) => void;
   showQuakes?: boolean;
   missing?: MissingPerson[];
