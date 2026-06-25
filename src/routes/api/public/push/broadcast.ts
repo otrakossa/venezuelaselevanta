@@ -82,13 +82,21 @@ export const Route = createFileRoute("/api/public/push/broadcast")({
 
         const { data: report, error: rErr } = await supabaseAdmin
           .from("reports")
-          .select("id, title, description, latitude, longitude, address, urgency, category_id")
+          .select("id, title, description, lat, lng, address, urgency, category_id")
           .eq("id", body.report_id)
           .maybeSingle();
 
         if (rErr || !report) {
           return Response.json({ ok: false, error: "report not found" }, { status: 404 });
         }
+        const r = report as {
+          id: string;
+          title: string | null;
+          description: string | null;
+          lat: number | null;
+          lng: number | null;
+          address: string | null;
+        };
 
         const { data: subs, error: sErr } = await supabaseAdmin
           .from("push_subscriptions")
@@ -96,18 +104,18 @@ export const Route = createFileRoute("/api/public/push/broadcast")({
 
         if (sErr) return Response.json({ ok: false, error: sErr.message }, { status: 500 });
 
-        const targets = (subs ?? []).filter((s) => {
-          if (s.lat == null || s.lng == null) return true; // no location → all critical alerts
-          if (report.latitude == null || report.longitude == null) return true;
-          const dist = haversineKm(s.lat, s.lng, report.latitude as number, report.longitude as number);
+        const targets = (subs ?? []).filter((s: any) => {
+          if (s.lat == null || s.lng == null) return true;
+          if (r.lat == null || r.lng == null) return true;
+          const dist = haversineKm(s.lat, s.lng, r.lat, r.lng);
           return dist <= (s.radius_km ?? 10);
         });
 
         const notifPayload = JSON.stringify({
-          title: `🚨 Emergencia: ${report.title?.slice(0, 60) ?? "Reporte crítico"}`,
-          body: report.address || report.description?.slice(0, 120) || "Toca para ver el detalle.",
-          url: `/?report=${report.id}`,
-          tag: `report-${report.id}`,
+          title: `🚨 Emergencia: ${r.title?.slice(0, 60) ?? "Reporte crítico"}`,
+          body: r.address || r.description?.slice(0, 120) || "Toca para ver el detalle.",
+          url: `/?report=${r.id}`,
+          tag: `report-${r.id}`,
         });
 
         const sent: { endpoint: string; status: number }[] = [];
