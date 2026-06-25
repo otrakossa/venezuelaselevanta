@@ -31,6 +31,9 @@ echo "→ Building..."
 bun run build
 
 echo "→ Restarting app..."
-pm2 restart venezuela-levanta
+pm2 start /var/www/venezuelaselevanta/ecosystem.config.cjs || \
+  pm2 restart /var/www/venezuelaselevanta/ecosystem.config.cjs --update-env
+pm2 save
 
 echo "✓ Deploy completado: $(date)"
+
