@@ -238,6 +238,9 @@ function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFou
   const reported = new Date(person.report_date);
   const daysAgo = Math.floor((Date.now() - reported.getTime()) / 86_400_000);
 
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://venezuelaselevanta.info";
+  const directLink = `${origin}/?missing=${person.id}`;
+
   const shareWA = () => {
     const text =
       `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n` +
@@ -245,13 +248,13 @@ function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFou
       (person.last_seen_location ? `📍 Última ubicación: ${person.last_seen_location}\n` : "") +
       (person.description ? `📝 ${person.description}\n` : "") +
       (person.contact_phone ? `📞 Contacto: ${person.contact_phone}\n` : "") +
-      `\nMás info: https://venezuelaselevanta.info/desaparecidos`;
+      `\nVer en el mapa: ${directLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(`https://venezuelaselevanta.info/desaparecidos`);
+      await navigator.clipboard.writeText(directLink);
       toast.success("Enlace copiado");
     } catch {
       toast.error("No se pudo copiar");
