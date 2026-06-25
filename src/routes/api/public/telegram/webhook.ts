@@ -61,14 +61,16 @@ function categoryKb() {
 const urgencyKb = () =>
   ikb([URGENCIES.map((u) => ({ text: u.n, callback_data: `urg:${u.v}` }))]);
 
-const mediaKb = () => ({
+const mediaKb = (hasAny: boolean) => ({
   reply_markup: {
     keyboard: [
-      [{ text: "⏭️ Omitir foto/video" }],
+      hasAny
+        ? [{ text: "✅ Listo, continuar" }]
+        : [{ text: "⏭️ Omitir foto/video" }],
       [{ text: "❌ Cancelar" }],
     ],
     resize_keyboard: true,
-    one_time_keyboard: true,
+    one_time_keyboard: false,
   },
 });
 
@@ -170,6 +172,7 @@ async function uploadTelegramFile(
 
 async function finalizeReport(chatId: number, draft: Record<string, unknown>, reporterName: string) {
   const db = await getAdmin();
+  const mediaUrls = Array.isArray(draft.media_urls) ? (draft.media_urls as string[]) : [];
   const { error } = await db.from("reports").insert({
     title: String(draft.title ?? "Reporte vía Telegram").slice(0, 120),
     description: (draft.description as string | undefined) ?? null,
@@ -180,17 +183,17 @@ async function finalizeReport(chatId: number, draft: Record<string, unknown>, re
     lat: Number(draft.lat),
     lng: Number(draft.lng),
     reporter_name: `${reporterName} (Telegram)`,
-    photo_url: (draft.media_url as string | undefined) ?? null,
+    photo_url: mediaUrls[0] ?? null,
+    media_urls: mediaUrls,
   });
   await clearSession(chatId);
   if (error) {
     await send(chatId, `⚠️ No se pudo guardar el reporte: ${error.message}`, removeKb());
     return;
   }
-  const hasMedia = Boolean(draft.media_url);
   await send(
     chatId,
-    `✅ <b>¡Reporte enviado!</b>${hasMedia ? "\n📎 Multimedia adjunta." : ""}\nGracias por ayudar. Ya aparece en el mapa colaborativo.\n\nUsa /reportar para enviar otro.`,
+    `✅ <b>¡Reporte enviado!</b>${mediaUrls.length ? `\n📎 ${mediaUrls.length} adjunto${mediaUrls.length === 1 ? "" : "s"}.` : ""}\nGracias por ayudar. Ya aparece en el mapa colaborativo.\n\nUsa /reportar para enviar otro.`,
     removeKb(),
   );
 }
@@ -213,11 +216,11 @@ async function processUpdate(update: Record<string, unknown>) {
     }
     if (cb.data.startsWith("urg:") && session.state === "awaiting_urgency") {
       const urg = cb.data.slice(4);
-      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg });
+      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg, media_urls: [] });
       await send(
         chatId,
-        "4/5 · ¿Quieres adjuntar una <b>foto o video</b>? Envíala ahora, o pulsa «Omitir».",
-        mediaKb(),
+        "4/5 · ¿Quieres adjuntar <b>fotos y/o videos</b>?\n\nEnvía uno o varios (también funciona enviar un álbum). Cuando termines, pulsa «✅ Listo, continuar» o «⏭️ Omitir» si no tienes.",
+        mediaKb(false),
       );
       return;
     }
@@ -245,7 +248,7 @@ async function processUpdate(update: Record<string, unknown>) {
   if (text === "/ayuda") {
     return send(
       chatId,
-      "Comandos:\n/reportar — nuevo reporte (acepta foto/video)\n/cancelar — cancelar reporte actual\n/start — menú\n\nMapa: https://venezuelaselevanta.info",
+      "Comandos:\n/reportar — nuevo reporte (acepta varias fotos/videos)\n/cancelar — cancelar reporte actual\n/start — menú\n\nMapa: https://venezuelaselevanta.info",
     );
   }
 
@@ -266,24 +269,24 @@ async function processUpdate(update: Record<string, unknown>) {
   }
 
   if (session.state === "awaiting_media") {
+    const current = Array.isArray(session.draft.media_urls)
+      ? (session.draft.media_urls as string[])
+      : [];
+
     // Photo
     if (msg.photo && msg.photo.length > 0) {
-      await send(chatId, "⏳ Subiendo foto…");
       const largest = msg.photo[msg.photo.length - 1];
       const uploaded = await uploadTelegramFile(largest.file_id, "image");
       if (!uploaded) {
-        await send(chatId, "⚠️ No se pudo subir la foto. Intenta otra o pulsa «Omitir».", mediaKb());
+        await send(chatId, "⚠️ No se pudo subir la foto. Intenta de nuevo.", mediaKb(current.length > 0));
         return;
       }
-      await setSession(chatId, "awaiting_location", {
-        ...session.draft,
-        media_url: uploaded.url,
-        media_type: uploaded.type,
-      });
+      const next = [...current, uploaded.url];
+      await setSession(chatId, "awaiting_media", { ...session.draft, media_urls: next });
       return send(
         chatId,
-        "✅ Foto adjuntada.\n\n5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
-        locationKb(),
+        `📎 ${next.length} adjunto${next.length === 1 ? "" : "s"}. Envía más o pulsa «✅ Listo, continuar».`,
+        mediaKb(true),
       );
     }
     // Video
@@ -291,23 +294,29 @@ async function processUpdate(update: Record<string, unknown>) {
       await send(chatId, "⏳ Subiendo video…");
       const uploaded = await uploadTelegramFile(msg.video.file_id, "video");
       if (!uploaded) {
-        await send(chatId, "⚠️ No se pudo subir el video. Intenta otro o pulsa «Omitir».", mediaKb());
+        await send(chatId, "⚠️ No se pudo subir el video. Intenta de nuevo.", mediaKb(current.length > 0));
         return;
       }
-      await setSession(chatId, "awaiting_location", {
-        ...session.draft,
-        media_url: uploaded.url,
-        media_type: uploaded.type,
-      });
+      const next = [...current, uploaded.url];
+      await setSession(chatId, "awaiting_media", { ...session.draft, media_urls: next });
       return send(
         chatId,
-        "✅ Video adjuntado.\n\n5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
+        `📎 ${next.length} adjunto${next.length === 1 ? "" : "s"}. Envía más o pulsa «✅ Listo, continuar».`,
+        mediaKb(true),
+      );
+    }
+    // Continue
+    if (text === "✅ Listo, continuar" || text === "/listo") {
+      await setSession(chatId, "awaiting_location", session.draft);
+      return send(
+        chatId,
+        "5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
         locationKb(),
       );
     }
-    // Skip
+    // Skip (no media yet)
     if (text === "⏭️ Omitir foto/video" || text === "/omitir" || text === "-") {
-      await setSession(chatId, "awaiting_location", session.draft);
+      await setSession(chatId, "awaiting_location", { ...session.draft, media_urls: [] });
       return send(
         chatId,
         "5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
@@ -316,8 +325,8 @@ async function processUpdate(update: Record<string, unknown>) {
     }
     return send(
       chatId,
-      "Envía una foto o video, o pulsa «Omitir foto/video».",
-      mediaKb(),
+      "Envía fotos o videos, o pulsa el botón inferior cuando termines.",
+      mediaKb(current.length > 0),
     );
   }
 

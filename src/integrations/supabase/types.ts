@@ -111,6 +111,7 @@ export type Database = {
           id: string
           lat: number
           lng: number
+          media_urls: string[]
           photo_url: string | null
           reporter_name: string | null
           status: string
@@ -128,6 +129,7 @@ export type Database = {
           id?: string
           lat: number
           lng: number
+          media_urls?: string[]
           photo_url?: string | null
           reporter_name?: string | null
           status?: string
@@ -145,6 +147,7 @@ export type Database = {
           id?: string
           lat?: number
           lng?: number
+          media_urls?: string[]
           photo_url?: string | null
           reporter_name?: string | null
           status?: string

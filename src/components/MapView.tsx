@@ -105,6 +105,36 @@ export function MapView({
                     {r.address ? (
                       <div className="text-[11px] text-neutral-500">📍 {r.address}</div>
                     ) : null}
+                    {(() => {
+                      const media = (r.media_urls && r.media_urls.length > 0)
+                        ? r.media_urls
+                        : (r.photo_url ? [r.photo_url] : []);
+                      if (media.length === 0) return null;
+                      return (
+                        <div className={`grid gap-1 pt-1 ${media.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                          {media.map((url, i) => {
+                            const isVideo = /\.(mp4|mov|webm|m4v)(\?|$)/i.test(url);
+                            return isVideo ? (
+                              <video
+                                key={i}
+                                src={url}
+                                controls
+                                className="w-full h-24 object-cover rounded bg-black"
+                              />
+                            ) : (
+                              <a key={i} href={url} target="_blank" rel="noreferrer">
+                                <img
+                                  src={url}
+                                  alt={`Adjunto ${i + 1}`}
+                                  className="w-full h-24 object-cover rounded"
+                                  loading="lazy"
+                                />
+                              </a>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     <div className="flex flex-wrap gap-1 pt-1">
                       <span
                         className="text-[10px] px-1.5 py-0.5 rounded font-semibold text-white"
