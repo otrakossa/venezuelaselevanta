@@ -67,12 +67,14 @@ function FocusController({
     if (!target) return;
     const targetZoom = Math.max(map.getZoom(), 13);
     map.flyTo([target.lat, target.lng], targetZoom, { duration: 0.8 });
-    // Wait for the cluster group to settle so the marker exists at this zoom.
-    const t = window.setTimeout(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    const tryOpen = () => {
       const m = markersRef.current.get(target.id);
-      if (m) m.openPopup();
-    }, 700);
-    return () => window.clearTimeout(t);
+      if (m) { m.openPopup(); } else if (++attempts < 5) { timerId = setTimeout(tryOpen, 250); }
+    };
+    timerId = setTimeout(tryOpen, 900);
+    return () => clearTimeout(timerId);
   }, [target, map, markersRef]);
   return null;
 }
