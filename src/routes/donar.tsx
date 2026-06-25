@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { Copy, Check, CreditCard, Server, Map as MapIcon, Radio, AlertTriangle, Wallet } from "lucide-react";
-import heroImage from "@/assets/hero-amanecer.jpg";
+import heroImage from "@/assets/hero-rescate.jpg";
 
 export const Route = createFileRoute("/donar")({
   ssr: false,
