@@ -429,7 +429,7 @@ function HomePage() {
                   <button
                     type="button"
                     onClick={() => {
-                      openDetail(r.id);
+                      setFocusReport({ id: r.id, lat: r.lat, lng: r.lng, nonce: Date.now() });
                       setSheetOpen(false);
                     }}
                     className="flex-1 min-w-0 text-left p-3 active:bg-muted/70 hover:bg-muted/50 transition"
