@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const SITE = "https://venezuelaselevanta.info";
 const STATIC_PATHS = ["/", "/reportar", "/desaparecidos", "/estadisticas", "/donar", "/creditos"];
 
-export const Route = createFileRoute("/sitemap[.]xml")({
+export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
