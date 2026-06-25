@@ -275,32 +275,37 @@ function OrgCard({ org }: { org: Organization }) {
     .join("")
     .toUpperCase();
   const content = (
-    <div className="rounded-xl border border-border bg-card p-4 h-full flex flex-col gap-3 hover:border-[color:var(--sunrise)]/50 hover:shadow-lg transition-all group">
-      <div className="flex items-center gap-3">
-        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[color:var(--gold)]/30 to-[color:var(--sunrise)]/20 text-[color:var(--midnight)] flex items-center justify-center font-display text-sm shrink-0 overflow-hidden ring-1 ring-border group-hover:scale-105 transition-transform">
-          {org.logo ? (
-            <img
-              src={org.logo}
-              alt={org.name}
-              className="h-full w-full object-contain p-1.5 bg-white"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : (
-            initials
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-sm truncate">{org.name}</div>
-          {org.url && (
-            <div className="text-[11px] text-[color:var(--sky)] inline-flex items-center gap-0.5 truncate">
-              Visitar <ExternalLink className="h-2.5 w-2.5" />
-            </div>
-          )}
+    <div className="rounded-2xl border border-border bg-card overflow-hidden h-full flex flex-col hover:border-[color:var(--sunrise)]/60 hover:shadow-xl hover:-translate-y-1 transition-all group">
+      <div className="relative h-40 bg-gradient-to-br from-white via-[color:var(--cream)] to-[color:var(--gold)]/20 flex items-center justify-center p-6 border-b border-border/60 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--sunrise)_15%,transparent),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
+        {org.logo ? (
+          <img
+            src={org.logo}
+            alt={org.name}
+            className="relative max-h-full max-w-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              el.style.display = "none";
+              el.parentElement?.querySelector("[data-fallback]")?.classList.remove("hidden");
+            }}
+          />
+        ) : null}
+        <div
+          data-fallback
+          className={`${org.logo ? "hidden " : ""}relative h-20 w-20 rounded-2xl bg-gradient-to-br from-[color:var(--sunrise)] to-[color:var(--gold)] text-white flex items-center justify-center font-display text-2xl shadow-lg`}
+        >
+          {initials}
         </div>
       </div>
-      {org.description && <p className="text-xs text-muted-foreground leading-relaxed">{org.description}</p>}
+      <div className="p-4 flex-1 flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="font-display text-base text-[color:var(--midnight)] leading-tight">{org.name}</div>
+          {org.url && (
+            <ExternalLink className="h-4 w-4 text-[color:var(--sky)] shrink-0 mt-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          )}
+        </div>
+        {org.description && <p className="text-xs text-muted-foreground leading-relaxed">{org.description}</p>}
+      </div>
     </div>
   );
   return org.url ? (
