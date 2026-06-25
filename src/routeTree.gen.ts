@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
+import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 
 const ReportarRoute = ReportarRouteImport.update({
   id: '/reportar',
@@ -53,6 +54,11 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
+  id: '/api/public/media/$',
+  path: '/api/public/media/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/desaparecidos': typeof DesaparecidosRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/desaparecidos': typeof DesaparecidosRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/desaparecidos': typeof DesaparecidosRoute
   '/estadisticas': typeof EstadisticasRoute
   '/reportar': typeof ReportarRoute
+  '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
@@ -91,6 +100,7 @@ export interface FileRouteTypes {
     | '/desaparecidos'
     | '/estadisticas'
     | '/reportar'
+    | '/api/public/media/$'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -100,6 +110,7 @@ export interface FileRouteTypes {
     | '/desaparecidos'
     | '/estadisticas'
     | '/reportar'
+    | '/api/public/media/$'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
@@ -109,6 +120,7 @@ export interface FileRouteTypes {
     | '/desaparecidos'
     | '/estadisticas'
     | '/reportar'
+    | '/api/public/media/$'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -119,6 +131,7 @@ export interface RootRouteChildren {
   DesaparecidosRoute: typeof DesaparecidosRoute
   EstadisticasRoute: typeof EstadisticasRoute
   ReportarRoute: typeof ReportarRoute
+  ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -173,6 +186,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/media/$': {
+      id: '/api/public/media/$'
+      path: '/api/public/media/$'
+      fullPath: '/api/public/media/$'
+      preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +203,7 @@ const rootRouteChildren: RootRouteChildren = {
   DesaparecidosRoute: DesaparecidosRoute,
   EstadisticasRoute: EstadisticasRoute,
   ReportarRoute: ReportarRoute,
+  ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport

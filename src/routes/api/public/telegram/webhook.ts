@@ -61,6 +61,17 @@ function categoryKb() {
 const urgencyKb = () =>
   ikb([URGENCIES.map((u) => ({ text: u.n, callback_data: `urg:${u.v}` }))]);
 
+const mediaKb = () => ({
+  reply_markup: {
+    keyboard: [
+      [{ text: "⏭️ Omitir foto/video" }],
+      [{ text: "❌ Cancelar" }],
+    ],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  },
+});
+
 const locationKb = () => ({
   reply_markup: {
     keyboard: [
@@ -101,19 +112,60 @@ async function handleStart(chatId: number, name?: string) {
   await clearSession(chatId);
   await send(
     chatId,
-    `<b>Venezuela Se Levanta</b> 🇻🇪\n\nHola${name ? ` ${name}` : ""}. Soy el bot para reportar incidentes del terremoto.\n\nUsa /reportar para crear un reporte ciudadano. Tu información aparecerá en el mapa en tiempo real.\n\nOtros comandos:\n/reportar — nuevo reporte\n/cancelar — cancelar reporte actual\n/ayuda — ayuda`,
+    `<b>Venezuela Se Levanta</b> 🇻🇪\n\nHola${name ? ` ${name}` : ""}. Soy el bot para reportar incidentes del terremoto.\n\nUsa /reportar para crear un reporte ciudadano. Puedes adjuntar foto o video. Tu información aparecerá en el mapa en tiempo real.\n\nOtros comandos:\n/reportar — nuevo reporte\n/cancelar — cancelar reporte actual\n/ayuda — ayuda`,
     removeKb(),
   );
 }
 
 async function startReport(chatId: number) {
   await setSession(chatId, "awaiting_category", {});
-  await send(chatId, "1/4 · Elige la <b>categoría</b> del incidente:", categoryKb());
+  await send(chatId, "1/5 · Elige la <b>categoría</b> del incidente:", categoryKb());
 }
 
 async function cancelFlow(chatId: number) {
   await clearSession(chatId);
   await send(chatId, "❌ Reporte cancelado. Usa /reportar para empezar de nuevo.", removeKb());
+}
+
+// Download Telegram file via gateway and upload to Supabase storage.
+async function uploadTelegramFile(
+  fileId: string,
+  kind: "image" | "video",
+): Promise<{ url: string; type: string } | null> {
+  try {
+    const infoRes = await tg("getFile", { file_id: fileId });
+    if (!infoRes.ok) return null;
+    const info = (await infoRes.json()) as { result?: { file_path?: string } };
+    const filePath = info.result?.file_path;
+    if (!filePath) return null;
+
+    const dl = await fetch(`${GATEWAY_URL}/file/${filePath}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": process.env.TELEGRAM_API_KEY!,
+      },
+    });
+    if (!dl.ok) return null;
+    const bytes = new Uint8Array(await dl.arrayBuffer());
+    const contentType =
+      dl.headers.get("content-type") ||
+      (kind === "video" ? "video/mp4" : "image/jpeg");
+    const ext = filePath.split(".").pop()?.toLowerCase() || (kind === "video" ? "mp4" : "jpg");
+    const key = `telegram/${crypto.randomUUID()}.${ext}`;
+
+    const db = await getAdmin();
+    const { error } = await db.storage
+      .from("report-media")
+      .upload(key, bytes, { contentType, upsert: false });
+    if (error) {
+      console.error("storage upload", error);
+      return null;
+    }
+    return { url: `/api/public/media/${key}`, type: kind };
+  } catch (err) {
+    console.error("uploadTelegramFile", err);
+    return null;
+  }
 }
 
 async function finalizeReport(chatId: number, draft: Record<string, unknown>, reporterName: string) {
@@ -128,15 +180,17 @@ async function finalizeReport(chatId: number, draft: Record<string, unknown>, re
     lat: Number(draft.lat),
     lng: Number(draft.lng),
     reporter_name: `${reporterName} (Telegram)`,
+    photo_url: (draft.media_url as string | undefined) ?? null,
   });
   await clearSession(chatId);
   if (error) {
     await send(chatId, `⚠️ No se pudo guardar el reporte: ${error.message}`, removeKb());
     return;
   }
+  const hasMedia = Boolean(draft.media_url);
   await send(
     chatId,
-    `✅ <b>¡Reporte enviado!</b>\nGracias por ayudar. Ya aparece en el mapa colaborativo.\n\nUsa /reportar para enviar otro.`,
+    `✅ <b>¡Reporte enviado!</b>${hasMedia ? "\n📎 Multimedia adjunta." : ""}\nGracias por ayudar. Ya aparece en el mapa colaborativo.\n\nUsa /reportar para enviar otro.`,
     removeKb(),
   );
 }
@@ -154,16 +208,16 @@ async function processUpdate(update: Record<string, unknown>) {
     if (cb.data.startsWith("cat:") && session.state === "awaiting_category") {
       const slug = cb.data.slice(4);
       await setSession(chatId, "awaiting_title", { ...session.draft, category: slug });
-      await send(chatId, "2/4 · Escribe un <b>título breve</b> (ej: «Edificio colapsado en Av. Bolívar»).");
+      await send(chatId, "2/5 · Escribe un <b>título breve</b> (ej: «Edificio colapsado en Av. Bolívar»).");
       return;
     }
     if (cb.data.startsWith("urg:") && session.state === "awaiting_urgency") {
       const urg = cb.data.slice(4);
-      await setSession(chatId, "awaiting_location", { ...session.draft, urgency: urg });
+      await setSession(chatId, "awaiting_media", { ...session.draft, urgency: urg });
       await send(
         chatId,
-        "4/4 · Comparte la <b>ubicación</b> del incidente (botón abajo). Si no estás allí, puedes adjuntar una ubicación manual desde el clip 📎.",
-        locationKb(),
+        "4/5 · ¿Quieres adjuntar una <b>foto o video</b>? Envíala ahora, o pulsa «Omitir».",
+        mediaKb(),
       );
       return;
     }
@@ -176,6 +230,8 @@ async function processUpdate(update: Record<string, unknown>) {
         from?: { first_name?: string };
         text?: string;
         location?: { latitude: number; longitude: number };
+        photo?: { file_id: string; file_size?: number }[];
+        video?: { file_id: string };
       }
     | undefined;
   if (!msg) return;
@@ -189,7 +245,7 @@ async function processUpdate(update: Record<string, unknown>) {
   if (text === "/ayuda") {
     return send(
       chatId,
-      "Comandos:\n/reportar — nuevo reporte\n/cancelar — cancelar reporte actual\n/start — menú\n\nMapa: https://venezuelaselevanta.info",
+      "Comandos:\n/reportar — nuevo reporte (acepta foto/video)\n/cancelar — cancelar reporte actual\n/start — menú\n\nMapa: https://venezuelaselevanta.info",
     );
   }
 
@@ -200,13 +256,69 @@ async function processUpdate(update: Record<string, unknown>) {
 
   if (session.state === "awaiting_title" && text) {
     await setSession(chatId, "awaiting_description", { ...session.draft, title: text.slice(0, 120) });
-    return send(chatId, "3/4 · Agrega una <b>descripción</b> (o envía «-» para omitir).");
+    return send(chatId, "3/5 · Agrega una <b>descripción</b> (o envía «-» para omitir).");
   }
 
   if (session.state === "awaiting_description" && text) {
     const desc = text === "-" ? null : text.slice(0, 1000);
     await setSession(chatId, "awaiting_urgency", { ...session.draft, description: desc });
     return send(chatId, "Elige la <b>urgencia</b>:", urgencyKb());
+  }
+
+  if (session.state === "awaiting_media") {
+    // Photo
+    if (msg.photo && msg.photo.length > 0) {
+      await send(chatId, "⏳ Subiendo foto…");
+      const largest = msg.photo[msg.photo.length - 1];
+      const uploaded = await uploadTelegramFile(largest.file_id, "image");
+      if (!uploaded) {
+        await send(chatId, "⚠️ No se pudo subir la foto. Intenta otra o pulsa «Omitir».", mediaKb());
+        return;
+      }
+      await setSession(chatId, "awaiting_location", {
+        ...session.draft,
+        media_url: uploaded.url,
+        media_type: uploaded.type,
+      });
+      return send(
+        chatId,
+        "✅ Foto adjuntada.\n\n5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
+        locationKb(),
+      );
+    }
+    // Video
+    if (msg.video) {
+      await send(chatId, "⏳ Subiendo video…");
+      const uploaded = await uploadTelegramFile(msg.video.file_id, "video");
+      if (!uploaded) {
+        await send(chatId, "⚠️ No se pudo subir el video. Intenta otro o pulsa «Omitir».", mediaKb());
+        return;
+      }
+      await setSession(chatId, "awaiting_location", {
+        ...session.draft,
+        media_url: uploaded.url,
+        media_type: uploaded.type,
+      });
+      return send(
+        chatId,
+        "✅ Video adjuntado.\n\n5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
+        locationKb(),
+      );
+    }
+    // Skip
+    if (text === "⏭️ Omitir foto/video" || text === "/omitir" || text === "-") {
+      await setSession(chatId, "awaiting_location", session.draft);
+      return send(
+        chatId,
+        "5/5 · Comparte la <b>ubicación</b> del incidente (botón abajo).",
+        locationKb(),
+      );
+    }
+    return send(
+      chatId,
+      "Envía una foto o video, o pulsa «Omitir foto/video».",
+      mediaKb(),
+    );
   }
 
   if (session.state === "awaiting_location" && msg.location) {
