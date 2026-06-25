@@ -224,8 +224,29 @@ function HomePage() {
               </div>
             }
           >
-            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} />
+            <MapView reports={visible} focusReport={focusReport} onOpenDetail={openDetail} showQuakes={showQuakes} />
           </ClientOnly>
+
+          {/* USGS Legend */}
+          {showQuakes && (
+            <div className="absolute left-2 bottom-16 lg:bottom-3 z-[400] bg-card/95 border border-border rounded-lg shadow-md p-2 text-[10px] backdrop-blur">
+              <div className="font-bold mb-1 text-[11px]">🌍 Sismos USGS</div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full" style={{ background: "#FFC93C", width: 10, height: 10, opacity: 0.7 }} />
+                  <span>M &lt; 4.0</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full" style={{ background: "#FF6B35", width: 14, height: 14, opacity: 0.7 }} />
+                  <span>M 4.0 – 5.5</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="rounded-full" style={{ background: "#DC2626", width: 18, height: 18, opacity: 0.7 }} />
+                  <span>M ≥ 5.5</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mobile bottom-sheet handle for the recent reports list */}
           <button
