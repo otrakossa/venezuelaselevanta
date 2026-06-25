@@ -37,3 +37,37 @@ export async function reverseGeocode(
     return null;
   }
 }
+
+/**
+ * Forward geocode an address string to lat/lng via Nominatim.
+ * Biases results to Venezuela. Returns null on failure.
+ */
+export async function geocodeAddress(
+  address: string,
+  signal?: AbortSignal,
+): Promise<{ lat: number; lng: number; display: string } | null> {
+  try {
+    const q = address.trim();
+    if (!q) return null;
+    const url = new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("format", "jsonv2");
+    url.searchParams.set("q", q);
+    url.searchParams.set("countrycodes", "ve");
+    url.searchParams.set("limit", "1");
+    url.searchParams.set("accept-language", "es");
+    const res = await fetch(url.toString(), {
+      signal,
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const hit = Array.isArray(data) ? data[0] : null;
+    if (!hit) return null;
+    const lat = parseFloat(hit.lat);
+    const lng = parseFloat(hit.lon);
+    if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+    return { lat, lng, display: hit.display_name ?? q };
+  } catch {
+    return null;
+  }
+}
