@@ -161,6 +161,31 @@ function HomePage() {
                     </button>
                   );
                 })}
+                <span className="shrink-0 w-px self-stretch bg-border/60 mx-0.5" aria-hidden />
+                <button
+                  onClick={() => setTrust((t) => (t === "verified" ? "all" : "verified"))}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    trust === "verified"
+                      ? "bg-[color:var(--gold)] text-[color:var(--midnight)] border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Solo reportes verificados oficialmente"
+                >
+                  <BadgeCheck className="h-3 w-3" /> Verificados
+                </button>
+                <button
+                  onClick={() => setTrust((t) => (t === "trusted" ? "all" : "trusted"))}
+                  className={cn(
+                    "shrink-0 inline-flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full border font-semibold whitespace-nowrap shadow-sm transition",
+                    trust === "trusted"
+                      ? "bg-emerald-500 text-white border-transparent"
+                      : "bg-card/95 text-foreground border-border",
+                  )}
+                  title="Verificados + confiables por la comunidad (≥70%)"
+                >
+                  <ShieldCheck className="h-3 w-3" /> Confiables
+                </button>
               </div>
             </div>
             <div className="pointer-events-auto bg-card/95 border border-border rounded-full px-2.5 py-1.5 text-[11px] font-bold shadow-sm shrink-0">
