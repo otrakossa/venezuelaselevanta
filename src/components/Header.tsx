@@ -127,7 +127,7 @@ export function Header() {
             )}
           >
             <Heart className="h-3.5 w-3.5 text-[color:var(--sunrise)]" />
-            Qué es · Créditos
+            Qué es esto?
           </Link>
           <Link
             to="/admin"
