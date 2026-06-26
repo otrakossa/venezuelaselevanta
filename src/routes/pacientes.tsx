@@ -515,6 +515,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     address: "",
     center_name: "",
     center_address: "",
+    center_lat: null as number | null,
+    center_lng: null as number | null,
+    center_phone: "" as string,
     status: "stable" as PatientStatus,
     notes: "",
   });
@@ -536,6 +539,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         sex:            f.sex || null,
         age:            f.age ? Number(f.age) : null,
         center_address: f.center_address.trim() || null,
+        center_lat:     f.center_lat,
+        center_lng:     f.center_lng,
         notes:          f.notes.trim() || null,
         id_number:      f.id_number.trim().replace(/\D/g, "") || null,
         phone:          f.phone.trim() || null,
@@ -626,13 +631,29 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         inputMode="tel"
       />
 
-      <div className="sm:col-span-2">
+      <div className="sm:col-span-2 space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
-          onChange={(name) => setF({ ...f, center_name: name })}
+          onChange={(name, c) =>
+            setF({
+              ...f,
+              center_name: name,
+              center_address: c?.address ?? (c ? [c.city, c.state].filter(Boolean).join(", ") : ""),
+              center_lat: c?.lat ?? null,
+              center_lng: c?.lng ?? null,
+              center_phone: c?.phone ?? "",
+            })
+          }
           placeholder="Nombre del centro de salud *"
           required
         />
+        {(f.center_lat != null || f.center_phone) && (
+          <p className="text-[11px] text-muted-foreground pl-1">
+            {f.center_lat != null && <span>📍 ubicación geolocalizada</span>}
+            {f.center_lat != null && f.center_phone && <span> · </span>}
+            {f.center_phone && <span>📞 {f.center_phone}</span>}
+          </p>
+        )}
       </div>
       <input
         className={`${field} sm:col-span-2`}

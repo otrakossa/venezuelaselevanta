@@ -431,6 +431,9 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     urgency:       "high" as NeedUrgency,
     center_name:   "",
     center_address: "",
+    center_lat:    null as number | null,
+    center_lng:    null as number | null,
+    center_phone:  "" as string,
     contact_name:  "",
     contact_phone: "",
     contact_info:  "",
@@ -453,6 +456,8 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         urgency:        f.urgency,
         center_name:    f.center_name.trim(),
         center_address: f.center_address.trim() || null,
+        lat:            f.center_lat,
+        lng:            f.center_lng,
         contact_name:   f.contact_name.trim() || null,
         contact_phone:  f.contact_phone.trim() || null,
         contact_info:   f.contact_info.trim() || null,
@@ -540,13 +545,29 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         maxLength={100}
       />
 
-      <div className="sm:col-span-2">
+      <div className="sm:col-span-2 space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
-          onChange={(name) => setF({ ...f, center_name: name })}
+          onChange={(name, c) =>
+            setF({
+              ...f,
+              center_name: name,
+              center_address: c?.address ?? (c ? [c.city, c.state].filter(Boolean).join(", ") : ""),
+              center_lat: c?.lat ?? null,
+              center_lng: c?.lng ?? null,
+              center_phone: c?.phone ?? "",
+            })
+          }
           placeholder="Centro / comunidad donde se necesita *"
           required
         />
+        {(f.center_lat != null || f.center_phone) && (
+          <p className="text-[11px] text-muted-foreground pl-1">
+            {f.center_lat != null && <span>📍 ubicación geolocalizada</span>}
+            {f.center_lat != null && f.center_phone && <span> · </span>}
+            {f.center_phone && <span>📞 {f.center_phone}</span>}
+          </p>
+        )}
       </div>
       <input
         className={`${field} sm:col-span-2`}

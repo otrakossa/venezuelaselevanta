@@ -10,11 +10,11 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { useHealthCenters, normalizeText } from "@/hooks/useHealthCenters";
+import { useHealthCenters, normalizeText, type HealthCenter } from "@/hooks/useHealthCenters";
 
 type Props = {
   value: string;
-  onChange: (name: string) => void;
+  onChange: (name: string, center?: HealthCenter) => void;
   placeholder?: string;
   required?: boolean;
   className?: string;
@@ -119,7 +119,7 @@ export function HealthCenterPicker({
                         key={c.id}
                         value={c.id}
                         onSelect={() => {
-                          onChange(c.name);
+                          onChange(c.name, c);
                           setOpen(false);
                           setQuery("");
                         }}
