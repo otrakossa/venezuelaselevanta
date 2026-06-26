@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse, PackageOpen, Sparkles } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
@@ -116,6 +116,18 @@ export function Header() {
           >
             <HandHeart className="h-3.5 w-3.5" />
             Donar
+          </Link>
+          <Link
+            to="/que-es"
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
+              pathname === "/que-es"
+                ? "bg-[color:var(--cream)] text-[color:var(--midnight)]"
+                : "text-header-foreground/80 hover:bg-white/10",
+            )}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            Qué es
           </Link>
           <Link
             to="/creditos"
