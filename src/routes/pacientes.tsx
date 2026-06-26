@@ -1,13 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import {
   Search, X, HeartPulse, Loader2, RefreshCw, Plus,
-  MapPin, User, ClipboardList,
+  MapPin, User, ClipboardList, IdCard, Phone, Building2,
 } from "lucide-react";
+
+const searchSchema = z.object({
+  center: z.string().optional(),
+});
 
 export const Route = createFileRoute("/pacientes")({
   ssr: false,
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Pacientes en centros de salud — Venezuela Se Levanta" },
@@ -37,6 +43,9 @@ interface Patient {
   registered_by: string | null;
   discharged_at: string | null;
   created_at: string;
+  id_number: string | null;
+  phone: string | null;
+  address: string | null;
 }
 
 const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: string }> = {
