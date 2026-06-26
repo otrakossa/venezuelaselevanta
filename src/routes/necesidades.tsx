@@ -407,7 +407,7 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
             onClick={onOffer}
             className="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold py-2 px-3 rounded-lg transition"
           >
-            <HandHeart className="h-3.5 w-3.5" /> Me ofrezco
+            <PackageOpen className="h-3.5 w-3.5" /> Ofrecer ayuda
           </button>
         )}
         {n.status === "fulfilled" && (
