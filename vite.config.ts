@@ -24,8 +24,16 @@ export default defineConfig({
         devOptions: { enabled: false },
         filename: "sw.js",
         workbox: {
+          // SSR app — HTML must always come from the network. Never precache or
+          // navigate-fallback to a stale shell pointing at hashed chunks of an
+          // older build (that's what caused "el sitio no se renderiza completo"
+          // after each deploy).
+          navigateFallback: null,
           navigateFallbackDenylist: [/^\/api\//, /^\/~oauth/],
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp}"],
+          globPatterns: ["**/*.{js,css,ico,png,svg,jpg,webp,woff2}"],
+          cleanupOutdatedCaches: true,
+          skipWaiting: true,
+          clientsClaim: true,
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/[a-c]?\.?tile\.openstreetmap\.org\/.*/i,
@@ -33,15 +41,6 @@ export default defineConfig({
               options: {
                 cacheName: "osm-tiles",
                 expiration: { maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 },
-              },
-            },
-            {
-              urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-              handler: "NetworkFirst",
-              options: {
-                cacheName: "supabase-api",
-                expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
-                networkTimeoutSeconds: 5,
               },
             },
           ],
