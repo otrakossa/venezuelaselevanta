@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
+import { Route as PacientesRouteImport } from './routes/pacientes'
+import { Route as NecesidadesRouteImport } from './routes/necesidades'
 import { Route as EstadisticasRouteImport } from './routes/estadisticas'
 import { Route as DonarRouteImport } from './routes/donar'
 import { Route as DesaparecidosRouteImport } from './routes/desaparecidos'
@@ -35,6 +37,16 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ReportarRoute = ReportarRouteImport.update({
   id: '/reportar',
   path: '/reportar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacientesRoute = PacientesRouteImport.update({
+  id: '/pacientes',
+  path: '/pacientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NecesidadesRoute = NecesidadesRouteImport.update({
+  id: '/necesidades',
+  path: '/necesidades',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EstadisticasRoute = EstadisticasRouteImport.update({
@@ -123,6 +135,8 @@ export interface FileRoutesByFullPath {
   '/desaparecidos': typeof DesaparecidosRoute
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
+  '/necesidades': typeof NecesidadesRoute
+  '/pacientes': typeof PacientesRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -142,6 +156,8 @@ export interface FileRoutesByTo {
   '/desaparecidos': typeof DesaparecidosRoute
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
+  '/necesidades': typeof NecesidadesRoute
+  '/pacientes': typeof PacientesRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -162,6 +178,8 @@ export interface FileRoutesById {
   '/desaparecidos': typeof DesaparecidosRoute
   '/donar': typeof DonarRoute
   '/estadisticas': typeof EstadisticasRoute
+  '/necesidades': typeof NecesidadesRoute
+  '/pacientes': typeof PacientesRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -183,6 +201,8 @@ export interface FileRouteTypes {
     | '/desaparecidos'
     | '/donar'
     | '/estadisticas'
+    | '/necesidades'
+    | '/pacientes'
     | '/reportar'
     | '/sitemap.xml'
     | '/api/reports.csv'
@@ -202,6 +222,8 @@ export interface FileRouteTypes {
     | '/desaparecidos'
     | '/donar'
     | '/estadisticas'
+    | '/necesidades'
+    | '/pacientes'
     | '/reportar'
     | '/sitemap.xml'
     | '/api/reports.csv'
@@ -221,6 +243,8 @@ export interface FileRouteTypes {
     | '/desaparecidos'
     | '/donar'
     | '/estadisticas'
+    | '/necesidades'
+    | '/pacientes'
     | '/reportar'
     | '/sitemap.xml'
     | '/api/reports.csv'
@@ -241,6 +265,8 @@ export interface RootRouteChildren {
   DesaparecidosRoute: typeof DesaparecidosRoute
   DonarRoute: typeof DonarRoute
   EstadisticasRoute: typeof EstadisticasRoute
+  NecesidadesRoute: typeof NecesidadesRoute
+  PacientesRoute: typeof PacientesRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
@@ -267,6 +293,20 @@ declare module '@tanstack/react-router' {
       path: '/reportar'
       fullPath: '/reportar'
       preLoaderRoute: typeof ReportarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pacientes': {
+      id: '/pacientes'
+      path: '/pacientes'
+      fullPath: '/pacientes'
+      preLoaderRoute: typeof PacientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/necesidades': {
+      id: '/necesidades'
+      path: '/necesidades'
+      fullPath: '/necesidades'
+      preLoaderRoute: typeof NecesidadesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/estadisticas': {
@@ -385,6 +425,8 @@ const rootRouteChildren: RootRouteChildren = {
   DesaparecidosRoute: DesaparecidosRoute,
   DonarRoute: DonarRoute,
   EstadisticasRoute: EstadisticasRoute,
+  NecesidadesRoute: NecesidadesRoute,
+  PacientesRoute: PacientesRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
