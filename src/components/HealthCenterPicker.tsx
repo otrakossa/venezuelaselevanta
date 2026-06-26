@@ -103,10 +103,17 @@ export function HealthCenterPicker({
                 {loading ? "Cargando…" : "Sin resultados."}
               </CommandEmpty>
               {filtered.length > 0 && (
-                <CommandGroup heading={`${filtered.length} resultado${filtered.length === 1 ? "" : "s"}`}>
+                <CommandGroup
+                  heading={
+                    nQuery
+                      ? `${total} resultado${total === 1 ? "" : "s"}${truncated ? ` · mostrando ${filtered.length}` : ""}`
+                      : `Escribe para buscar entre ${centers.length} centros`
+                  }
+                >
                   {filtered.map((c) => {
                     const selected = value === c.name;
-                    const sub = [c.city, c.state].filter(Boolean).join(" · ");
+                    const loc = [c.city, c.state].filter(Boolean).join(" · ");
+                    const sub = loc || (c.address ? c.address : "Ubicación no registrada");
                     return (
                       <CommandItem
                         key={c.id}
@@ -126,11 +133,23 @@ export function HealthCenterPicker({
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-medium truncate">{c.name}</div>
-                          {sub && <div className="text-[11px] text-muted-foreground truncate">{sub}</div>}
+                          <div
+                            className={cn(
+                              "text-[11px] truncate",
+                              loc ? "text-muted-foreground" : "text-muted-foreground/60 italic",
+                            )}
+                          >
+                            {sub}
+                          </div>
                         </div>
                       </CommandItem>
                     );
                   })}
+                  {truncated && (
+                    <div className="px-3 py-2 text-[11px] text-muted-foreground italic">
+                      Afina la búsqueda para ver más resultados.
+                    </div>
+                  )}
                 </CommandGroup>
               )}
               {query.trim() && !exactMatch && (
