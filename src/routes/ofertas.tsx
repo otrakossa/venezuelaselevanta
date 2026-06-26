@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const searchSchema = z.object({
-  need: fallback(z.string().uuid().optional(), undefined),
+  need: fallback(z.string().uuid(), undefined as unknown as string).optional(),
 });
 
 export const Route = createFileRoute("/ofertas")({
