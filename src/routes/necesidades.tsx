@@ -23,7 +23,7 @@ const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 type NeedCategory = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "other";
 type NeedUrgency  = "critical" | "high" | "medium" | "low";
 type NeedStatus   = "open" | "partial" | "fulfilled";
-type OfferStatus  = "open" | "matched" | "delivered";
+
 
 interface Need {
   id: string;
