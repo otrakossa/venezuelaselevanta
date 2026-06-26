@@ -14,9 +14,21 @@ import {
   Download,
   Sparkles,
   MessageSquare,
+  Building2,
+  Code2,
+  ExternalLink,
 } from "lucide-react";
 import heroImage from "@/assets/hero-rescate.jpg";
-import { TELEGRAM_BOT } from "@/lib/credits";
+import {
+  TELEGRAM_BOT,
+  team,
+  collaborators,
+  organizations,
+  tech,
+  type Person,
+  type Organization,
+} from "@/lib/credits";
+import { ContactForm } from "@/components/ContactForm";
 
 export const Route = createFileRoute("/que-es")({
   head: () => ({
