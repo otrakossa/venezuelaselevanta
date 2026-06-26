@@ -311,9 +311,6 @@ function NecesidadesPage() {
   );
 }
 
-  );
-}
-
 function Kpi({ value, label, tone }: { value: number; label: string; tone: "red" | "orange" | "yellow" | "green" }) {
   const tones = {
     red:    "from-red-500/15 to-red-500/5 text-red-600",
