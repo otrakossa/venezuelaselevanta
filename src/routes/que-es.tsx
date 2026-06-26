@@ -503,22 +503,6 @@ function PersonCard({ person }: { person: Person; large?: boolean }) {
     </div>
   );
 }
-              <a
-                key={l.url}
-                href={l.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[11px] text-[color:var(--sky)] hover:underline inline-flex items-center gap-0.5"
-              >
-                {l.label} <ExternalLink className="h-2.5 w-2.5" />
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function OrgCard({ org }: { org: Organization }) {
   const initials = org.name
