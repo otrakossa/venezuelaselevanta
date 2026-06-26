@@ -204,8 +204,10 @@ function AboutPage() {
             <p>
               Detrás de esta plataforma hay manos concretas: <strong>Codex Tecnología</strong>,
               la <strong>Fundación Casa del Bosque</strong>, la comunidad de{" "}
-              <strong>Activistas por el Software Libre</strong>, equipos de verificación, y miles
-              de personas en terreno que reportan, validan y ayudan a difundir.
+              <strong>Activistas por el Software Libre</strong>, el{" "}
+              <strong>Centro de Estudios Estratégicos del Sur Global</strong>, equipos de
+              verificación, y miles de personas en terreno que reportan, validan y ayudan a
+              difundir.
             </p>
           </div>
         </section>
