@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
