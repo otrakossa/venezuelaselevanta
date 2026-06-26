@@ -18,6 +18,7 @@ import {
   Code2,
   ExternalLink,
   UserRound,
+  Network,
 } from "lucide-react";
 import heroImage from "@/assets/hero-rescate.jpg";
 import {
