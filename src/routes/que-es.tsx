@@ -488,3 +488,100 @@ function Way({ title, desde }: { title: string; desde: string }) {
     </li>
   );
 }
+
+function PersonCard({ person, large }: { person: Person; large?: boolean }) {
+  const initials =
+    person.initials ??
+    person.name
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  return (
+    <div className="group rounded-xl border border-border bg-card p-3 flex items-center gap-3 hover:border-[color:var(--sunrise)]/40 hover:shadow-md transition-all">
+      <div
+        className={
+          (large ? "h-14 w-14 text-base " : "h-11 w-11 text-sm ") +
+          "rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-[color:var(--gold)] text-white font-display flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform"
+        }
+      >
+        {person.avatar ? (
+          <img src={person.avatar} alt={person.name} className="h-full w-full rounded-full object-cover" />
+        ) : (
+          initials
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-sm truncate">{person.name}</div>
+        <div className="text-xs text-muted-foreground truncate">{person.role}</div>
+        {person.links && person.links.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-2">
+            {person.links.map((l) => (
+              <a
+                key={l.url}
+                href={l.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-[color:var(--sky)] hover:underline inline-flex items-center gap-0.5"
+              >
+                {l.label} <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrgCard({ org }: { org: Organization }) {
+  const initials = org.name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const content = (
+    <div className="rounded-2xl border border-border bg-card overflow-hidden h-full flex flex-col hover:border-[color:var(--sunrise)]/60 hover:shadow-xl hover:-translate-y-1 transition-all group">
+      <div className="relative h-40 bg-gradient-to-br from-white via-[color:var(--cream)] to-[color:var(--gold)]/20 flex items-center justify-center p-6 border-b border-border/60 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--sunrise)_15%,transparent),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
+        {org.logo ? (
+          <img
+            src={org.logo}
+            alt={org.name}
+            className="relative max-h-full max-w-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              el.style.display = "none";
+              el.parentElement?.querySelector("[data-fallback]")?.classList.remove("hidden");
+            }}
+          />
+        ) : null}
+        <div
+          data-fallback
+          className={`${org.logo ? "hidden " : ""}relative h-20 w-20 rounded-2xl bg-gradient-to-br from-[color:var(--sunrise)] to-[color:var(--gold)] text-white flex items-center justify-center font-display text-2xl shadow-lg`}
+        >
+          {initials}
+        </div>
+      </div>
+      <div className="p-4 flex-1 flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="font-display text-base text-[color:var(--midnight)] leading-tight">{org.name}</div>
+          {org.url && (
+            <ExternalLink className="h-4 w-4 text-[color:var(--sky)] shrink-0 mt-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          )}
+        </div>
+        {org.description && <p className="text-xs text-muted-foreground leading-relaxed">{org.description}</p>}
+      </div>
+    </div>
+  );
+  return org.url ? (
+    <a href={org.url} target="_blank" rel="noreferrer" className="block h-full">
+      {content}
+    </a>
+  ) : (
+    content
+  );
+}
+
