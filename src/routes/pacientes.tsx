@@ -515,6 +515,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     address: "",
     center_name: "",
     center_address: "",
+    center_lat: null as number | null,
+    center_lng: null as number | null,
+    center_phone: "" as string,
     status: "stable" as PatientStatus,
     notes: "",
   });
