@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_sessions: {
+        Row: {
+          chat_id: number
+          data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          chat_id: number
+          data: Json
+          updated_at?: string | null
+        }
+        Update: {
+          chat_id?: number
+          data?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      bot_users: {
+        Row: {
+          chat_id: number
+          first_name: string | null
+          last_seen: string | null
+          username: string | null
+        }
+        Insert: {
+          chat_id: number
+          first_name?: string | null
+          last_seen?: string | null
+          username?: string | null
+        }
+        Update: {
+          chat_id?: number
+          first_name?: string | null
+          last_seen?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string
