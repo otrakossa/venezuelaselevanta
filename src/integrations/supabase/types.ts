@@ -588,6 +588,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cast_report_vote: {
+        Args: { p_device_id: string; p_report_id: string; p_vote: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
