@@ -205,36 +205,54 @@ function PacientesPage() {
       )}
 
       <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
-        {hospitals.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <button
-              onClick={() => setCenter(undefined)}
-              className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
-                !center
-                  ? "bg-primary text-primary-foreground border-primary shadow"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5" /> Todos
-              <span className="ml-1 text-[10px] opacity-80">{counts.active}</span>
-            </button>
-            {hospitals.map(([name, n]) => (
+        {hospitals.length > 0 && (() => {
+          const COLLAPSED = 4;
+          const visible = showAllChips ? hospitals : hospitals.slice(0, COLLAPSED);
+          const hidden = hospitals.length - visible.length;
+          return (
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button
-                key={name}
-                onClick={() => setCenter(name)}
-                title={name}
-                className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition border max-w-[240px] ${
-                  center === name
-                    ? "bg-primary text-primary-foreground border-primary shadow"
+                onClick={() => setCenter(undefined)}
+                className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full font-semibold transition border ${
+                  !center
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "bg-card border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span className="truncate">🏥 {name}</span>
-                <span className="text-[10px] opacity-80 shrink-0">{n}</span>
+                <Building2 className="h-3.5 w-3.5" /> Todos
+                <span className="text-[10px] opacity-80">{counts.active}</span>
               </button>
-            ))}
-          </div>
-        )}
+              {visible.map(([name, n]) => (
+                <button
+                  key={name}
+                  onClick={() => setCenter(name)}
+                  title={name}
+                  className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full font-semibold transition border max-w-[60vw] sm:max-w-[260px] ${
+                    center === name
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span className="truncate">🏥 {shortHospital(name)}</span>
+                  <span className="text-[10px] opacity-80 shrink-0">{n}</span>
+                </button>
+              ))}
+              {hospitals.length > COLLAPSED && (
+                <button
+                  onClick={() => setShowAllChips((s) => !s)}
+                  className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full font-semibold border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+                >
+                  {showAllChips ? (
+                    <>Ver menos <ChevronUp className="h-3.5 w-3.5" /></>
+                  ) : (
+                    <>+{hidden} más <ChevronDown className="h-3.5 w-3.5" /></>
+                  )}
+                </button>
+              )}
+            </div>
+          );
+        })()}
+
 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
