@@ -508,23 +508,27 @@ async function handleChat(chatId: number, text: string, session: Session | null)
     if (intent.title)                                         draft.title    = String(intent.title).slice(0, 120);
     if (draft.category && draft.title) {
       setSession(chatId, "awaiting_description", draft);
-      return send(chatId, `${greet}voy a registrar: <b>${draft.title}</b>\n\n3/6 · Agrega más detalles (o «-» para omitir):`);
+      await send(chatId, `${greet}voy a registrar: <b>${draft.title}</b>\n\n3/6 · Agrega más detalles (o «-» para omitir):`);
+      return;
     }
     if (draft.category) {
       setSession(chatId, "awaiting_title", draft);
       const catName = CATEGORIES.find(c => c.slug === draft.category)?.name ?? "";
-      return send(chatId, `${greet}Categoría: <b>${catName}</b>\n\n2/6 · Escribe un <b>título breve</b>:`);
+      await send(chatId, `${greet}Categoría: <b>${catName}</b>\n\n2/6 · Escribe un <b>título breve</b>:`);
+      return;
     }
     setSession(chatId, "awaiting_category", draft);
-    return send(chatId, `${greet}voy a ayudarte a registrar el incidente.\n\n1/6 · Elige la <b>categoría</b>:`, categoryKb());
+    await send(chatId, `${greet}voy a ayudarte a registrar el incidente.\n\n1/6 · Elige la <b>categoría</b>:`, categoryKb());
+    return;
   }
   if (intent?.intent === "register_missing") {
     await send(chatId, `${greet}voy a registrar a la persona desaparecida.`);
     return startMissingPerson(chatId);
   }
   if (intent?.intent === "search_missing") {
-    if (intent.query) return handleBuscar(chatId, intent.query);
-    return send(chatId, `¿Cómo se llama la persona que buscas?`);
+    if (intent.query) { await handleBuscar(chatId, intent.query); return; }
+    await send(chatId, `¿Cómo se llama la persona que buscas?`);
+    return;
   }
   if (intent?.intent === "status") return handleEstado(chatId);
 
