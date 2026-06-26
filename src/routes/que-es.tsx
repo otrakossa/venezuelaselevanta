@@ -17,6 +17,7 @@ import {
   Building2,
   Code2,
   ExternalLink,
+  UserRound,
 } from "lucide-react";
 import heroImage from "@/assets/hero-rescate.jpg";
 import {
