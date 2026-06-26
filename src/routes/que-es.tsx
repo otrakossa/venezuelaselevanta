@@ -120,15 +120,6 @@ function AboutPage() {
           }}
         />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-16 text-[color:var(--cream)]">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-white/80 hover:text-white transition-colors mb-4"
-          >
-            <ArrowLeft className="h-4 w-4" /> Volver al mapa
-          </Link>
-          <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] bg-[color:var(--sunrise)]/20 border border-[color:var(--sunrise)]/40 text-[color:var(--gold)] px-2.5 py-1 rounded-full">
-            <Sparkles className="h-3 w-3" /> Nuestra historia
-          </span>
           <h1 className="font-display text-3xl sm:text-5xl mt-3 leading-tight">
             Venezuela se levanta,
             <br />
