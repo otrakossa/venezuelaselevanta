@@ -458,6 +458,40 @@ function AboutPage() {
           <ContactForm />
         </section>
 
+        {/* Otras iniciativas — listado compacto al final */}
+        <section className="pt-4 border-t border-border/60">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            <Network className="h-3.5 w-3.5" />
+            Otras iniciativas ciudadanas
+          </div>
+          <p className="text-xs text-muted-foreground mb-4 max-w-2xl">
+            No estamos solos. Estos proyectos hermanos también responden al terremoto desde distintos frentes.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
+            {INICIATIVAS.map((cat) => (
+              <div key={cat.title} className="text-xs">
+                <div className="font-medium text-foreground/80 mb-1">{cat.title}</div>
+                <ul className="space-y-0.5">
+                  {cat.links.map((url) => (
+                    <li key={url}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-muted-foreground hover:text-[color:var(--sky)] hover:underline break-all"
+                      >
+                        {url.replace(/^https?:\/\//, "")}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+
+
         {/* Cierre */}
         <section className="text-center py-8 sm:py-12">
           <p className="font-display text-2xl sm:text-4xl text-[color:var(--midnight)] leading-tight">
