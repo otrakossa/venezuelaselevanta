@@ -104,7 +104,7 @@ export function MapView({
   );
 
   return (
-    <div style={{ height, width: "100%" }}>
+    <div style={{ height, width: "100%", position: "relative" }}>
       <MapContainer
         center={VZLA_CENTER}
         zoom={6}

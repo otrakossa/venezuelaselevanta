@@ -215,3 +215,9 @@
   20% { transform: scale(0.97); }
 }
 .animate-heartbeat { animation: heartbeat 2.4s ease-in-out infinite; transform-origin: center; }
+
+/* Top progress bar between TanStack route transitions */
+@keyframes route-progress {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
