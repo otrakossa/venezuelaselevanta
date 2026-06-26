@@ -7,6 +7,7 @@ import {
   MapPin, User, ClipboardList, IdCard, Phone, Building2,
   ChevronDown, ChevronUp,
 } from "lucide-react";
+import { MatchSuggestions } from "@/components/MatchSuggestions";
 
 const searchSchema = z.object({
   center: z.string().optional(),
