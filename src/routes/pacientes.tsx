@@ -321,42 +321,75 @@ function PacientesPage() {
         )}
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {loading ? (
-          <div className="col-span-full grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-36 rounded-2xl bg-muted animate-pulse" />
-            ))}
-          </div>
-        ) : list.length === 0 ? (
-          <div className="col-span-full py-16 text-center">
-            <div className="text-4xl mb-3">🏥</div>
-            <p className="font-bold text-base mb-1">No hay pacientes registrados</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
-            </p>
-            {(q || filter !== "all" || center) ? (
-              <button
-                onClick={() => { setQ(""); setFilter("all"); setCenter(undefined); }}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
-              >
-                Limpiar filtros
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
-              >
-                Registrar paciente
-              </button>
+      {(() => {
+        const total = list.length;
+        const visible = list.slice(0, page * PAGE_SIZE);
+        const hasMore = visible.length < total;
+        return (
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {loading ? (
+                [...Array(6)].map((_, i) => (
+                  <div key={i} className="h-36 rounded-2xl bg-muted animate-pulse" />
+                ))
+              ) : total === 0 ? (
+                <div className="col-span-full py-16 text-center">
+                  <div className="text-4xl mb-3">🏥</div>
+                  <p className="font-bold text-base mb-1">No hay pacientes registrados</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
+                  </p>
+                  {(q || filter !== "all" || center) ? (
+                    <button
+                      onClick={() => { setQ(""); setFilter("all"); setCenter(undefined); }}
+                      className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                    >
+                      Limpiar filtros
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                    >
+                      Registrar paciente
+                    </button>
+                  )}
+                </div>
+              ) : (
+                visible.map((p) => <PatientCard key={p.id} patient={p} />)
+              )}
+            </div>
+
+            {!loading && total > 0 && (
+              <div className="flex flex-col items-center gap-2 mt-6 pb-4">
+                <p className="text-[11px] text-muted-foreground">
+                  Mostrando <span className="font-bold text-foreground">{visible.length}</span> de{" "}
+                  <span className="font-bold text-foreground">{total}</span> paciente{total === 1 ? "" : "s"}
+                </p>
+                {hasMore ? (
+                  <button
+                    onClick={() => setPage((p) => p + 1)}
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-card border border-border text-sm font-bold hover:bg-muted hover:border-primary/40 transition active:scale-[0.98]"
+                  >
+                    Cargar más
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                ) : total > PAGE_SIZE && (
+                  <button
+                    onClick={() => { setPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className="text-xs text-muted-foreground hover:text-foreground font-semibold"
+                  >
+                    ↑ Volver arriba
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        ) : (
-          list.map((p) => <PatientCard key={p.id} patient={p} />)
-        )}
-      </div>
+          </>
+        );
+      })()}
     </div>
   );
+
 
 }
 
