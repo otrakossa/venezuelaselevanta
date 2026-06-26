@@ -38,7 +38,7 @@ export const organizations: Organization[] = [
     name: "Fundación Casa del Bosque",
     description: "Organización aliada · activismo tecnopolítico",
     url: "https://x.com/fcbosque",
-    logo: "/__l5e/assets-v1/ec3094bf-2500-4fe2-9bf7-b7c27b394faf/logo-fcbosque.png",
+    logo: "/logo-fcbosque.png",
   },
   {
     name: "Activistas por el Software Libre",
@@ -56,7 +56,7 @@ export const organizations: Organization[] = [
     name: "Codex Tecnología",
     description: "Desarrollo, infraestructura y mantenimiento",
     url: "https://codextecnologia.com",
-    logo: "/__l5e/assets-v1/e986dcb5-f378-470a-8fc9-9f935dcceb8f/logo-codex.png",
+    logo: "/logo-codex.png",
   },
 ];
 
