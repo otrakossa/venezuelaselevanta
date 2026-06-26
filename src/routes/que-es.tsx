@@ -357,37 +357,19 @@ function AboutPage() {
           </div>
         </section>
 
-        {/* Equipo */}
+        {/* Equipo y colaboradores */}
         <section id="equipo" className="space-y-4 scroll-mt-20">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-[color:var(--sunrise)]" />
             <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
-              Equipo core
+              Equipo y colaboradores
             </h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Quienes mantienen y desarrollan la plataforma.
+            Personas que mantienen, desarrollan y sostienen la plataforma día a día.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {team.map((p) => (
-              <PersonCard key={p.name} person={p} large />
-            ))}
-          </div>
-        </section>
-
-        {/* Colaboradores */}
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <HandHeart className="h-5 w-5 text-[color:var(--gold)]" />
-            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
-              Colaboradores
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Voluntarios, verificadores y comunidad que aporta día a día.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {collaborators.map((p) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[...team, ...collaborators].map((p) => (
               <PersonCard key={p.name} person={p} />
             ))}
           </div>
