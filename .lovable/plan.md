@@ -1,31 +1,49 @@
-## Problema
+## Qué hay disponible en `health_centers`
 
-1. **Datos sucios en `health_centers`**: hay 35 registros con nombres genéricos sin ubicación —25 son literalmente `"Ambulatorio"` sin `city` ni `address`, más duplicados de `"Barrio adentro"`, `"CDI"`, `"Alfa"`, etc. Son inútiles: el usuario no puede distinguir uno de otro.
-2. **Picker limita a 50 resultados**: al buscar (p. ej. "hospital") solo aparecen los primeros 50 de potencialmente cientos, sin indicador de que hay más.
+De los 1.419 centros activos:
 
-## Cambios
+| Campo | Cobertura | Útil para autocompletar |
+|---|---|---|
+| `name` | 100% | nombre del centro |
+| `lat` / `lng` | 100% | coordenadas (mapa) |
+| `type` | 100% | tipo (Hospital, Ambulatorio, CDI…) |
+| `address` | 39% | dirección |
+| `city` | 40% | municipio |
+| `state` | 4% | estado |
+| `phone` | 7% | teléfono |
 
-### 1. Migración de limpieza de datos
-Eliminar registros genéricos sin información útil:
-```sql
-DELETE FROM public.health_centers
-WHERE address IS NULL
-  AND city IS NULL
-  AND lower(trim(name)) IN ('ambulatorio','hospital','cdi','barrio adentro','alfa','clinica','clínica');
-```
-Esto borra los ~30 registros chatarra; los que sí tienen `city` (p. ej. "Ambulatorio – Tabay") se conservan.
+Hoy el `HealthCenterPicker` solo devuelve el **nombre**, así que toda esa información se pierde aunque el usuario elija un centro conocido.
+
+## Cambios propuestos (solo UI, sin tocar el schema)
+
+### 1. `src/hooks/useHealthCenters.ts`
+- Traer también `lat`, `lng`, `state`, `phone`, `type` (ya trae `id`, `name`, `city`, `address`).
 
 ### 2. `src/components/HealthCenterPicker.tsx`
-- **Quitar el tope hardcodeado de 50**. Sin búsqueda: mostrar los primeros 100 con un aviso "Escribe para buscar entre 1.4k centros". Con búsqueda: mostrar **todos** los matches (no cortar).
-- **Mostrar el conteo real** en el encabezado del grupo: "234 resultados" en lugar de "50".
-- **Virtualización ligera**: si los resultados pasan de 200, renderizar solo los primeros 200 y agregar un item final tipo "…afina la búsqueda para ver más" para evitar lag del DOM. Es más simple que añadir `react-window` y suficiente para 1.4k filas.
-- **Mejor etiqueta cuando falta ubicación**: si un centro no tiene `city` ni `state`, mostrar el `address` truncado o `(ubicación no registrada)` en la línea secundaria, así el usuario sabe que es ambiguo.
-- **Ordenar resultados**: priorizar los que empiezan por el término buscado, luego los que lo contienen; dentro de cada grupo, primero los que tienen `city`.
+- Cambiar la firma del callback a `onChange(name, center?)` para entregar el centro completo cuando se elige uno del listado (y `undefined` cuando es texto libre / "usar como nuevo").
+- Mantener compatibilidad: si el consumidor solo usa el primer argumento, sigue funcionando.
 
-### 3. Sin cambios en `/pacientes` ni `/necesidades`
-Solo consumen el picker; el comportamiento mejora automáticamente.
+### 3. `src/routes/pacientes.tsx`
+- Cuando se selecciona un centro, autocompletar:
+  - `center_address` ← `address` (o `city, state` si no hay dirección)
+  - `center_lat` ← `lat`
+  - `center_lng` ← `lng`
+- Mostrar bajo el picker un mini-resumen "📍 dirección · 📞 teléfono" cuando el centro lo tenga, en modo solo lectura.
+- Los campos siguen siendo editables por si el usuario quiere ajustar.
+
+### 4. `src/routes/necesidades.tsx`
+- Mismo comportamiento: autocompletar `center_address`, `lat`, `lng` al elegir un centro.
+- Mostrar el mismo resumen informativo.
 
 ## Lo que NO cambia
-- Esquema de `health_centers` (no se añaden columnas).
-- Almacenamiento del campo `center_name` como string libre en `patients`/`needs`.
-- Opción de "Usar X como nuevo centro" cuando no hay match exacto.
+
+- Esquema de base de datos.
+- Lógica del backend / RPCs / matching.
+- Posibilidad de escribir un centro nuevo a mano (sigue funcionando, sin autocompletar).
+- Otros formularios (reportes, desaparecidos) que no usan el picker.
+
+## Detalles técnicos
+
+- El picker pasa el objeto completo del centro, así evitamos un segundo lookup en los consumidores.
+- La selección de un centro nuevo (`"Usar X como nuevo centro"`) invoca `onChange(name, undefined)` para que los consumidores limpien `lat/lng/address` y permitan que el usuario los rellene a mano.
+- Si el centro elegido no tiene `lat/lng` válidos (no debería pasar, pero por defensa), no se sobreescriben los valores actuales del formulario.
