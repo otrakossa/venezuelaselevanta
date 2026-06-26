@@ -96,6 +96,8 @@ async function fetchPatients(): Promise<Patient[]> {
   return res.json();
 }
 
+const PAGE_SIZE = 24;
+
 function PacientesPage() {
   const navigate = useNavigate({ from: "/pacientes" });
   const { center } = Route.useSearch();
@@ -106,6 +108,8 @@ function PacientesPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("active");
   const [showForm, setShowForm] = useState(false);
+  const [page, setPage] = useState(1);
+  const [showAllChips, setShowAllChips] = useState(false);
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
