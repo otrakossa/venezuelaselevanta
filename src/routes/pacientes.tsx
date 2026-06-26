@@ -127,6 +127,7 @@ function PacientesPage() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { setPage(1); }, [q, filter, center]);
 
   const setCenter = (c?: string) =>
     navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
