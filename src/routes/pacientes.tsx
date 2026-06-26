@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   Search, X, HeartPulse, Loader2, RefreshCw, Plus,
   MapPin, User, ClipboardList, IdCard, Phone, Building2,
+  ChevronDown, ChevronUp,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -95,6 +96,16 @@ async function fetchPatients(): Promise<Patient[]> {
   return res.json();
 }
 
+const PAGE_SIZE = 24;
+
+function shortHospital(name: string) {
+  return name
+    .replace(/^Hospital\s+/i, "")
+    .replace(/^Centro\s+Cl[ií]nico\s+/i, "CC ")
+    .replace(/\s+Venezolana\s+[-–]\s+/i, " ")
+    .replace(/\s+[-–]\s+/g, " ");
+}
+
 function PacientesPage() {
   const navigate = useNavigate({ from: "/pacientes" });
   const { center } = Route.useSearch();
@@ -105,6 +116,8 @@ function PacientesPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("active");
   const [showForm, setShowForm] = useState(false);
+  const [page, setPage] = useState(1);
+  const [showAllChips, setShowAllChips] = useState(false);
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -122,6 +135,7 @@ function PacientesPage() {
   };
 
   useEffect(() => { load(); }, []);
+  useEffect(() => { setPage(1); }, [q, filter, center]);
 
   const setCenter = (c?: string) =>
     navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
@@ -162,7 +176,7 @@ function PacientesPage() {
   }, [patients, filter, q, center]);
 
   return (
-    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative overflow-x-hidden">
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
         <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-end sm:justify-between">
@@ -199,36 +213,54 @@ function PacientesPage() {
       )}
 
       <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
-        {hospitals.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <button
-              onClick={() => setCenter(undefined)}
-              className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
-                !center
-                  ? "bg-primary text-primary-foreground border-primary shadow"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5" /> Todos
-              <span className="ml-1 text-[10px] opacity-80">{counts.active}</span>
-            </button>
-            {hospitals.map(([name, n]) => (
+        {hospitals.length > 0 && (() => {
+          const COLLAPSED = 4;
+          const visible = showAllChips ? hospitals : hospitals.slice(0, COLLAPSED);
+          const hidden = hospitals.length - visible.length;
+          return (
+            <div className="flex items-center gap-1.5 flex-wrap">
               <button
-                key={name}
-                onClick={() => setCenter(name)}
-                title={name}
-                className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition border max-w-[240px] ${
-                  center === name
-                    ? "bg-primary text-primary-foreground border-primary shadow"
+                onClick={() => setCenter(undefined)}
+                className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full font-semibold transition border ${
+                  !center
+                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "bg-card border-border text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <span className="truncate">🏥 {name}</span>
-                <span className="text-[10px] opacity-80 shrink-0">{n}</span>
+                <Building2 className="h-3.5 w-3.5" /> Todos
+                <span className="text-[10px] opacity-80">{counts.active}</span>
               </button>
-            ))}
-          </div>
-        )}
+              {visible.map(([name, n]) => (
+                <button
+                  key={name}
+                  onClick={() => setCenter(name)}
+                  title={name}
+                  className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-full font-semibold transition border max-w-[60vw] sm:max-w-[260px] ${
+                    center === name
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span className="truncate">🏥 {shortHospital(name)}</span>
+                  <span className="text-[10px] opacity-80 shrink-0">{n}</span>
+                </button>
+              ))}
+              {hospitals.length > COLLAPSED && (
+                <button
+                  onClick={() => setShowAllChips((s) => !s)}
+                  className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-full font-semibold border border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 transition"
+                >
+                  {showAllChips ? (
+                    <>Ver menos <ChevronUp className="h-3.5 w-3.5" /></>
+                  ) : (
+                    <>+{hidden} más <ChevronDown className="h-3.5 w-3.5" /></>
+                  )}
+                </button>
+              )}
+            </div>
+          );
+        })()}
+
 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
@@ -249,17 +281,17 @@ function PacientesPage() {
               </button>
             )}
           </div>
-          <div className="flex gap-1 bg-muted/70 rounded-xl p-1 overflow-x-auto">
+          <div className="flex gap-1 bg-muted/70 rounded-xl p-1 flex-wrap">
             {(["active", "discharged", "all"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
+                className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
                   filter === f ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "all" ? "Todos" : f === "active" ? "En centro" : "Alta médica"}
-                <span className="ml-1.5 text-[10px] opacity-70">{counts[f]}</span>
+                {f === "all" ? "Todos" : f === "active" ? "En centro" : "Alta"}
+                <span className="ml-1 text-[10px] opacity-70">{counts[f]}</span>
               </button>
             ))}
           </div>
@@ -289,42 +321,75 @@ function PacientesPage() {
         )}
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {loading ? (
-          <div className="col-span-full grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-36 rounded-2xl bg-muted animate-pulse" />
-            ))}
-          </div>
-        ) : list.length === 0 ? (
-          <div className="col-span-full py-16 text-center">
-            <div className="text-4xl mb-3">🏥</div>
-            <p className="font-bold text-base mb-1">No hay pacientes registrados</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
-            </p>
-            {(q || filter !== "all" || center) ? (
-              <button
-                onClick={() => { setQ(""); setFilter("all"); setCenter(undefined); }}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
-              >
-                Limpiar filtros
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
-              >
-                Registrar paciente
-              </button>
+      {(() => {
+        const total = list.length;
+        const visible = list.slice(0, page * PAGE_SIZE);
+        const hasMore = visible.length < total;
+        return (
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              {loading ? (
+                [...Array(6)].map((_, i) => (
+                  <div key={i} className="h-36 rounded-2xl bg-muted animate-pulse" />
+                ))
+              ) : total === 0 ? (
+                <div className="col-span-full py-16 text-center">
+                  <div className="text-4xl mb-3">🏥</div>
+                  <p className="font-bold text-base mb-1">No hay pacientes registrados</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
+                  </p>
+                  {(q || filter !== "all" || center) ? (
+                    <button
+                      onClick={() => { setQ(""); setFilter("all"); setCenter(undefined); }}
+                      className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                    >
+                      Limpiar filtros
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setShowForm(true)}
+                      className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                    >
+                      Registrar paciente
+                    </button>
+                  )}
+                </div>
+              ) : (
+                visible.map((p) => <PatientCard key={p.id} patient={p} />)
+              )}
+            </div>
+
+            {!loading && total > 0 && (
+              <div className="flex flex-col items-center gap-2 mt-6 pb-4">
+                <p className="text-[11px] text-muted-foreground">
+                  Mostrando <span className="font-bold text-foreground">{visible.length}</span> de{" "}
+                  <span className="font-bold text-foreground">{total}</span> paciente{total === 1 ? "" : "s"}
+                </p>
+                {hasMore ? (
+                  <button
+                    onClick={() => setPage((p) => p + 1)}
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-card border border-border text-sm font-bold hover:bg-muted hover:border-primary/40 transition active:scale-[0.98]"
+                  >
+                    Cargar más
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                ) : total > PAGE_SIZE && (
+                  <button
+                    onClick={() => { setPage(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    className="text-xs text-muted-foreground hover:text-foreground font-semibold"
+                  >
+                    ↑ Volver arriba
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        ) : (
-          list.map((p) => <PatientCard key={p.id} patient={p} />)
-        )}
-      </div>
+          </>
+        );
+      })()}
     </div>
   );
+
 
 }
 
