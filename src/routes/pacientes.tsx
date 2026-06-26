@@ -19,7 +19,7 @@ export const Route = createFileRoute("/pacientes")({
   head: () => ({
     meta: [
       { title: "Atendidos en centros de salud — Venezuela Se Levanta" },
-      { name: "description", content: "Busca y registra pacientes en centros de salud tras la emergencia en Venezuela." },
+      { name: "description", content: "Busca y registra personas atendidas en centros de salud tras la emergencia en Venezuela." },
     ],
   }),
   component: AtendidosPage,
@@ -366,7 +366,7 @@ function AtendidosPage() {
               <div className="flex flex-col items-center gap-2 mt-6 pb-4">
                 <p className="text-[11px] text-muted-foreground">
                   Mostrando <span className="font-bold text-foreground">{visible.length}</span> de{" "}
-                  <span className="font-bold text-foreground">{total}</span> paciente{total === 1 ? "" : "s"}
+                  <span className="font-bold text-foreground">{total}</span> atendido{total === 1 ? "" : "s"}
                 </p>
                 {hasMore ? (
                   <button
