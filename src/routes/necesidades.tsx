@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
-  Info, ChevronDown,
+  Info, ChevronDown, PackageOpen,
 } from "lucide-react";
 
 export const Route = createFileRoute("/necesidades")({
