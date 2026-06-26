@@ -100,6 +100,21 @@ const ACCIONES = [
   },
 ] as const;
 
+const INICIATIVAS: { title: string; links: string[] }[] = [
+  { title: "Reporte de personas desaparecidas", links: ["https://venezuelareporta.org", "https://venezuelatebusca.com", "https://desaparecidosterremotovenezuela.com"] },
+  { title: "Reporte de daños estructurales", links: ["https://terremotovenezuela.com", "https://tilinapp.com", "https://app.appcentinela.com/instalar"] },
+  { title: "Apoyo presencial y rescate", links: ["https://rescate-ve.vercel.app"] },
+  { title: "Ingenieros para inspección de habitabilidad", links: ["https://habitable.lovable.app", "https://www.instagram.com/grupoavila.ve", "https://app.appcentinela.com/instalar"] },
+  { title: "Centros de acopio", links: ["https://ayudaparavenezuela.com", "https://www.veneconnect.com/apoyo-terremoto", "https://tugruero.com", "https://zonasegura.up.railway.app"] },
+  { title: "Insumos requeridos por zona", links: ["https://ayudaparavenezuela.com"] },
+  { title: "Centros de alimentación", links: ["https://refugiosvenezuela.com"] },
+  { title: "Refugios y alojamiento", links: ["https://refugiosvenezuela.com", "https://zonasegura.up.railway.app"] },
+  { title: "Pacientes en hospitales", links: ["https://pacientesterremotovzla.lovable.app"] },
+  { title: "Información de mascotas", links: ["https://www.huellascan.com/terremoto"] },
+  { title: "Logística y transporte", links: ["https://rescate-ve.vercel.app"] },
+  { title: "Apoyo médico y psicológico", links: ["https://www.nueveonce.com", "https://venemergencia.com"] },
+];
+
 function AboutPage() {
   return (
     <div className="flex flex-col">
