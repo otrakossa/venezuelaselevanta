@@ -5,6 +5,7 @@ export type HealthCenter = {
   name: string;
   city: string | null;
   state: string | null;
+  address: string | null;
 };
 
 let cache: HealthCenter[] | null = null;
