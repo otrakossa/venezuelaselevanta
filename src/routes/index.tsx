@@ -212,13 +212,15 @@ function HomePage() {
     <div className="flex flex-col">
       {showHero && (
         <section
-          className="relative overflow-hidden border-b border-border lg:block"
+          className="relative overflow-hidden border-b border-border"
           style={{ backgroundColor: "var(--midnight)" }}
+          aria-label="Bienvenida y acciones principales"
         >
           <img
             src={heroImage}
-            alt="Amanecer sobre Venezuela"
-            className="absolute inset-0 h-full w-full object-cover opacity-70"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 h-full w-full object-cover opacity-40"
             width={1536}
             height={1024}
           />
@@ -226,50 +228,101 @@ function HomePage() {
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(90deg, rgba(13,43,69,0.92) 0%, rgba(13,43,69,0.7) 45%, rgba(13,43,69,0.25) 100%)",
+                "linear-gradient(180deg, rgba(13,43,69,0.95) 0%, rgba(13,43,69,0.85) 60%, rgba(13,43,69,0.92) 100%)",
             }}
           />
           <button
             onClick={dismissHero}
-            className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white"
-            aria-label="Ocultar portada"
+            className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white min-h-[36px] min-w-[36px] grid place-items-center"
+            aria-label="Ocultar portada y ver el mapa"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden />
           </button>
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-10 text-[color:var(--cream)]">
-            <div className="max-w-2xl space-y-2 sm:space-y-4">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 text-[color:var(--cream)]">
+            <div className="max-w-3xl space-y-3 sm:space-y-4">
               <span className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.18em] bg-[color:var(--sunrise)]/20 border border-[color:var(--sunrise)]/40 text-[color:var(--gold)] px-2.5 py-1 rounded-full">
                 <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--sunrise)] animate-pulse" />
-                Respuesta ciudadana
+                Respuesta ciudadana al terremoto
               </span>
-              <h1 className="font-display text-2xl sm:text-5xl leading-[1.05] tracking-tight">
+              <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl leading-[1.05] tracking-tight">
                 La tierra se movió,
                 <br />
                 <span className="text-[color:var(--gold)]">pero Venezuela sigue firme.</span>
               </h1>
-              <p className="text-xs sm:text-base text-white/85 max-w-xl hidden sm:block">
-                Mapa colaborativo de crisis del terremoto. Reporta, consulta y coordina ayuda en tiempo real.
+              <p className="text-sm sm:text-base text-white/85 max-w-2xl">
+                Mapa colaborativo en tiempo real. Elige cómo quieres ayudar:
               </p>
-              <div className="flex flex-wrap gap-2 pt-1">
-                <Link
-                  to="/reportar"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[color:var(--sunrise)] hover:bg-[#e85a28] text-white font-semibold text-sm shadow-lg shadow-[color:var(--sunrise)]/30"
-                >
-                  <FilePlus className="h-4 w-4" />
-                  Reportar
-                </Link>
-                <button
-                  onClick={dismissHero}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm"
-                >
-                  <MapIcon className="h-4 w-4" />
-                  Ver mapa
-                </button>
-              </div>
+            </div>
+
+            {/* 3 acciones primarias */}
+            <div className="relative mt-5 sm:mt-7 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              <Link
+                to="/desaparecidos"
+                className="group rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur border border-white/20 hover:border-rose-300/60 p-4 sm:p-5 transition-all min-h-[88px] flex items-start gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300"
+              >
+                <span className="h-10 w-10 rounded-xl bg-rose-500/90 grid place-items-center text-white shrink-0 group-hover:scale-105 transition-transform">
+                  <Users className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-base sm:text-lg text-white leading-tight">
+                    Buscar o reportar desaparecido
+                  </span>
+                  <span className="block text-[12px] sm:text-xs text-white/70 mt-0.5 leading-snug">
+                    ¿No sabes nada de un familiar o conocido?
+                  </span>
+                </span>
+              </Link>
+
+              <Link
+                to="/reportar"
+                className="group rounded-2xl bg-[color:var(--sunrise)] hover:bg-[#e85a28] border border-[color:var(--sunrise)] p-4 sm:p-5 transition-all min-h-[88px] flex items-start gap-3 text-left shadow-lg shadow-[color:var(--sunrise)]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              >
+                <span className="h-10 w-10 rounded-xl bg-white/20 grid place-items-center text-white shrink-0 group-hover:scale-105 transition-transform">
+                  <FilePlus className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-base sm:text-lg text-white leading-tight">
+                    Reportar un incidente
+                  </span>
+                  <span className="block text-[12px] sm:text-xs text-white/85 mt-0.5 leading-snug">
+                    ¿Viste algo que la gente debe saber?
+                  </span>
+                </span>
+              </Link>
+
+              <Link
+                to="/ofertas"
+                className="group rounded-2xl bg-white/10 hover:bg-white/15 backdrop-blur border border-white/20 hover:border-[color:var(--gold)]/60 p-4 sm:p-5 transition-all min-h-[88px] flex items-start gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--gold)]"
+              >
+                <span className="h-10 w-10 rounded-xl bg-[color:var(--gold)] grid place-items-center text-[color:var(--midnight)] shrink-0 group-hover:scale-105 transition-transform">
+                  <HandHeart className="h-5 w-5" aria-hidden />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-base sm:text-lg text-white leading-tight">
+                    Quiero ayudar
+                  </span>
+                  <span className="block text-[12px] sm:text-xs text-white/70 mt-0.5 leading-snug">
+                    ¿Tienes recursos, tiempo o transporte?
+                  </span>
+                </span>
+              </Link>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] sm:text-xs text-white/65">
+              <button
+                onClick={dismissHero}
+                className="inline-flex items-center gap-1.5 hover:text-white transition-colors underline-offset-4 hover:underline"
+              >
+                <MapIcon className="h-3.5 w-3.5" aria-hidden /> Ver el mapa completo
+              </button>
+              <Link to="/que-es" className="hover:text-white transition-colors underline-offset-4 hover:underline">
+                ¿Qué es Venezuela Se Levanta?
+              </Link>
             </div>
           </div>
         </section>
       )}
+
 
       <div
         className={cn(
