@@ -371,12 +371,20 @@ const VALID_URGS = new Set(["critical","high","medium","low"]);
 async function detectIntent(text: string): Promise<IntentResult | null> {
   const t = text.replace(/"/g, "'").slice(0, 300);
   return geminiJSON<IntentResult>(
-    `Eres el asistente de "Venezuela Se Levanta", sistema de crisis post-terremoto.\n` +
+    `Eres el asistente de "Venezuela Se Levanta", sistema de crisis post-terremoto en Venezuela.\n` +
     `El usuario escribió: "${t}"\n\n` +
-    `Clasifica la intención. Responde SOLO JSON:\n` +
+    `INTENCIONES (elige UNA):\n` +
+    `- "register_missing": quiere REGISTRAR a una persona específica como desaparecida (familiar, amigo, etc.)\n` +
+    `- "search_missing": quiere BUSCAR a una persona desaparecida por nombre\n` +
+    `- "report": quiere reportar una situación de crisis (edificio dañado, heridos, rescate, vía bloqueada) — NO personas desaparecidas\n` +
+    `- "status": quiere ver estadísticas o cifras del sistema\n` +
+    `- "help": pide ayuda sobre cómo usar el bot\n` +
+    `- "unknown": conversación general, preguntas sobre el terremoto, etc.\n\n` +
+    `IMPORTANTE: si mencionan una persona desaparecida específica (mamá, familiar, amigo) → "register_missing", NO "report".\n\n` +
+    `Responde SOLO JSON:\n` +
     `{"intent":"report"|"search_missing"|"register_missing"|"status"|"help"|"unknown",` +
-    `"query":"nombre si search_missing","category":"missing|medical|rescue|shelter|infrastructure|evacuation|blocked_road|hospital",` +
-    `"urgency":"critical|high|medium|low","title":"título si reporte"}`
+    `"query":"nombre si search_missing","category":"medical|rescue|shelter|infrastructure|evacuation|blocked_road|hospital (solo si report)",` +
+    `"urgency":"critical|high|medium|low","title":"título breve si report"}`
   );
 }
 
