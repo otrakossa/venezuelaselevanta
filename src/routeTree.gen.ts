@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
+import { Route as QueEsRouteImport } from './routes/que-es'
 import { Route as PacientesRouteImport } from './routes/pacientes'
 import { Route as OfertasRouteImport } from './routes/ofertas'
 import { Route as NecesidadesRouteImport } from './routes/necesidades'
@@ -40,6 +41,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ReportarRoute = ReportarRouteImport.update({
   id: '/reportar',
   path: '/reportar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QueEsRoute = QueEsRouteImport.update({
+  id: '/que-es',
+  path: '/que-es',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PacientesRoute = PacientesRouteImport.update({
@@ -156,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/necesidades': typeof NecesidadesRoute
   '/ofertas': typeof OfertasRoute
   '/pacientes': typeof PacientesRoute
+  '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/necesidades': typeof NecesidadesRoute
   '/ofertas': typeof OfertasRoute
   '/pacientes': typeof PacientesRoute
+  '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/necesidades': typeof NecesidadesRoute
   '/ofertas': typeof OfertasRoute
   '/pacientes': typeof PacientesRoute
+  '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/necesidades'
     | '/ofertas'
     | '/pacientes'
+    | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
     | '/api/reports.csv'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/necesidades'
     | '/ofertas'
     | '/pacientes'
+    | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
     | '/api/reports.csv'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/necesidades'
     | '/ofertas'
     | '/pacientes'
+    | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
     | '/api/reports.csv'
@@ -304,6 +316,7 @@ export interface RootRouteChildren {
   NecesidadesRoute: typeof NecesidadesRoute
   OfertasRoute: typeof OfertasRoute
   PacientesRoute: typeof PacientesRoute
+  QueEsRoute: typeof QueEsRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
@@ -332,6 +345,13 @@ declare module '@tanstack/react-router' {
       path: '/reportar'
       fullPath: '/reportar'
       preLoaderRoute: typeof ReportarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/que-es': {
+      id: '/que-es'
+      path: '/que-es'
+      fullPath: '/que-es'
+      preLoaderRoute: typeof QueEsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pacientes': {
@@ -488,6 +508,7 @@ const rootRouteChildren: RootRouteChildren = {
   NecesidadesRoute: NecesidadesRoute,
   OfertasRoute: OfertasRoute,
   PacientesRoute: PacientesRoute,
+  QueEsRoute: QueEsRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
