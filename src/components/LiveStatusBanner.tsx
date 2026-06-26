@@ -11,21 +11,19 @@ const DISMISS_KEY = "vsl-live-banner-dismissed";
  */
 export function LiveStatusBanner() {
   const { reports } = useReports();
-  const { missing } = useMissing();
+  const { missing, counts } = useMissing();
   const [hidden, setHidden] = useState(true); // empezar oculto para evitar flash
 
   useEffect(() => {
     setHidden(sessionStorage.getItem(DISMISS_KEY) === "1");
   }, []);
 
-  const counts = useMemo(() => {
+  const stats = useMemo(() => {
     const activeReports = reports.filter((r) => r.status === "active").length;
-    const stillMissing = missing.filter((m) => m.status === "missing").length;
-    const found = missing.filter((m) => m.status === "found").length;
     const lastUpdate = [...reports, ...missing]
       .map((x) => new Date((x as { updated_at?: string }).updated_at ?? x.created_at).getTime())
       .reduce((a, b) => (b > a ? b : a), 0);
-    return { activeReports, stillMissing, found, lastUpdate };
+    return { activeReports, lastUpdate };
   }, [reports, missing]);
 
   if (hidden) return null;
