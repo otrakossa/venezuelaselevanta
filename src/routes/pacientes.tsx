@@ -124,7 +124,7 @@ function PacientesPage() {
   useEffect(() => { load(); }, []);
 
   const setCenter = (c?: string) =>
-    navigate({ search: (prev) => ({ ...prev, center: c }), replace: true });
+    navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
 
   // counts overall (no filter applied)
   const counts = useMemo(() => ({
