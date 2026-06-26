@@ -358,7 +358,7 @@ function PacientesPage() {
                   )}
                 </div>
               ) : (
-                visible.map((p) => <PatientCard key={p.id} patient={p} />)
+                visible.map((p) => <PatientCard key={p.id} patient={p} onChanged={() => load(true)} />)
               )}
             </div>
 
