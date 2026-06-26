@@ -309,6 +309,7 @@ export type Database = {
       }
       patients: {
         Row: {
+          address: string | null
           age: number | null
           center_address: string | null
           center_lat: number | null
@@ -317,13 +318,16 @@ export type Database = {
           created_at: string
           discharged_at: string | null
           id: string
+          id_number: string | null
           name: string
           notes: string | null
+          phone: string | null
           registered_by: string | null
           sex: string | null
           status: string
         }
         Insert: {
+          address?: string | null
           age?: number | null
           center_address?: string | null
           center_lat?: number | null
@@ -332,13 +336,16 @@ export type Database = {
           created_at?: string
           discharged_at?: string | null
           id?: string
+          id_number?: string | null
           name: string
           notes?: string | null
+          phone?: string | null
           registered_by?: string | null
           sex?: string | null
           status?: string
         }
         Update: {
+          address?: string | null
           age?: number | null
           center_address?: string | null
           center_lat?: number | null
@@ -347,8 +354,10 @@ export type Database = {
           created_at?: string
           discharged_at?: string | null
           id?: string
+          id_number?: string | null
           name?: string
           notes?: string | null
+          phone?: string | null
           registered_by?: string | null
           sex?: string | null
           status?: string
@@ -644,6 +653,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
