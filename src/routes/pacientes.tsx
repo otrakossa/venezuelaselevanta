@@ -47,6 +47,7 @@ interface Patient {
   id_number: string | null;
   phone: string | null;
   address: string | null;
+  matched_missing_id: string | null;
 }
 
 const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: string }> = {
