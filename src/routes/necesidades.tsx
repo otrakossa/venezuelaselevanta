@@ -303,11 +303,14 @@ function NecesidadesPage() {
           </div>
         ) : (
           list.map((n) => (
-            <NeedCard key={n.id} need={n} onOffer={() => setOfferTarget(n)} />
+            <NeedCard key={n.id} need={n} onOffer={() => navigate({ to: "/ofertas", search: { need: n.id } })} />
           ))
         )}
       </div>
     </div>
+  );
+}
+
   );
 }
 
