@@ -128,14 +128,22 @@ export async function reverseGeocode(
   if (cached !== undefined) return cached;
 
   return throttle(async () => {
-    const url = new URL("https://nominatim.openstreetmap.org/reverse");
-    url.searchParams.set("format", "jsonv2");
-    url.searchParams.set("lat", lat.toFixed(6));
-    url.searchParams.set("lon", lng.toFixed(6));
-    url.searchParams.set("zoom", "16");
-    url.searchParams.set("addressdetails", "1");
-    url.searchParams.set("accept-language", "es");
-    const res = await fetchWithRetry(url.toString(), signal);
+    // Prefer same-origin proxy (HTTP-cached via CDN/nginx) — falls back to Nominatim directly.
+    const proxy = new URL("/api/public/geocode", typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    proxy.searchParams.set("reverse", "1");
+    proxy.searchParams.set("lat", lat.toFixed(6));
+    proxy.searchParams.set("lng", lng.toFixed(6));
+    let res = await fetchWithRetry(proxy.toString(), signal);
+    if (!res || !res.ok) {
+      const url = new URL("https://nominatim.openstreetmap.org/reverse");
+      url.searchParams.set("format", "jsonv2");
+      url.searchParams.set("lat", lat.toFixed(6));
+      url.searchParams.set("lon", lng.toFixed(6));
+      url.searchParams.set("zoom", "16");
+      url.searchParams.set("addressdetails", "1");
+      url.searchParams.set("accept-language", "es");
+      res = await fetchWithRetry(url.toString(), signal);
+    }
     if (!res || !res.ok) {
       setCache(memReverse, LS_REVERSE_KEY, key, null);
       return null;
@@ -173,13 +181,18 @@ export async function geocodeAddress(
   if (cached !== undefined) return cached;
 
   return throttle(async () => {
-    const url = new URL("https://nominatim.openstreetmap.org/search");
-    url.searchParams.set("format", "jsonv2");
-    url.searchParams.set("q", q);
-    url.searchParams.set("countrycodes", "ve");
-    url.searchParams.set("limit", "1");
-    url.searchParams.set("accept-language", "es");
-    const res = await fetchWithRetry(url.toString(), signal);
+    const proxy = new URL("/api/public/geocode", typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    proxy.searchParams.set("q", q);
+    let res = await fetchWithRetry(proxy.toString(), signal);
+    if (!res || !res.ok) {
+      const url = new URL("https://nominatim.openstreetmap.org/search");
+      url.searchParams.set("format", "jsonv2");
+      url.searchParams.set("q", q);
+      url.searchParams.set("countrycodes", "ve");
+      url.searchParams.set("limit", "1");
+      url.searchParams.set("accept-language", "es");
+      res = await fetchWithRetry(url.toString(), signal);
+    }
     if (!res || !res.ok) {
       setCache(memForward, LS_FORWARD_KEY, key, null);
       return null;

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@/components/ClientOnly";
-import { MapView } from "@/components/MapView";
+import { MapViewLazy as MapView } from "@/components/MapViewLazy";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports, useMissing } from "@/hooks/useReports";
 import { format } from "date-fns";

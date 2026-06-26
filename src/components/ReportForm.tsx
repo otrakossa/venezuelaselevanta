@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CATEGORIES } from "@/lib/categories";
 import { ClientOnly } from "./ClientOnly";
-import { MapView } from "./MapView";
+import { MapViewLazy as MapView } from "./MapViewLazy";
 import { Locate, Send, Camera, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import exifr from "exifr";
