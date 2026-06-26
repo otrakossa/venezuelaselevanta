@@ -117,6 +117,17 @@ export function useMissing() {
     await refetchCounts();
   }, [fetchPage, refetchCounts]);
 
+  // Throttle refetch of the 4 count(*) queries — they were firing on every
+  // single realtime event (USGS cron + bot inserts caused 113k+ calls/day).
+  const countsTimer = useRef<number | null>(null);
+  const scheduleCounts = useCallback(() => {
+    if (countsTimer.current != null) return;
+    countsTimer.current = window.setTimeout(() => {
+      countsTimer.current = null;
+      refetchCounts();
+    }, 10_000);
+  }, [refetchCounts]);
+
   useEffect(() => {
     let mounted = true;
     fetchPage(0, false).then(() => { if (!mounted) return; });
@@ -132,17 +143,41 @@ export function useMissing() {
             return prev.filter((r) => r.id !== (payload.old as MissingPerson).id);
           return prev;
         });
-        refetchCounts();
+        // Optimistic local count update — keeps the UI snappy without a round-trip
+        setCounts((prev) => {
+          const next = { ...prev };
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as MissingPerson;
+            next.all += 1;
+            if (row.status === "missing") next.missing += 1;
+            else if (row.status === "found") next.found += 1;
+            else if (row.status === "deceased") next.deceased += 1;
+          } else if (payload.eventType === "DELETE") {
+            const row = payload.old as MissingPerson;
+            next.all = Math.max(0, next.all - 1);
+            if (row.status === "missing") next.missing = Math.max(0, next.missing - 1);
+            else if (row.status === "found") next.found = Math.max(0, next.found - 1);
+            else if (row.status === "deceased") next.deceased = Math.max(0, next.deceased - 1);
+          }
+          return next;
+        });
+        // Reconcile with the server at most once every 10s
+        scheduleCounts();
       })
       .subscribe();
     return () => {
       mounted = false;
+      if (countsTimer.current != null) {
+        clearTimeout(countsTimer.current);
+        countsTimer.current = null;
+      }
       supabase.removeChannel(ch);
     };
-  }, [fetchPage, refetchCounts]);
+  }, [fetchPage, refetchCounts, scheduleCounts]);
 
   return { missing: records, counts, refetch, loadMore, hasMore, loadingMore };
 }
+
 
 
 export function useAuth() {
