@@ -1,57 +1,31 @@
-## Objetivo
+## Problema
 
-Reemplazar los inputs de texto libre para "Centro de salud" en `/pacientes` y `/necesidades` por un selector con búsqueda inteligente que use la tabla `health_centers` (1.439 centros ya cargados), permitiendo además crear un centro nuevo cuando no exista en la lista.
+1. **Datos sucios en `health_centers`**: hay 35 registros con nombres genéricos sin ubicación —25 son literalmente `"Ambulatorio"` sin `city` ni `address`, más duplicados de `"Barrio adentro"`, `"CDI"`, `"Alfa"`, etc. Son inútiles: el usuario no puede distinguir uno de otro.
+2. **Picker limita a 50 resultados**: al buscar (p. ej. "hospital") solo aparecen los primeros 50 de potencialmente cientos, sin indicador de que hay más.
 
-## Alcance
+## Cambios
 
-Tres formularios consumen `center_name`:
-- `src/routes/pacientes.tsx` (registrar paciente atendido)
-- `src/routes/necesidades.tsx` (publicar necesidad)
-- (Indirecto) `src/routes/ofertas.tsx` solo **muestra** `center_name` de necesidades vinculadas — no requiere cambio.
+### 1. Migración de limpieza de datos
+Eliminar registros genéricos sin información útil:
+```sql
+DELETE FROM public.health_centers
+WHERE address IS NULL
+  AND city IS NULL
+  AND lower(trim(name)) IN ('ambulatorio','hospital','cdi','barrio adentro','alfa','clinica','clínica');
+```
+Esto borra los ~30 registros chatarra; los que sí tienen `city` (p. ej. "Ambulatorio – Tabay") se conservan.
 
-El bot de Telegram queda fuera de este cambio (sigue como texto libre por ahora).
+### 2. `src/components/HealthCenterPicker.tsx`
+- **Quitar el tope hardcodeado de 50**. Sin búsqueda: mostrar los primeros 100 con un aviso "Escribe para buscar entre 1.4k centros". Con búsqueda: mostrar **todos** los matches (no cortar).
+- **Mostrar el conteo real** en el encabezado del grupo: "234 resultados" en lugar de "50".
+- **Virtualización ligera**: si los resultados pasan de 200, renderizar solo los primeros 200 y agregar un item final tipo "…afina la búsqueda para ver más" para evitar lag del DOM. Es más simple que añadir `react-window` y suficiente para 1.4k filas.
+- **Mejor etiqueta cuando falta ubicación**: si un centro no tiene `city` ni `state`, mostrar el `address` truncado o `(ubicación no registrada)` en la línea secundaria, así el usuario sabe que es ambiguo.
+- **Ordenar resultados**: priorizar los que empiezan por el término buscado, luego los que lo contienen; dentro de cada grupo, primero los que tienen `city`.
 
-## Diseño UX
+### 3. Sin cambios en `/pacientes` ni `/necesidades`
+Solo consumen el picker; el comportamiento mejora automáticamente.
 
-Componente nuevo: `src/components/HealthCenterPicker.tsx`
-
-- Trigger tipo input con placeholder "Buscar centro de salud…"
-- Al hacer foco / clic abre un popover con:
-  - Campo de búsqueda (filtra por `name`, `city`, `state` — case-insensitive, sin acentos)
-  - Lista virtualizada o capada a ~50 resultados, mostrando: **Nombre** · municipio/estado en gris
-  - Opción al final: "➕ Usar '<texto escrito>' como nuevo centro" cuando no haya match exacto y el usuario tenga texto
-- Al seleccionar un centro existente: guarda `center_name` (string) y, si el formulario lo necesita más adelante, expone también `health_center_id`
-- Permite limpiar la selección
-
-Construido con `Command` (cmdk) + `Popover` de shadcn (ya instalados).
-
-## Datos
-
-- Hook `useHealthCenters()` en `src/hooks/useHealthCenters.ts`:
-  - `fetch` directo (REST) a `health_centers?select=id,name,city,state&order=name.asc` una sola vez por sesión
-  - Cachea en memoria (módulo-level) — 1.439 filas ≈ pocos KB, sin paginación
-  - Devuelve `{ centers, loading, error }`
-- Filtro en cliente usando `normalize()` (lowercase + `String.prototype.normalize('NFD').replace(/\p{Diacritic}/gu,'')`)
-
-## Integración
-
-1. **`src/routes/necesidades.tsx`** (línea 545): reemplazar el `<input>` por `<HealthCenterPicker value={f.center_name} onChange={(name) => setF({ ...f, center_name: name })} required />`. Conservar la validación existente.
-
-2. **`src/routes/pacientes.tsx`** (línea 631): mismo reemplazo.
-
-3. **Filtro de la lista de pacientes** (`/pacientes` ya tiene un select de centros derivado de los pacientes existentes — se mantiene tal cual, no cambia).
-
-## Base de datos
-
-No se requieren migraciones. Se sigue guardando `center_name` como texto en `patients` y `needs` (compatibilidad con datos actuales y con el bot de Telegram). Opcionalmente, si más adelante se quiere referencia dura, se puede agregar `health_center_id uuid` — fuera de alcance ahora.
-
-## Archivos a crear / editar
-
-- **Crear**: `src/components/HealthCenterPicker.tsx`, `src/hooks/useHealthCenters.ts`
-- **Editar**: `src/routes/necesidades.tsx`, `src/routes/pacientes.tsx`
-
-## Fuera de alcance
-
-- Bot de Telegram
-- Migración de datos históricos (`patients.center_name` ya escritos a mano)
-- Crear nuevos `health_centers` en la BD desde el formulario (por ahora "nuevo centro" solo guarda el string libre)
+## Lo que NO cambia
+- Esquema de `health_centers` (no se añaden columnas).
+- Almacenamiento del campo `center_name` como string libre en `patients`/`needs`.
+- Opción de "Usar X como nuevo centro" cuando no hay match exacto.

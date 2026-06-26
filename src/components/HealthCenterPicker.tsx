@@ -31,22 +31,33 @@ export function HealthCenterPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
+  const HARD_RENDER_CAP = 200;
   const nQuery = normalizeText(query);
-  const filtered = useMemo(() => {
-    if (!centers.length) return [];
-    if (!nQuery) return centers.slice(0, 50);
-    const out: typeof centers = [];
+  const { matches, total } = useMemo(() => {
+    if (!centers.length) return { matches: [], total: 0 };
+    if (!nQuery) return { matches: centers.slice(0, 100), total: centers.length };
+    const starts: typeof centers = [];
+    const includes: typeof centers = [];
     for (const c of centers) {
-      const hay = normalizeText(
-        `${c.name} ${c.city ?? ""} ${c.state ?? ""}`,
-      );
-      if (hay.includes(nQuery)) {
-        out.push(c);
-        if (out.length >= 50) break;
-      }
+      const n = normalizeText(c.name);
+      const hay = normalizeText(`${c.name} ${c.city ?? ""} ${c.state ?? ""} ${c.address ?? ""}`);
+      if (n.startsWith(nQuery)) starts.push(c);
+      else if (hay.includes(nQuery)) includes.push(c);
     }
-    return out;
+    const rank = (a: typeof centers[number], b: typeof centers[number]) => {
+      const ag = a.city || a.state ? 0 : 1;
+      const bg = b.city || b.state ? 0 : 1;
+      if (ag !== bg) return ag - bg;
+      return a.name.localeCompare(b.name);
+    };
+    starts.sort(rank);
+    includes.sort(rank);
+    const all = [...starts, ...includes];
+    return { matches: all.slice(0, HARD_RENDER_CAP), total: all.length };
   }, [centers, nQuery]);
+  const filtered = matches;
+  const truncated = total > filtered.length;
+
 
   const exactMatch = useMemo(
     () =>
@@ -92,10 +103,17 @@ export function HealthCenterPicker({
                 {loading ? "Cargando…" : "Sin resultados."}
               </CommandEmpty>
               {filtered.length > 0 && (
-                <CommandGroup heading={`${filtered.length} resultado${filtered.length === 1 ? "" : "s"}`}>
+                <CommandGroup
+                  heading={
+                    nQuery
+                      ? `${total} resultado${total === 1 ? "" : "s"}${truncated ? ` · mostrando ${filtered.length}` : ""}`
+                      : `Escribe para buscar entre ${centers.length} centros`
+                  }
+                >
                   {filtered.map((c) => {
                     const selected = value === c.name;
-                    const sub = [c.city, c.state].filter(Boolean).join(" · ");
+                    const loc = [c.city, c.state].filter(Boolean).join(" · ");
+                    const sub = loc || (c.address ? c.address : "Ubicación no registrada");
                     return (
                       <CommandItem
                         key={c.id}
@@ -115,11 +133,23 @@ export function HealthCenterPicker({
                         />
                         <div className="min-w-0">
                           <div className="text-sm font-medium truncate">{c.name}</div>
-                          {sub && <div className="text-[11px] text-muted-foreground truncate">{sub}</div>}
+                          <div
+                            className={cn(
+                              "text-[11px] truncate",
+                              loc ? "text-muted-foreground" : "text-muted-foreground/60 italic",
+                            )}
+                          >
+                            {sub}
+                          </div>
                         </div>
                       </CommandItem>
                     );
                   })}
+                  {truncated && (
+                    <div className="px-3 py-2 text-[11px] text-muted-foreground italic">
+                      Afina la búsqueda para ver más resultados.
+                    </div>
+                  )}
                 </CommandGroup>
               )}
               {query.trim() && !exactMatch && (
