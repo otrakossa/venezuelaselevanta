@@ -31,22 +31,33 @@ export function HealthCenterPicker({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
+  const HARD_RENDER_CAP = 200;
   const nQuery = normalizeText(query);
-  const filtered = useMemo(() => {
-    if (!centers.length) return [];
-    if (!nQuery) return centers.slice(0, 50);
-    const out: typeof centers = [];
+  const { matches, total } = useMemo(() => {
+    if (!centers.length) return { matches: [], total: 0 };
+    if (!nQuery) return { matches: centers.slice(0, 100), total: centers.length };
+    const starts: typeof centers = [];
+    const includes: typeof centers = [];
     for (const c of centers) {
-      const hay = normalizeText(
-        `${c.name} ${c.city ?? ""} ${c.state ?? ""}`,
-      );
-      if (hay.includes(nQuery)) {
-        out.push(c);
-        if (out.length >= 50) break;
-      }
+      const n = normalizeText(c.name);
+      const hay = normalizeText(`${c.name} ${c.city ?? ""} ${c.state ?? ""} ${c.address ?? ""}`);
+      if (n.startsWith(nQuery)) starts.push(c);
+      else if (hay.includes(nQuery)) includes.push(c);
     }
-    return out;
+    const rank = (a: typeof centers[number], b: typeof centers[number]) => {
+      const ag = a.city || a.state ? 0 : 1;
+      const bg = b.city || b.state ? 0 : 1;
+      if (ag !== bg) return ag - bg;
+      return a.name.localeCompare(b.name);
+    };
+    starts.sort(rank);
+    includes.sort(rank);
+    const all = [...starts, ...includes];
+    return { matches: all.slice(0, HARD_RENDER_CAP), total: all.length };
   }, [centers, nQuery]);
+  const filtered = matches;
+  const truncated = total > filtered.length;
+
 
   const exactMatch = useMemo(
     () =>
