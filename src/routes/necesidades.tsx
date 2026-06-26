@@ -143,12 +143,6 @@ function NecesidadesPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
-      {offerTarget && (
-        <OfferDialog
-          need={offerTarget}
-          onClose={() => setOfferTarget(null)}
-        />
-      )}
 
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
