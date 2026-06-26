@@ -380,6 +380,15 @@ function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson
         </div>
       )}
 
+      <div className="px-4 pb-2">
+        <MatchSuggestions
+          kind="missing"
+          selfId={person.id}
+          matchedId={person.matched_patient_id}
+          onChanged={onChanged}
+        />
+      </div>
+
       {/* Actions */}
       <div className="px-4 pb-4 flex items-center gap-2">
         <button
