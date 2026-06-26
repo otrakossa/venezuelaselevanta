@@ -10,6 +10,7 @@ import { useUSGSQuakes, quakeColor } from "@/hooks/useUSGSQuakes";
 import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { Link } from "@tanstack/react-router";
 import { isValidCoords } from "@/lib/geo";
+import { MapLegend } from "@/components/MapLegend";
 
 const VZLA_CENTER: [number, number] = [9.5, -66.5];
 
