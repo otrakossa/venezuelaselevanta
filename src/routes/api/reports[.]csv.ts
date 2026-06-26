@@ -64,7 +64,7 @@ export const Route = createFileRoute("/api/reports.csv")({
           headers: {
             "Content-Type": "text/csv; charset=utf-8",
             "Content-Disposition": 'attachment; filename="venezuelaselevanta-reportes.csv"',
-            "Cache-Control": "public, max-age=300",
+            "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600",
             ...CORS,
           },
         });
