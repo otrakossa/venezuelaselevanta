@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/reports.geojson")({
 
         return new Response(JSON.stringify(body), {
           status: 200,
-          headers: { "Content-Type": "application/geo+json; charset=utf-8", "Cache-Control": "public, max-age=300", ...CORS },
+          headers: { "Content-Type": "application/geo+json; charset=utf-8", "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=600", ...CORS },
         });
       },
     },
