@@ -184,7 +184,7 @@ async function geocodeText(address: string): Promise<{ lat: number; lng: number 
 }
 
 // ── Gemini hybrid NLP ─────────────────────────────────────────────────────
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 async function geminiJSON<T>(prompt: string): Promise<T | null> {
   if (!GEMINI_KEY) return null;
