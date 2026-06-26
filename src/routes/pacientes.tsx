@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronUp,
 } from "lucide-react";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 
 const searchSchema = z.object({
   center: z.string().optional(),
@@ -625,14 +626,14 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         inputMode="tel"
       />
 
-      <input
-        className={`${field} sm:col-span-2`}
-        placeholder="Nombre del centro de salud *"
-        value={f.center_name}
-        onChange={(e) => setF({ ...f, center_name: e.target.value })}
-        required
-        maxLength={150}
-      />
+      <div className="sm:col-span-2">
+        <HealthCenterPicker
+          value={f.center_name}
+          onChange={(name) => setF({ ...f, center_name: name })}
+          placeholder="Nombre del centro de salud *"
+          required
+        />
+      </div>
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Dirección del centro (opcional)"
