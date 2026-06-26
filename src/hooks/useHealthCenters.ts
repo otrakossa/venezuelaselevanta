@@ -17,7 +17,7 @@ async function fetchAll(): Promise<HealthCenter[]> {
   const url = import.meta.env.VITE_SUPABASE_URL as string;
   const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
   inflight = fetch(
-    `${url}/rest/v1/health_centers?select=id,name,city,state&order=name.asc`,
+    `${url}/rest/v1/health_centers?select=id,name,city,state,address&order=name.asc`,
     { headers: { apikey: key, Authorization: `Bearer ${key}` } },
   )
     .then((r) => {
