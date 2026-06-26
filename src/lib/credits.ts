@@ -58,6 +58,12 @@ export const organizations: Organization[] = [
     url: "https://codextecnologia.com",
     logo: "/logo-codex.png",
   },
+  {
+    name: "CEESUR",
+    description: "Centro de Estudios Estratégicos del Sur Global",
+    url: "https://ceesur.org",
+    logo: "/logo-ceesur.svg",
+  },
 ];
 
 export const tech: TechCredit[] = [
