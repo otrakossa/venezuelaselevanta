@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
@@ -11,7 +11,8 @@ const NAV = [
   { to: "/reportar", label: "Reportar", icon: FilePlus },
   { to: "/desaparecidos", label: "Desaparecidos", icon: Users },
   { to: "/pacientes", label: "Atendidos", icon: HeartPulse },
-  { to: "/necesidades", label: "¡Quiero ayudar!", icon: HandHeart },
+  { to: "/necesidades", label: "Necesidades", icon: HandHeart },
+  { to: "/ofertas", label: "¡Quiero ayudar!", icon: PackageOpen },
   { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ] as const;
 
