@@ -130,18 +130,6 @@ export function Header() {
             Qué es
           </Link>
           <Link
-            to="/creditos"
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
-              pathname === "/creditos"
-                ? "bg-[color:var(--gold)] text-[color:var(--midnight)]"
-                : "text-header-foreground/80 hover:bg-white/10",
-            )}
-          >
-            <Heart className="h-3.5 w-3.5" />
-            Créditos
-          </Link>
-          <Link
             to="/admin"
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
