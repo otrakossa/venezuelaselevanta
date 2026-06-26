@@ -98,6 +98,14 @@ async function fetchPatients(): Promise<Patient[]> {
 
 const PAGE_SIZE = 24;
 
+function shortHospital(name: string) {
+  return name
+    .replace(/^Hospital\s+/i, "")
+    .replace(/^Centro\s+Cl[ií]nico\s+/i, "CC ")
+    .replace(/\s+Venezolana\s+[-–]\s+/i, " ")
+    .replace(/\s+[-–]\s+/g, " ");
+}
+
 function PacientesPage() {
   const navigate = useNavigate({ from: "/pacientes" });
   const { center } = Route.useSearch();
