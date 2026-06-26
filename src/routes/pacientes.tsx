@@ -328,11 +328,12 @@ function PacientesPage() {
 
 }
 
-function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue" | "yellow" | "slate" }) {
+function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue" | "yellow" | "slate" | "teal" }) {
   const tones = {
     blue:   "from-blue-500/15 to-blue-500/5 text-blue-600",
     yellow: "from-yellow-500/15 to-yellow-500/5 text-yellow-600",
     slate:  "from-slate-500/15 to-slate-500/5 text-foreground",
+    teal:   "from-teal-500/15 to-teal-500/5 text-teal-600",
   } as const;
   return (
     <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-3 py-2.5`}>
