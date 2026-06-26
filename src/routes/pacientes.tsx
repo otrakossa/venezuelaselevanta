@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   Search, X, HeartPulse, Loader2, RefreshCw, Plus,
   MapPin, User, ClipboardList, IdCard, Phone, Building2,
+  ChevronDown, ChevronUp,
 } from "lucide-react";
 
 const searchSchema = z.object({
