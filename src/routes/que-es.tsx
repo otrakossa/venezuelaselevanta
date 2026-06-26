@@ -18,6 +18,7 @@ import {
   Code2,
   ExternalLink,
   UserRound,
+  Network,
 } from "lucide-react";
 import heroImage from "@/assets/hero-rescate.jpg";
 import {
@@ -98,6 +99,21 @@ const ACCIONES = [
     desc: "Sostén la operación de la plataforma y a los equipos en terreno.",
   },
 ] as const;
+
+const INICIATIVAS: { title: string; links: string[] }[] = [
+  { title: "Reporte de personas desaparecidas", links: ["https://venezuelareporta.org", "https://venezuelatebusca.com", "https://desaparecidosterremotovenezuela.com"] },
+  { title: "Reporte de daños estructurales", links: ["https://terremotovenezuela.com", "https://tilinapp.com", "https://app.appcentinela.com/instalar"] },
+  { title: "Apoyo presencial y rescate", links: ["https://rescate-ve.vercel.app"] },
+  { title: "Ingenieros para inspección de habitabilidad", links: ["https://habitable.lovable.app", "https://www.instagram.com/grupoavila.ve", "https://app.appcentinela.com/instalar"] },
+  { title: "Centros de acopio", links: ["https://ayudaparavenezuela.com", "https://www.veneconnect.com/apoyo-terremoto", "https://tugruero.com", "https://zonasegura.up.railway.app"] },
+  { title: "Insumos requeridos por zona", links: ["https://ayudaparavenezuela.com"] },
+  { title: "Centros de alimentación", links: ["https://refugiosvenezuela.com"] },
+  { title: "Refugios y alojamiento", links: ["https://refugiosvenezuela.com", "https://zonasegura.up.railway.app"] },
+  { title: "Pacientes en hospitales", links: ["https://pacientesterremotovzla.lovable.app"] },
+  { title: "Información de mascotas", links: ["https://www.huellascan.com/terremoto"] },
+  { title: "Logística y transporte", links: ["https://rescate-ve.vercel.app"] },
+  { title: "Apoyo médico y psicológico", links: ["https://www.nueveonce.com", "https://venemergencia.com"] },
+];
 
 function AboutPage() {
   return (
@@ -422,6 +438,48 @@ function AboutPage() {
             ))}
           </ul>
         </section>
+
+        {/* Otras iniciativas */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Network className="h-5 w-5 text-[color:var(--sky)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Otras iniciativas ciudadanas
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            No estamos solos. Estos proyectos hermanos también responden al terremoto desde distintos frentes.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {INICIATIVAS.map((cat) => (
+              <div
+                key={cat.title}
+                className="rounded-2xl border border-border bg-card p-4 hover:border-[color:var(--sky)]/40 transition-colors"
+              >
+                <div className="font-display text-sm text-[color:var(--midnight)] leading-tight mb-2">
+                  {cat.title}
+                </div>
+                <ul className="space-y-1">
+                  {cat.links.map((url) => (
+                    <li key={url}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[color:var(--sky)] hover:underline inline-flex items-center gap-1 break-all"
+                      >
+                        {url.replace(/^https?:\/\//, "")}
+                        <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+
 
         {/* Contacto */}
         <section id="contacto" className="space-y-4 scroll-mt-20">
