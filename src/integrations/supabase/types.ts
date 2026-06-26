@@ -285,6 +285,7 @@ export type Database = {
           created_at: string
           description: string | null
           dispute_count: number
+          external_id: string | null
           hidden: boolean
           hidden_at: string | null
           hidden_reason: string | null
@@ -297,6 +298,7 @@ export type Database = {
           parish: string | null
           photo_url: string | null
           reporter_name: string | null
+          source: string | null
           state: string | null
           status: string
           title: string
@@ -314,6 +316,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           dispute_count?: number
+          external_id?: string | null
           hidden?: boolean
           hidden_at?: string | null
           hidden_reason?: string | null
@@ -326,6 +329,7 @@ export type Database = {
           parish?: string | null
           photo_url?: string | null
           reporter_name?: string | null
+          source?: string | null
           state?: string | null
           status?: string
           title: string
@@ -343,6 +347,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           dispute_count?: number
+          external_id?: string | null
           hidden?: boolean
           hidden_at?: string | null
           hidden_reason?: string | null
@@ -355,6 +360,7 @@ export type Database = {
           parish?: string | null
           photo_url?: string | null
           reporter_name?: string | null
+          source?: string | null
           state?: string | null
           status?: string
           title?: string

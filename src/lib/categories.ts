@@ -1,11 +1,11 @@
 import {
-  UserX, HeartPulse, Siren, HandHelping, Building2, MapPin, Construction, Cross,
+  UserX, HeartPulse, Siren, HandHelping, Building2, MapPin, Construction, Cross, Waves,
   type LucideIcon,
 } from "lucide-react";
 
 export type CategorySlug =
   | "missing" | "medical" | "rescue" | "shelter"
-  | "infrastructure" | "evacuation" | "blocked_road" | "hospital";
+  | "infrastructure" | "evacuation" | "blocked_road" | "hospital" | "earthquake";
 
 export interface CategoryMeta {
   slug: CategorySlug;
@@ -24,6 +24,7 @@ export const CATEGORIES: CategoryMeta[] = [
   { slug: "evacuation",     name: "Punto de encuentro / Evacuación", color: "#16A34A", icon: MapPin,       emoji: "🟢" },
   { slug: "blocked_road",   name: "Vías bloqueadas",                 color: "#374151", icon: Construction, emoji: "⚫" },
   { slug: "hospital",       name: "Centro médico / Hospital",        color: "#DB2777", icon: Cross,        emoji: "🩺" },
+  { slug: "earthquake",     name: "Sismo (USGS)",                    color: "#9333EA", icon: Waves,        emoji: "🌐" },
 ];
 
 export const CATEGORY_MAP: Record<string, CategoryMeta> = Object.fromEntries(

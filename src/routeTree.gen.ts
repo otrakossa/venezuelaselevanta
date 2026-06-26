@@ -25,6 +25,7 @@ import { Route as ApiPublicReportsRouteImport } from './routes/api/public/report
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
+import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -107,6 +108,12 @@ const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
   path: '/api/public/media/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksIngestUsgsRoute =
+  ApiPublicHooksIngestUsgsRouteImport.update({
+    id: '/api/public/hooks/ingest-usgs',
+    path: '/api/public/hooks/ingest-usgs',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
+  '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
+  '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
+  '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/reports'
+    | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/reports'
+    | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
@@ -215,6 +227,7 @@ export interface FileRouteTypes {
     | '/api/reports.geojson'
     | '/reportes/$id'
     | '/api/public/reports'
+    | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/telegram/webhook'
@@ -234,6 +247,7 @@ export interface RootRouteChildren {
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
+  ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
@@ -353,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/ingest-usgs': {
+      id: '/api/public/hooks/ingest-usgs'
+      path: '/api/public/hooks/ingest-usgs'
+      fullPath: '/api/public/hooks/ingest-usgs'
+      preLoaderRoute: typeof ApiPublicHooksIngestUsgsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -370,6 +391,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
+  ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
@@ -377,13 +399,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
