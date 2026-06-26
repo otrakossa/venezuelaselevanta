@@ -1,13 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, Users, HeartPulse, HandHeart, Plus } from "lucide-react";
+import { Map, Users, HandHeart, PackageOpen, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { to: "/", label: "Mapa", icon: Map },
   { to: "/desaparecidos", label: "Personas", icon: Users },
   // FAB sits in the middle slot
-  { to: "/pacientes", label: "Atendidos", icon: HeartPulse },
-  { to: "/necesidades", label: "¡Quiero ayudar!", icon: HandHeart },
+  { to: "/necesidades", label: "Necesidades", icon: HandHeart },
+  { to: "/ofertas", label: "Ayudar", icon: PackageOpen },
 ] as const;
 
 /**
