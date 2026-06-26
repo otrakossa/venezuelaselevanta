@@ -471,35 +471,38 @@ function Way({ title, desde }: { title: string; desde: string }) {
   );
 }
 
-function PersonCard({ person, large }: { person: Person; large?: boolean }) {
-  const initials =
-    person.initials ??
-    person.name
-      .split(" ")
-      .map((w) => w[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
+function PersonCard({ person }: { person: Person; large?: boolean }) {
   return (
-    <div className="group rounded-xl border border-border bg-card p-3 flex items-center gap-3 hover:border-[color:var(--sunrise)]/40 hover:shadow-md transition-all">
-      <div
-        className={
-          (large ? "h-14 w-14 text-base " : "h-11 w-11 text-sm ") +
-          "rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-[color:var(--gold)] text-white font-display flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform"
-        }
-      >
+    <div className="group rounded-xl border border-border bg-card p-4 flex flex-col items-center text-center gap-2 hover:border-[color:var(--sunrise)]/40 hover:shadow-md transition-all">
+      <div className="h-16 w-16 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform overflow-hidden ring-2 ring-white">
         {person.avatar ? (
-          <img src={person.avatar} alt={person.name} className="h-full w-full rounded-full object-cover" />
+          <img src={person.avatar} alt={person.name} className="h-full w-full object-cover" />
         ) : (
-          initials
+          <UserRound className="h-9 w-9 text-slate-500" strokeWidth={1.5} />
         )}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-semibold text-sm truncate">{person.name}</div>
-        <div className="text-xs text-muted-foreground truncate">{person.role}</div>
+      <div className="min-w-0 w-full">
+        <div className="font-semibold text-sm text-[color:var(--midnight)] truncate">{person.name}</div>
+        <div className="text-xs text-muted-foreground leading-snug line-clamp-2 mt-0.5">{person.role}</div>
         {person.links && person.links.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-wrap justify-center gap-2">
             {person.links.map((l) => (
+              <a
+                key={l.url}
+                href={l.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-[color:var(--sky)] hover:underline inline-flex items-center gap-0.5"
+              >
+                {l.label} <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
               <a
                 key={l.url}
                 href={l.url}
