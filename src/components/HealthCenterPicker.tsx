@@ -119,7 +119,7 @@ export function HealthCenterPicker({
                         key={c.id}
                         value={c.id}
                         onSelect={() => {
-                          onChange(c.name);
+                          onChange(c.name, c);
                           setOpen(false);
                           setQuery("");
                         }}
