@@ -12,7 +12,13 @@ const VE_MIN_LAT = -1, VE_MAX_LAT = 14, VE_MIN_LNG = -74, VE_MAX_LNG = -59;
 
 // ── Sessions (2h TTL) ─────────────────────────────────────────────────────
 type HistoryEntry = { role: "user" | "bot"; text: string };
-type Session = { state: string; draft: Record<string, unknown>; history: HistoryEntry[]; at: number };
+type Session = {
+  state: string;
+  draft: Record<string, unknown>;
+  history: HistoryEntry[];
+  userName?: string;
+  at: number;
+};
 const sessions = new Map<number, Session>();
 const SESSION_TTL = 2 * 60 * 60 * 1000;
 
@@ -22,9 +28,21 @@ function getSession(id: number): Session | null {
   if (Date.now() - s.at > SESSION_TTL) { sessions.delete(id); return null; }
   return s;
 }
-function setSession(id: number, state: string, draft: Record<string, unknown>, history?: HistoryEntry[]) {
+function setSession(
+  id: number,
+  state: string,
+  draft: Record<string, unknown>,
+  history?: HistoryEntry[],
+  userName?: string,
+) {
   const existing = sessions.get(id);
-  sessions.set(id, { state, draft, history: history ?? existing?.history ?? [], at: Date.now() });
+  sessions.set(id, {
+    state,
+    draft,
+    history: history ?? existing?.history ?? [],
+    userName: userName ?? existing?.userName,
+    at: Date.now(),
+  });
 }
 function clearSession(id: number) { sessions.delete(id); }
 
@@ -232,13 +250,16 @@ async function geminiConverse(
   history: HistoryEntry[],
   userMsg: string,
   stats: { reports: number; missing: number; searching: number },
+  userName?: string,
 ): Promise<string | null> {
   if (!GEMINI_KEY) return null;
 
   const systemText =
     `Eres el asistente del sistema "Venezuela Se Levanta", plataforma ciudadana de respuesta al terremoto en Venezuela.\n` +
     `Tu misión: orientar, informar y acompañar a las personas afectadas. Ayudarlas a registrar incidentes y encontrar desaparecidos.\n\n` +
+    (userName ? `El usuario se llama ${userName}. Dirígete a él/ella por su nombre cuando sea natural y cálido.\n\n` : "") +
     `PERSONALIDAD: Cálido, sereno, venezolano. Habla con cercanía. Infunde calma. Nunca alarmista. Usa "chamo", "mi pana", "tranquilo/a" cuando sea natural.\n\n` +
+    `Cuando el usuario quiera reportar un incidente o registrar un desaparecido, el sistema va a iniciar ese proceso automáticamente. Responde con algo breve y cálido tipo "Claro${userName ? ` ${userName}` : ""}, voy a ayudarte a registrar eso ahora." sin dar instrucciones adicionales.\n\n` +
     `NÚMEROS DE EMERGENCIA EN VENEZUELA:\n` +
     `• Protección Civil Nacional: 171\n` +
     `• Emergencias médicas / ambulancia: 911\n` +
@@ -351,19 +372,14 @@ async function extractReportFields(text: string): Promise<ReportExtract | null> 
 }
 
 // ── Commands ──────────────────────────────────────────────────────────────
-async function handleStart(chatId: number, name?: string) {
+async function handleStart(chatId: number) {
   clearSession(chatId);
+  setSession(chatId, "awaiting_user_name", {});
   await send(chatId,
     `<b>Venezuela Se Levanta 🇻🇪</b>\n\n` +
-    `Hola${name ? ` ${name}` : ""}. Soy el asistente del sistema de reportes ciudadanos del terremoto.\n\n` +
-    `Puedo ayudarte con información de emergencia, registrar incidentes y buscar personas desaparecidas.\n\n` +
-    `/reportar — publicar un incidente en el mapa\n` +
-    `/registrar_desaparecido — registrar persona desaparecida\n` +
-    `/buscar [nombre] — buscar persona desaparecida\n` +
-    `/estado — cifras actuales del mapa\n` +
-    `/cancelar — cancelar operación actual\n\n` +
-    `También puedes escribirme en lenguaje natural: pregúntame qué hacer ante un sismo, cómo ayudar, números de emergencia, etc.\n\n` +
-    `🌐 https://venezuelaselevanta.info`,
+    `Hola, soy el asistente del sistema ciudadano de respuesta al terremoto.\n\n` +
+    `Puedo ayudarte a registrar incidentes, buscar personas desaparecidas y orientarte en esta emergencia.\n\n` +
+    `¿Cómo te llamas?`,
     removeKb(),
   );
 }
@@ -419,10 +435,55 @@ async function handleEstado(chatId: number) {
 }
 
 // ── Conversational chat handler ───────────────────────────────────────────
-async function handleChat(chatId: number, text: string, session: Session | null) {
-  const history = session?.history ?? [];
-  const stats = await getQuickStats();
-  const response = await geminiConverse(history, text, stats);
+// Handles both the "chat" session state and no-session free-text messages.
+// Detects structured intents first and starts the corresponding flow inline;
+// falls back to Gemini conversational response for everything else.
+async function handleChat(chatId: number, text: string, session: Session | null): Promise<void> {
+  const history  = session?.history ?? [];
+  const userName = session?.userName;
+  const greet    = userName ? `Claro ${userName}, ` : "Entendido, ";
+
+  // ── Detect structured intent first ────────────────────────────────────
+  const intent = await detectIntent(text);
+
+  if (intent?.intent === "report") {
+    const draft: Record<string, unknown> = {};
+    if (intent.category && VALID_CATS.has(intent.category)) draft.category = intent.category;
+    if (intent.urgency  && VALID_URGS.has(intent.urgency))  draft.urgency  = intent.urgency;
+    if (intent.title)                                         draft.title    = String(intent.title).slice(0, 120);
+
+    if (draft.category && draft.title) {
+      setSession(chatId, "awaiting_description", draft);
+      const catName = CATEGORIES.find(c => c.slug === draft.category)?.name ?? "";
+      await send(chatId, `${greet}voy a registrar: <b>${draft.title}</b> (${catName})\n\n3/6 · Agrega más detalles (o «-» para omitir):`);
+      return;
+    }
+    if (draft.category) {
+      setSession(chatId, "awaiting_title", draft);
+      const catName = CATEGORIES.find(c => c.slug === draft.category)?.name ?? "";
+      await send(chatId, `${greet}Categoría: <b>${catName}</b>\n\n2/6 · Escribe un <b>título breve</b>:`);
+      return;
+    }
+    setSession(chatId, "awaiting_category", draft);
+    await send(chatId, `${greet}voy a ayudarte a registrar el incidente.\n\n1/6 · Elige la <b>categoría</b>:`, categoryKb());
+    return;
+  }
+
+  if (intent?.intent === "register_missing") {
+    await send(chatId, `${greet}voy a registrar a la persona desaparecida.`);
+    return startMissingPerson(chatId);
+  }
+
+  if (intent?.intent === "search_missing") {
+    if (intent.query) return handleBuscar(chatId, intent.query);
+    return send(chatId, `${userName ? `${userName}, ¿` : "¿"}cómo se llama la persona que buscas? Escribe el nombre completo.`);
+  }
+
+  if (intent?.intent === "status") return handleEstado(chatId);
+
+  // ── Conversational response for help / unknown ─────────────────────────
+  const stats    = await getQuickStats();
+  const response = await geminiConverse(history, text, stats, userName);
 
   if (response) {
     const newHistory: HistoryEntry[] = [
@@ -436,13 +497,11 @@ async function handleChat(chatId: number, text: string, session: Session | null)
   }
 
   // Fallback when Gemini is unavailable
+  const name = userName ? ` ${userName}` : "";
   await send(chatId,
-    `Estoy aquí para ayudarte 🇻🇪\n\n` +
-    `En caso de emergencia: llama al <b>171</b> (Protección Civil) o <b>911</b>.\n\n` +
-    `/reportar — publicar un incidente en el mapa\n` +
-    `/registrar_desaparecido — registrar persona desaparecida\n` +
-    `/buscar [nombre] — buscar a alguien\n` +
-    `/estado — ver cifras actuales`
+    `Estoy aquí para ayudarte${name} 🇻🇪\n\n` +
+    `En emergencias: <b>171</b> (Protección Civil) · <b>911</b>\n\n` +
+    `/reportar · /registrar_desaparecido · /buscar · /estado`
   );
 }
 
@@ -483,9 +542,10 @@ async function finalizeReport(chatId: number, draft: Record<string, unknown>, na
   });
   clearSession(chatId);
   if (err) { await send(chatId, `⚠️ No se pudo guardar el reporte: ${err}`, removeKb()); return; }
+  const thanks = name !== "Anónimo" ? ` Gracias, ${name}` : "";
   await send(chatId,
     `✅ <b>¡Reporte publicado!</b>${mediaUrls.length ? `\n📎 ${mediaUrls.length} adjunto(s).` : ""}\n` +
-    `Ya aparece en el mapa. Gracias por ayudar a Venezuela 🇻🇪\n\n` +
+    `Ya aparece en el mapa.${thanks} 🇻🇪\n\n` +
     `/reportar para otro | /estado para ver cifras`,
     removeKb(),
   );
@@ -594,7 +654,7 @@ async function processUpdate(update: Record<string, unknown>) {
   const text     = (msg.text ?? "").trim();
 
   // Global commands (always handled, regardless of session state)
-  if (text === "/start" || text.startsWith("/start "))    return handleStart(chatId, fromName);
+  if (text === "/start" || text.startsWith("/start "))    return handleStart(chatId);
   if (text === "/reportar")                               return startReport(chatId);
   if (text === "/registrar_desaparecido")                 return startMissingPerson(chatId);
   if (text === "/cancelar" || text === "❌ Cancelar")     return cancelFlow(chatId);
@@ -617,6 +677,28 @@ async function processUpdate(update: Record<string, unknown>) {
 
   const session = getSession(chatId);
 
+  // ── Awaiting user name (after /start greeting) ────────────────────────────
+  if (session?.state === "awaiting_user_name") {
+    if (text && !text.startsWith("/")) {
+      const userName = text.slice(0, 50).trim();
+      setSession(chatId, "chat", {}, [], userName);
+      await send(chatId,
+        `Mucho gusto, <b>${userName}</b> 🤝\n\n` +
+        `Cuéntame en qué te puedo ayudar. Puedo:\n\n` +
+        `• Registrar un incidente en el mapa\n` +
+        `• Registrar a una persona desaparecida\n` +
+        `• Buscar a alguien por nombre\n` +
+        `• Orientarte sobre qué hacer en la emergencia\n` +
+        `• Darte números de emergencia y protocolos de seguridad\n\n` +
+        `Cuéntame lo que necesitas con tus propias palabras, o usa los comandos:\n` +
+        `/reportar · /registrar_desaparecido · /buscar · /estado`,
+        removeKb(),
+      );
+      return;
+    }
+    return send(chatId, "¿Cómo te llamas? Escríbeme tu nombre para poder ayudarte mejor.");
+  }
+
   // ── Chat state: free-form conversation ────────────────────────────────────
   if (session?.state === "chat") {
     if (text && !text.startsWith("/")) {
@@ -625,45 +707,12 @@ async function processUpdate(update: Record<string, unknown>) {
     return send(chatId, "Escríbeme algo, o usa /reportar para registrar un incidente.");
   }
 
-  // ── No session: detect intent or start conversation ───────────────────────
+  // ── No session: route through handleChat (detects intent + converses) ───────
   if (!session) {
-    if (text && !text.startsWith("/")) {
-      const intent = await detectIntent(text);
-      if (intent?.intent === "report") {
-        const draft: Record<string, unknown> = {};
-        if (intent.category && VALID_CATS.has(intent.category)) draft.category = intent.category;
-        if (intent.urgency  && VALID_URGS.has(intent.urgency))  draft.urgency  = intent.urgency;
-        if (intent.title)                                         draft.title    = String(intent.title).slice(0, 120);
-
-        if (draft.category && draft.title) {
-          setSession(chatId, "awaiting_description", draft);
-          const catName = CATEGORIES.find(c => c.slug === draft.category)?.name ?? "";
-          return send(chatId,
-            `Entendido 👍 Registraré: <b>${draft.title}</b> (${catName})\n\n` +
-            `3/6 · Agrega más detalles (o «-» para omitir):`
-          );
-        }
-        if (draft.category) {
-          setSession(chatId, "awaiting_title", draft);
-          const catName = CATEGORIES.find(c => c.slug === draft.category)?.name ?? "";
-          return send(chatId, `Entendido. Categoría: <b>${catName}</b>\n\n2/6 · Escribe un <b>título breve</b>:`);
-        }
-        setSession(chatId, "awaiting_category", draft);
-        return send(chatId, "Voy a ayudarte a registrar el incidente.\n\n1/6 · Elige la <b>categoría</b>:", categoryKb());
-      }
-      if (intent?.intent === "search_missing") {
-        if (intent.query) return handleBuscar(chatId, intent.query);
-        return send(chatId, "Escribe el nombre completo. Ejemplo:\n<code>/buscar Juan García</code>");
-      }
-      if (intent?.intent === "register_missing") return startMissingPerson(chatId);
-      if (intent?.intent === "status")           return handleEstado(chatId);
-
-      // For help, general questions, unknown intent — use conversational AI
-      return handleChat(chatId, text, null);
-    }
+    if (text && !text.startsWith("/")) return handleChat(chatId, text, null);
     return send(chatId,
       "Hola 🇻🇪 Escríbeme lo que necesitas o usa /reportar para registrar un incidente.\n" +
-      "También puedo responder preguntas sobre seguridad, emergencias y el terremoto.\n\n" +
+      "También puedo responder preguntas sobre seguridad y emergencias.\n\n" +
       "/ayuda — ver todos los comandos"
     );
   }
@@ -809,7 +858,7 @@ async function processUpdate(update: Record<string, unknown>) {
 
   if (session.state === "awaiting_confirm") {
     if (text === "✅ Confirmar y publicar" || isNaturalConfirm(text))
-      return finalizeReport(chatId, session.draft, fromName);
+      return finalizeReport(chatId, session.draft, session.userName ?? fromName);
     if (text === "❌ Cancelar" || isNaturalCancel(text))
       return cancelFlow(chatId);
     return send(chatId, "Pulsa «✅ Confirmar y publicar» o «❌ Cancelar».", confirmKb());
