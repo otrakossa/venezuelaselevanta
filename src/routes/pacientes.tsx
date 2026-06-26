@@ -482,6 +482,13 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
           </div>
         )}
 
+        <MatchSuggestions
+          kind="patient"
+          selfId={p.id}
+          matchedId={p.matched_missing_id}
+          onChanged={onChanged}
+        />
+
         <div className="flex items-center justify-between pt-1 border-t border-border/60">
           <span className="text-[10px] text-muted-foreground">
             {timeAgo(p.created_at)}
