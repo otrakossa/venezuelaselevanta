@@ -539,6 +539,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         sex:            f.sex || null,
         age:            f.age ? Number(f.age) : null,
         center_address: f.center_address.trim() || null,
+        center_lat:     f.center_lat,
+        center_lng:     f.center_lng,
         notes:          f.notes.trim() || null,
         id_number:      f.id_number.trim().replace(/\D/g, "") || null,
         phone:          f.phone.trim() || null,
