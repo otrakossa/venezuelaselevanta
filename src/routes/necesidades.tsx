@@ -100,7 +100,7 @@ function NecesidadesPage() {
   const [urgency, setUrgency]       = useState<NeedUrgency | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"active" | "fulfilled">("active");
   const [showForm, setShowForm]     = useState(false);
-  const [offerTarget, setOfferTarget] = useState<Need | null>(null);
+  const navigate = useNavigate({ from: "/necesidades" });
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
