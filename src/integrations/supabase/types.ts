@@ -132,6 +132,9 @@ export type Database = {
           last_seen_lat: number | null
           last_seen_lng: number | null
           last_seen_location: string | null
+          matched_at: string | null
+          matched_by: string | null
+          matched_patient_id: string | null
           municipality: string | null
           name: string
           parish: string | null
@@ -156,6 +159,9 @@ export type Database = {
           last_seen_lat?: number | null
           last_seen_lng?: number | null
           last_seen_location?: string | null
+          matched_at?: string | null
+          matched_by?: string | null
+          matched_patient_id?: string | null
           municipality?: string | null
           name: string
           parish?: string | null
@@ -180,6 +186,9 @@ export type Database = {
           last_seen_lat?: number | null
           last_seen_lng?: number | null
           last_seen_location?: string | null
+          matched_at?: string | null
+          matched_by?: string | null
+          matched_patient_id?: string | null
           municipality?: string | null
           name?: string
           parish?: string | null
@@ -192,7 +201,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "missing_persons_matched_patient_id_fkey"
+            columns: ["matched_patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       needs: {
         Row: {
@@ -319,6 +336,7 @@ export type Database = {
           discharged_at: string | null
           id: string
           id_number: string | null
+          matched_missing_id: string | null
           name: string
           notes: string | null
           phone: string | null
@@ -337,6 +355,7 @@ export type Database = {
           discharged_at?: string | null
           id?: string
           id_number?: string | null
+          matched_missing_id?: string | null
           name: string
           notes?: string | null
           phone?: string | null
@@ -355,6 +374,7 @@ export type Database = {
           discharged_at?: string | null
           id?: string
           id_number?: string | null
+          matched_missing_id?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
@@ -362,7 +382,15 @@ export type Database = {
           sex?: string | null
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "patients_matched_missing_id_fkey"
+            columns: ["matched_missing_id"]
+            isOneToOne: false
+            referencedRelation: "missing_persons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_config: {
         Row: {
@@ -653,8 +681,38 @@ export type Database = {
         }
         Returns: boolean
       }
+      link_missing_to_patient: {
+        Args: { p_missing_id: string; p_patient_id: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      suggest_missing_matches: {
+        Args: { p_patient_id: string }
+        Returns: {
+          last_seen_location: string
+          missing_age: number
+          missing_id: string
+          missing_name: string
+          score: number
+          status: string
+        }[]
+      }
+      suggest_patient_matches: {
+        Args: { p_missing_id: string }
+        Returns: {
+          center_name: string
+          patient_age: number
+          patient_id: string
+          patient_name: string
+          score: number
+          status: string
+        }[]
+      }
+      unlink_missing_patient: {
+        Args: { p_missing_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

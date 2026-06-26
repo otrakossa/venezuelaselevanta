@@ -7,6 +7,7 @@ import {
   MapPin, User, ClipboardList, IdCard, Phone, Building2,
   ChevronDown, ChevronUp,
 } from "lucide-react";
+import { MatchSuggestions } from "@/components/MatchSuggestions";
 
 const searchSchema = z.object({
   center: z.string().optional(),
@@ -47,6 +48,7 @@ interface Patient {
   id_number: string | null;
   phone: string | null;
   address: string | null;
+  matched_missing_id: string | null;
 }
 
 const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: string }> = {
@@ -356,7 +358,7 @@ function PacientesPage() {
                   )}
                 </div>
               ) : (
-                visible.map((p) => <PatientCard key={p.id} patient={p} />)
+                visible.map((p) => <PatientCard key={p.id} patient={p} onChanged={() => load(true)} />)
               )}
             </div>
 
@@ -408,7 +410,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue
   );
 }
 
-function PatientCard({ patient: p }: { patient: Patient }) {
+function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: () => void }) {
   const s = STATUS_STYLES[p.status];
   return (
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
@@ -479,6 +481,13 @@ function PatientCard({ patient: p }: { patient: Patient }) {
             <p className="line-clamp-2 leading-relaxed">{p.notes}</p>
           </div>
         )}
+
+        <MatchSuggestions
+          kind="patient"
+          selfId={p.id}
+          matchedId={p.matched_missing_id}
+          onChanged={onChanged}
+        />
 
         <div className="flex items-center justify-between pt-1 border-t border-border/60">
           <span className="text-[10px] text-muted-foreground">

@@ -14,6 +14,7 @@ import { MissingGridSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { LocationSelect } from "@/components/LocationSelect";
+import { MatchSuggestions } from "@/components/MatchSuggestions";
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
@@ -186,7 +187,7 @@ function MissingPage() {
         ) : (
           <>
             {list.map((m) => (
-              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} />
+              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} onChanged={refetch} />
             ))}
             {list.length === 0 && (
               <div className="col-span-full">
@@ -255,7 +256,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "rose
   );
 }
 
-function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFound: () => void }) {
+function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson; onMarkFound: () => void; onChanged?: () => void }) {
   const navigate = useNavigate();
   const hasCoords = person.last_seen_lat != null && person.last_seen_lng != null;
   const openOnMap = () => {
@@ -378,6 +379,15 @@ function MissingCard({ person, onMarkFound }: { person: MissingPerson; onMarkFou
           )}
         </div>
       )}
+
+      <div className="px-4 pb-2">
+        <MatchSuggestions
+          kind="missing"
+          selfId={person.id}
+          matchedId={person.matched_patient_id}
+          onChanged={onChanged}
+        />
+      </div>
 
       {/* Actions */}
       <div className="px-4 pb-4 flex items-center gap-2">
