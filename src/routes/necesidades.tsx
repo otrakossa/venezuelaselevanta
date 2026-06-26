@@ -545,13 +545,29 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         maxLength={100}
       />
 
-      <div className="sm:col-span-2">
+      <div className="sm:col-span-2 space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
-          onChange={(name) => setF({ ...f, center_name: name })}
+          onChange={(name, c) =>
+            setF({
+              ...f,
+              center_name: name,
+              center_address: c?.address ?? (c ? [c.city, c.state].filter(Boolean).join(", ") : ""),
+              center_lat: c?.lat ?? null,
+              center_lng: c?.lng ?? null,
+              center_phone: c?.phone ?? "",
+            })
+          }
           placeholder="Centro / comunidad donde se necesita *"
           required
         />
+        {(f.center_lat != null || f.center_phone) && (
+          <p className="text-[11px] text-muted-foreground pl-1">
+            {f.center_lat != null && <span>📍 ubicación geolocalizada</span>}
+            {f.center_lat != null && f.center_phone && <span> · </span>}
+            {f.center_phone && <span>📞 {f.center_phone}</span>}
+          </p>
+        )}
       </div>
       <input
         className={`${field} sm:col-span-2`}
