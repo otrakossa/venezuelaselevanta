@@ -18,11 +18,11 @@ export const Route = createFileRoute("/pacientes")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Pacientes en centros de salud — Venezuela Se Levanta" },
-      { name: "description", content: "Busca y registra pacientes en centros de salud tras la emergencia en Venezuela." },
+      { title: "Atendidos en centros de salud — Venezuela Se Levanta" },
+      { name: "description", content: "Busca y registra personas atendidas en centros de salud tras la emergencia en Venezuela." },
     ],
   }),
-  component: PacientesPage,
+  component: AtendidosPage,
 });
 
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
@@ -108,7 +108,7 @@ function shortHospital(name: string) {
     .replace(/\s+[-–]\s+/g, " ");
 }
 
-function PacientesPage() {
+function AtendidosPage() {
   const navigate = useNavigate({ from: "/pacientes" });
   const { center } = Route.useSearch();
 
@@ -186,9 +186,9 @@ function PacientesPage() {
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 mb-2">
               <HeartPulse className="h-3.5 w-3.5" /> Centros de salud
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Pacientes en centros de salud</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Atendidos en centros de salud</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">
-              Registra y busca pacientes atendidos en centros de salud durante la emergencia.
+              Registra y busca personas atendidas en centros de salud durante la emergencia.
             </p>
           </div>
           <button
@@ -196,7 +196,7 @@ function PacientesPage() {
             className="shrink-0 inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-95 active:scale-[0.98] transition"
           >
             {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showForm ? "Cerrar" : "Registrar paciente"}
+            {showForm ? "Cerrar" : "Registrar atendido"}
           </button>
         </div>
 
@@ -337,9 +337,9 @@ function PacientesPage() {
               ) : total === 0 ? (
                 <div className="col-span-full py-16 text-center">
                   <div className="text-4xl mb-3">🏥</div>
-                  <p className="font-bold text-base mb-1">No hay pacientes registrados</p>
+                  <p className="font-bold text-base mb-1">No hay atendidos registrados</p>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
+                    {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un atendido."}
                   </p>
                   {(q || filter !== "all" || center) ? (
                     <button
@@ -353,7 +353,7 @@ function PacientesPage() {
                       onClick={() => setShowForm(true)}
                       className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
                     >
-                      Registrar paciente
+                      Registrar atendido
                     </button>
                   )}
                 </div>
@@ -366,7 +366,7 @@ function PacientesPage() {
               <div className="flex flex-col items-center gap-2 mt-6 pb-4">
                 <p className="text-[11px] text-muted-foreground">
                   Mostrando <span className="font-bold text-foreground">{visible.length}</span> de{" "}
-                  <span className="font-bold text-foreground">{total}</span> paciente{total === 1 ? "" : "s"}
+                  <span className="font-bold text-foreground">{total}</span> atendido{total === 1 ? "" : "s"}
                 </p>
                 {hasMore ? (
                   <button
@@ -557,7 +557,7 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         throw new Error(errText);
       }
 
-      toast.success("Paciente registrado correctamente");
+      toast.success("Atendido registrado correctamente");
       onDone();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrar";
@@ -574,7 +574,7 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     >
       <div className="sm:col-span-2 flex items-center gap-2 mb-1">
         <HeartPulse className="h-4 w-4 text-primary" />
-        <h2 className="font-bold text-sm">Registrar paciente</h2>
+        <h2 className="font-bold text-sm">Registrar atendido</h2>
       </div>
 
       <input
@@ -642,7 +642,7 @@ function PatientForm({ onDone }: { onDone: () => void }) {
       />
       <input
         className={`${field} sm:col-span-2`}
-        placeholder="Dirección / residencia del paciente (opcional)"
+        placeholder="Dirección / residencia del atendido (opcional)"
         value={f.address}
         onChange={(e) => setF({ ...f, address: e.target.value })}
         maxLength={200}
@@ -681,7 +681,7 @@ function PatientForm({ onDone }: { onDone: () => void }) {
           disabled={busy}
           className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50 shadow-md shadow-primary/20"
         >
-          {busy ? "Guardando…" : "Registrar paciente"}
+          {busy ? "Guardando…" : "Registrar atendido"}
         </button>
       </div>
     </form>

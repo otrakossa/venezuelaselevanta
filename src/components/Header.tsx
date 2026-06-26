@@ -10,7 +10,7 @@ const NAV = [
   { to: "/", label: "Mapa", icon: Map },
   { to: "/reportar", label: "Reportar", icon: FilePlus },
   { to: "/desaparecidos", label: "Desaparecidos", icon: Users },
-  { to: "/pacientes", label: "Pacientes", icon: HeartPulse },
+  { to: "/pacientes", label: "Atendidos", icon: HeartPulse },
   { to: "/necesidades", label: "Necesidades", icon: HandHeart },
   { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ] as const;
