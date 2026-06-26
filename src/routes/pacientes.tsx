@@ -385,6 +385,29 @@ function PatientCard({ patient: p }: { patient: Patient }) {
           </div>
         </div>
 
+        {(p.id_number || p.phone || p.address) && (
+          <div className="grid gap-1 text-[11px] text-muted-foreground border-t border-border/40 pt-2">
+            {p.id_number && (
+              <div className="flex items-center gap-1.5">
+                <IdCard className="h-3 w-3 shrink-0" />
+                <span className="font-mono font-semibold text-foreground/80">{p.id_number}</span>
+              </div>
+            )}
+            {p.phone && (
+              <div className="flex items-center gap-1.5">
+                <Phone className="h-3 w-3 shrink-0" />
+                <a href={`tel:${p.phone}`} className="font-semibold text-foreground/80 hover:text-primary">{p.phone}</a>
+              </div>
+            )}
+            {p.address && (
+              <div className="flex items-start gap-1.5">
+                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                <span className="line-clamp-1">{p.address}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {p.notes && (
           <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
             <ClipboardList className="h-3.5 w-3.5 shrink-0 mt-0.5" />
