@@ -120,14 +120,14 @@ export function Header() {
           <Link
             to="/que-es"
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-semibold whitespace-nowrap transition-all border",
               pathname === "/que-es"
-                ? "bg-[color:var(--cream)] text-[color:var(--midnight)]"
-                : "text-header-foreground/80 hover:bg-white/10",
+                ? "bg-[color:var(--gold)] text-[color:var(--midnight)] border-[color:var(--gold)]"
+                : "bg-white/5 text-header-foreground border-white/20 hover:bg-white/15 hover:border-[color:var(--gold)]/60",
             )}
           >
-            <Sparkles className="h-3.5 w-3.5" />
-            Qué es
+            <Heart className="h-3.5 w-3.5 text-[color:var(--sunrise)]" />
+            Qué es · Créditos
           </Link>
           <Link
             to="/admin"
