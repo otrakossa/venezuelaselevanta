@@ -74,6 +74,51 @@ export type Database = {
         }
         Relationships: []
       }
+      health_centers: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          osm_id: number | null
+          osm_type: string | null
+          phone: string | null
+          state: string | null
+          type: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          osm_id?: number | null
+          osm_type?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          osm_id?: number | null
+          osm_type?: string | null
+          phone?: string | null
+          state?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       missing_persons: {
         Row: {
           age: number | null
