@@ -465,8 +465,8 @@ function Way({ title, desde }: { title: string; desde: string }) {
 
 function PersonCard({ person }: { person: Person; large?: boolean }) {
   return (
-    <div className="group rounded-xl border border-border bg-card p-4 flex flex-col items-center text-center gap-2 hover:border-[color:var(--sunrise)]/40 hover:shadow-md transition-all">
-      <div className="h-16 w-16 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform overflow-hidden ring-2 ring-white">
+    <div className="group p-2 flex flex-col items-center text-center gap-2 transition-all">
+      <div className="h-16 w-16 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform overflow-hidden">
         {person.avatar ? (
           <img src={person.avatar} alt={person.name} className="h-full w-full object-cover" />
         ) : (
