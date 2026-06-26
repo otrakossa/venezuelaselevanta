@@ -26,6 +26,7 @@ import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicGeocodeRouteImport } from './routes/api/public/geocode'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
@@ -116,6 +117,11 @@ const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
   path: '/api/public/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicGeocodeRoute = ApiPublicGeocodeRouteImport.update({
+  id: '/api/public/geocode',
+  path: '/api/public/geocode',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByTo {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
     | '/api/public/hooks/ingest-usgs'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
     | '/api/public/hooks/ingest-usgs'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
     | '/api/public/hooks/ingest-usgs'
@@ -297,6 +309,7 @@ export interface RootRouteChildren {
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
+  ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
@@ -426,6 +439,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/geocode': {
+      id: '/api/public/geocode'
+      path: '/api/public/geocode'
+      fullPath: '/api/public/geocode'
+      preLoaderRoute: typeof ApiPublicGeocodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
@@ -473,6 +493,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
+  ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
   ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
