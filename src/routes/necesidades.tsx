@@ -456,6 +456,8 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         urgency:        f.urgency,
         center_name:    f.center_name.trim(),
         center_address: f.center_address.trim() || null,
+        lat:            f.center_lat,
+        lng:            f.center_lng,
         contact_name:   f.contact_name.trim() || null,
         contact_phone:  f.contact_phone.trim() || null,
         contact_info:   f.contact_info.trim() || null,
