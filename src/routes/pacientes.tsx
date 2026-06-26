@@ -281,17 +281,17 @@ function PacientesPage() {
               </button>
             )}
           </div>
-          <div className="flex gap-1 bg-muted/70 rounded-xl p-1 overflow-x-auto">
+          <div className="flex gap-1 bg-muted/70 rounded-xl p-1 flex-wrap">
             {(["active", "discharged", "all"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
+                className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
                   filter === f ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {f === "all" ? "Todos" : f === "active" ? "En centro" : "Alta médica"}
-                <span className="ml-1.5 text-[10px] opacity-70">{counts[f]}</span>
+                {f === "all" ? "Todos" : f === "active" ? "En centro" : "Alta"}
+                <span className="ml-1 text-[10px] opacity-70">{counts[f]}</span>
               </button>
             ))}
           </div>
