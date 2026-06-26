@@ -14,9 +14,21 @@ import {
   Download,
   Sparkles,
   MessageSquare,
+  Building2,
+  Code2,
+  ExternalLink,
 } from "lucide-react";
 import heroImage from "@/assets/hero-rescate.jpg";
-import { TELEGRAM_BOT } from "@/lib/credits";
+import {
+  TELEGRAM_BOT,
+  team,
+  collaborators,
+  organizations,
+  tech,
+  type Person,
+  type Organization,
+} from "@/lib/credits";
+import { ContactForm } from "@/components/ContactForm";
 
 export const Route = createFileRoute("/que-es")({
   head: () => ({
@@ -330,20 +342,123 @@ function AboutPage() {
             />
           </ul>
           <div className="pt-2 flex flex-wrap gap-2">
-            <Link
-              to="/creditos"
-              hash="contacto"
+            <a
+              href="#contacto"
               className="inline-flex items-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold rounded-full px-5 py-2.5 text-sm hover:opacity-90 transition-opacity shadow-md"
             >
               <MessageSquare className="h-4 w-4" /> Escríbenos
-            </Link>
-            <Link
-              to="/creditos"
+            </a>
+            <a
+              href="#equipo"
               className="inline-flex items-center gap-2 bg-white border border-border text-[color:var(--midnight)] font-semibold rounded-full px-5 py-2.5 text-sm hover:border-[color:var(--sunrise)]/50 transition-colors"
             >
-              <Heart className="h-4 w-4 text-[color:var(--sunrise)]" /> Ver créditos
-            </Link>
+              <Heart className="h-4 w-4 text-[color:var(--sunrise)]" /> Conoce al equipo
+            </a>
           </div>
+        </section>
+
+        {/* Equipo */}
+        <section id="equipo" className="space-y-4 scroll-mt-20">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-[color:var(--sunrise)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Equipo core
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Quienes mantienen y desarrollan la plataforma.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {team.map((p) => (
+              <PersonCard key={p.name} person={p} large />
+            ))}
+          </div>
+        </section>
+
+        {/* Colaboradores */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <HandHeart className="h-5 w-5 text-[color:var(--gold)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Colaboradores
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Voluntarios, verificadores y comunidad que aporta día a día.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {collaborators.map((p) => (
+              <PersonCard key={p.name} person={p} />
+            ))}
+          </div>
+        </section>
+
+        {/* Organizaciones */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-[color:var(--sky)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Organizaciones aliadas
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Instituciones y colectivos que apoyan la respuesta.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {organizations.map((o) => (
+              <OrgCard key={o.name} org={o} />
+            ))}
+          </div>
+        </section>
+
+        {/* Tecnología */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Code2 className="h-5 w-5 text-[color:var(--midnight)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Tecnología y datos abiertos
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Construido sobre proyectos libres y abiertos.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {tech.map((t) => (
+              <li
+                key={t.name}
+                className="rounded-xl border border-border bg-card p-3 flex items-start gap-3 hover:border-[color:var(--sky)]/40 hover:shadow-md transition-all"
+              >
+                <div className="h-9 w-9 rounded-lg bg-[color:var(--sky)]/10 text-[color:var(--sky)] flex items-center justify-center font-display text-sm shrink-0">
+                  {t.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <a
+                    href={t.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-sm inline-flex items-center gap-1 hover:text-[color:var(--sunrise)] transition-colors"
+                  >
+                    {t.name} <ExternalLink className="h-3 w-3" />
+                  </a>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Contacto */}
+        <section id="contacto" className="space-y-4 scroll-mt-20">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-[color:var(--sunrise)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Contacto
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Envíanos un mensaje y te responderemos pronto.
+          </p>
+          <ContactForm />
         </section>
 
         {/* Cierre */}
@@ -373,3 +488,100 @@ function Way({ title, desde }: { title: string; desde: string }) {
     </li>
   );
 }
+
+function PersonCard({ person, large }: { person: Person; large?: boolean }) {
+  const initials =
+    person.initials ??
+    person.name
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  return (
+    <div className="group rounded-xl border border-border bg-card p-3 flex items-center gap-3 hover:border-[color:var(--sunrise)]/40 hover:shadow-md transition-all">
+      <div
+        className={
+          (large ? "h-14 w-14 text-base " : "h-11 w-11 text-sm ") +
+          "rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-[color:var(--gold)] text-white font-display flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform"
+        }
+      >
+        {person.avatar ? (
+          <img src={person.avatar} alt={person.name} className="h-full w-full rounded-full object-cover" />
+        ) : (
+          initials
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-sm truncate">{person.name}</div>
+        <div className="text-xs text-muted-foreground truncate">{person.role}</div>
+        {person.links && person.links.length > 0 && (
+          <div className="mt-1 flex flex-wrap gap-2">
+            {person.links.map((l) => (
+              <a
+                key={l.url}
+                href={l.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] text-[color:var(--sky)] hover:underline inline-flex items-center gap-0.5"
+              >
+                {l.label} <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OrgCard({ org }: { org: Organization }) {
+  const initials = org.name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const content = (
+    <div className="rounded-2xl border border-border bg-card overflow-hidden h-full flex flex-col hover:border-[color:var(--sunrise)]/60 hover:shadow-xl hover:-translate-y-1 transition-all group">
+      <div className="relative h-40 bg-gradient-to-br from-white via-[color:var(--cream)] to-[color:var(--gold)]/20 flex items-center justify-center p-6 border-b border-border/60 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,color-mix(in_oklab,var(--sunrise)_15%,transparent),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity" />
+        {org.logo ? (
+          <img
+            src={org.logo}
+            alt={org.name}
+            className="relative max-h-full max-w-full object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
+            onError={(e) => {
+              const el = e.currentTarget as HTMLImageElement;
+              el.style.display = "none";
+              el.parentElement?.querySelector("[data-fallback]")?.classList.remove("hidden");
+            }}
+          />
+        ) : null}
+        <div
+          data-fallback
+          className={`${org.logo ? "hidden " : ""}relative h-20 w-20 rounded-2xl bg-gradient-to-br from-[color:var(--sunrise)] to-[color:var(--gold)] text-white flex items-center justify-center font-display text-2xl shadow-lg`}
+        >
+          {initials}
+        </div>
+      </div>
+      <div className="p-4 flex-1 flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="font-display text-base text-[color:var(--midnight)] leading-tight">{org.name}</div>
+          {org.url && (
+            <ExternalLink className="h-4 w-4 text-[color:var(--sky)] shrink-0 mt-0.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          )}
+        </div>
+        {org.description && <p className="text-xs text-muted-foreground leading-relaxed">{org.description}</p>}
+      </div>
+    </div>
+  );
+  return org.url ? (
+    <a href={org.url} target="_blank" rel="noreferrer" className="block h-full">
+      {content}
+    </a>
+  ) : (
+    content
+  );
+}
+
