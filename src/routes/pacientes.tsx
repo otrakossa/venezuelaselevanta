@@ -435,6 +435,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     name: "",
     age: "",
     sex: "no indicado",
+    id_number: "",
+    phone: "",
+    address: "",
     center_name: "",
     center_address: "",
     status: "stable" as PatientStatus,
@@ -459,6 +462,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         age:            f.age ? Number(f.age) : null,
         center_address: f.center_address.trim() || null,
         notes:          f.notes.trim() || null,
+        id_number:      f.id_number.trim().replace(/\D/g, "") || null,
+        phone:          f.phone.trim() || null,
+        address:        f.address.trim() || null,
       };
 
       const res = await fetch(`${SUPA_URL}/rest/v1/patients`, {
