@@ -17,6 +17,9 @@ export default defineConfig({
     preset: "node-server",
   },
   vite: {
+    // DEV ONLY: permite que el túnel (cloudflared) llegue al dev server.
+    // No afecta producción (usa node-server/nitro). Revisar antes de mergear a main.
+    server: { allowedHosts: [".trycloudflare.com"] },
     plugins: [
       VitePWA({
         registerType: "autoUpdate",
