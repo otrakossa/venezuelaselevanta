@@ -535,6 +535,23 @@ function PatientForm({ onDone }: { onDone: () => void }) {
       </select>
 
       <input
+        className={field}
+        placeholder="Cédula / ID"
+        value={f.id_number}
+        onChange={(e) => setF({ ...f, id_number: e.target.value })}
+        maxLength={20}
+        inputMode="numeric"
+      />
+      <input
+        className={field}
+        placeholder="Teléfono de contacto"
+        value={f.phone}
+        onChange={(e) => setF({ ...f, phone: e.target.value })}
+        maxLength={30}
+        inputMode="tel"
+      />
+
+      <input
         className={`${field} sm:col-span-2`}
         placeholder="Nombre del centro de salud *"
         value={f.center_name}
@@ -547,6 +564,13 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         placeholder="Dirección del centro (opcional)"
         value={f.center_address}
         onChange={(e) => setF({ ...f, center_address: e.target.value })}
+        maxLength={200}
+      />
+      <input
+        className={`${field} sm:col-span-2`}
+        placeholder="Dirección / residencia del paciente (opcional)"
+        value={f.address}
+        onChange={(e) => setF({ ...f, address: e.target.value })}
         maxLength={200}
       />
 
