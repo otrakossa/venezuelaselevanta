@@ -82,11 +82,13 @@ export function useMissing() {
   }, []);
 
   const fetchPage = useCallback(async (pageOffset: number, append: boolean) => {
+    const { MISSING_PUBLIC_COLUMNS } = await import("@/lib/missing-columns");
     const { data } = await supabase
       .from("missing_persons")
-      .select("*")
+      .select(MISSING_PUBLIC_COLUMNS)
       .order("report_date", { ascending: false })
       .range(pageOffset, pageOffset + MISSING_PAGE - 1);
+
     if (!data) return;
     const items = data as unknown as MissingPerson[];
     if (append) {

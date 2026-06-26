@@ -149,6 +149,167 @@ export type Database = {
         }
         Relationships: []
       }
+      needs: {
+        Row: {
+          category: string
+          center_address: string | null
+          center_name: string
+          contact_info: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          quantity: string | null
+          reporter_name: string | null
+          status: string
+          title: string
+          updated_at: string
+          urgency: string
+        }
+        Insert: {
+          category: string
+          center_address?: string | null
+          center_name: string
+          contact_info?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          quantity?: string | null
+          reporter_name?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          urgency?: string
+        }
+        Update: {
+          category?: string
+          center_address?: string | null
+          center_name?: string
+          contact_info?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          quantity?: string | null
+          reporter_name?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          urgency?: string
+        }
+        Relationships: []
+      }
+      offers: {
+        Row: {
+          category: string
+          contact_info: string | null
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          description: string | null
+          id: string
+          location_desc: string | null
+          need_id: string | null
+          quantity: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          category: string
+          contact_info?: string | null
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location_desc?: string | null
+          need_id?: string | null
+          quantity?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          contact_info?: string | null
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location_desc?: string | null
+          need_id?: string | null
+          quantity?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_need_id_fkey"
+            columns: ["need_id"]
+            isOneToOne: false
+            referencedRelation: "needs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          age: number | null
+          center_address: string | null
+          center_lat: number | null
+          center_lng: number | null
+          center_name: string
+          created_at: string
+          discharged_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          registered_by: string | null
+          sex: string | null
+          status: string
+        }
+        Insert: {
+          age?: number | null
+          center_address?: string | null
+          center_lat?: number | null
+          center_lng?: number | null
+          center_name: string
+          created_at?: string
+          discharged_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          registered_by?: string | null
+          sex?: string | null
+          status?: string
+        }
+        Update: {
+          age?: number | null
+          center_address?: string | null
+          center_lat?: number | null
+          center_lng?: number | null
+          center_name?: string
+          created_at?: string
+          discharged_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          registered_by?: string | null
+          sex?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       push_config: {
         Row: {
           broadcast_secret: string | null
@@ -427,6 +588,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cast_report_vote: {
+        Args: { p_device_id: string; p_report_id: string; p_vote: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

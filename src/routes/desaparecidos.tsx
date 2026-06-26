@@ -63,12 +63,14 @@ function MissingPage() {
       setSearching(true);
       try {
         const needle = q.trim();
+        const { MISSING_PUBLIC_COLUMNS } = await import("@/lib/missing-columns");
         const { data } = await supabase
           .from("missing_persons")
-          .select("*")
+          .select(MISSING_PUBLIC_COLUMNS)
           .or(`name.ilike.%${needle}%,last_seen_location.ilike.%${needle}%,description.ilike.%${needle}%`)
           .order("report_date", { ascending: false })
           .limit(200);
+
         setSearchResults((data ?? []) as unknown as MissingPerson[]);
       } finally {
         setSearching(false);

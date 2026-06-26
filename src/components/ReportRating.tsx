@@ -70,23 +70,14 @@ export function ReportRating({ report, variant = "compact", showBadge = true }: 
     setDelta((d) => ({ confirm: d.confirm + cDelta, dispute: d.dispute + dDelta }));
 
     try {
-      if (prev === vote) {
-        const { error } = await supabase
-          .from("report_votes")
-          .delete()
-          .eq("report_id", report.id)
-          .eq("device_id", deviceId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("report_votes")
-          .upsert(
-            { report_id: report.id, device_id: deviceId, vote },
-            { onConflict: "report_id,device_id" },
-          );
-        if (error) throw error;
-      }
+      const { error } = await supabase.rpc("cast_report_vote" as never, {
+        p_report_id: report.id,
+        p_device_id: deviceId,
+        p_vote: prev === vote ? "none" : vote,
+      } as never);
+      if (error) throw error;
     } catch (e) {
+
       // revert optimistic
       setMyVote(prev);
       setDelta((d) => ({ confirm: d.confirm - cDelta, dispute: d.dispute - dDelta }));
