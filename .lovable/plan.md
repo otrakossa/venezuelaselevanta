@@ -1,56 +1,105 @@
-## Objetivo
 
-Que la lista lateral de la home (`/`) muestre, intercalados con los reportes, las personas desaparecidas geolocalizadas — sin importar si están `missing`, `reunited` o `found` — ordenadas por fecha junto a los reportes. Al hacer clic en una tarjeta de desaparecido se enfoca su marcador rosa en el mapa (igual que ya hace el chip "Desaparecidos" + `?missing=<id>`).
+## Qué contiene el archivo
 
-## Cambios
+Excel con **339 pacientes consolidados** del sismo, distribuidos en 5 hospitales de Caracas:
 
-Todo el trabajo es en `src/routes/index.tsx`. No se tocan hooks, tipos ni el mapa.
+| Hospital | Pacientes |
+|---|---|
+| Hospital Pérez Carreño | 119 |
+| Hospital Domingo Luciani | 91 |
+| Hospital Universitario de Caracas | 60 |
+| Periférico de Catia | 44 |
+| Cruz Roja | 28 |
 
-### 1. Lista combinada ordenada por fecha
+La hoja **"🔍 BUSCAR PACIENTES"** es el maestro consolidado (las otras 5 son por hospital y ya están incluidas ahí → no duplicar).
 
-- Construir un array `feed` que mezcle:
-  - `visible` (reportes ya filtrados por categoría/urgencia/trust/tiempo/búsqueda).
-  - `missing` con `last_seen_lat != null && last_seen_lng != null`, filtrado por la misma ventana de tiempo (`timeWindow`) y por el texto `q` (sobre `full_name`, `last_seen_address`, `description`).
-- Etiquetar cada item con un discriminador (`kind: "report" | "missing"`) y una `sortDate` (reports: `created_at`; missing: `last_seen_at ?? created_at`).
-- Ordenar desc por `sortDate` y cortar a 30 como hoy.
-- Los filtros de categoría / urgencia / verificados / confiables NO aplican a desaparecidos (no tienen esas dimensiones); se mantienen siempre que pasen tiempo + búsqueda. Si el chip "Desaparecidos" del mapa (`showMissing`) está apagado, también se ocultan de la lista para que mapa y lista queden coherentes.
+**Campos por paciente:** N°, Hospital, Apellidos y Nombres, Edad, Cédula/ID, Teléfono, Dirección, Observaciones. Muchas filas tienen edad/teléfono/dirección vacíos (depende del hospital).
 
-### 2. Tarjeta de desaparecido en la lista
+---
 
-Renderizada en el mismo `<ul>`, con el mismo padding/altura que las de reporte, pero diferenciada:
+## Problema con el esquema actual
 
-- Avatar circular rosa (`bg-rose-500`) con ícono `Users` en blanco, o miniatura cuadrada (`rounded-full object-cover`) si `photo_url` existe.
-- Título: `full_name`.
-- Sub-línea: `📍 {last_seen_address}` cuando exista.
-- Chips: badge rosa `Desaparecido` + badge de estado (`missing` / `reunited` / `found`) con color (rosa / verde / azul) y fecha en formato `dd MMM HH:mm` desde `last_seen_at ?? created_at`. Si hay edad, mostrarla discreta (`· {age} años`).
-- Botón de compartir WhatsApp a la derecha reutilizando el componente existente si soporta `missing`; si no, una variante mínima inline que abre `wa.me` con `nombre + última ubicación + link a /?missing=<id>`. (Pendiente verificar API de `WhatsAppShareButton` durante implementación; si no acepta `missing`, dejar solo el avatar sin botón en esta iteración para no inflar el cambio.)
+La tabla `patients` actual tiene: `name, age, sex, center_name, center_address, center_lat, center_lng, status, notes, registered_by, discharged_at`.
 
-Click en la tarjeta:
-- `setShowMissing(true)` (por si el chip estaba apagado, el marcador debe estar en el mapa para enfocarlo).
-- `setFocusMissing({ id, lat, lng, nonce: Date.now() })`.
-- `setSheetOpen(false)` (cierra el bottom sheet en móvil).
+**Faltan campos relevantes del Excel:** cédula, teléfono, dirección del paciente (distinta de la del centro). Meter todo eso en `notes` mezcla datos y dificulta búsqueda. Necesitamos columnas dedicadas.
 
-### 3. Contador y estado vacío
+---
 
-- El contador del header de la lista (`{visible.length} incidentes`) y el chip flotante del mapa (`{visible.length}` y `${visible.length} reportes` del handle móvil) pasan a usar el largo del `feed` combinado, con etiqueta neutra: "registros" en lugar de "reportes" / "incidentes".
-- `EmptyState` se mantiene; el mensaje "Sin reportes que coincidan" se cambia a "Sin registros que coincidan".
+## Plan
 
-### 4. Lo que NO cambia
+### 1. Migración de esquema (`patients`)
+Agregar 3 columnas opcionales:
+- `id_number text` (cédula)
+- `phone text`
+- `address text` (dirección del paciente)
 
-- `MapView`, hooks (`useReports`, `useMissing`), tipos, filtros existentes, URL search params, `ReportDetailSheet` ni la página `/desaparecidos`.
-- Los desaparecidos sin coordenadas siguen viéndose solo en `/desaparecidos`.
-- El comportamiento actual de clic en marcador del mapa (popup → detalle) no se toca.
+Y crear índices para búsqueda rápida por nombre y por cédula:
+```text
+CREATE INDEX patients_name_trgm  ON patients USING gin (name gin_trgm_ops);
+CREATE INDEX patients_id_number  ON patients (id_number);
+CREATE INDEX patients_center     ON patients (center_name);
+```
+(Activar `pg_trgm` si no está.)
 
-## Detalle técnico
+### 2. Catálogo de hospitales con coordenadas reales
+Insertar/upsert en la tabla existente `health_centers` los 5 hospitales con sus coordenadas:
 
-- Tipo local: `type FeedItem = { kind: "report"; data: Report; sortDate: number } | { kind: "missing"; data: MissingPerson; sortDate: number }`.
-- `feed` se calcula con `useMemo` dependiendo de `[visible, missing, showMissing, timeWindow, search2]`.
-- Render: `feed.slice(0, 30).map(item => item.kind === "report" ? <ReportRow .../> : <MissingRow .../>)` para mantener el JSX legible; se pueden inline ambos como hoy si se prefiere no extraer componentes.
-- Importar `Users` de `lucide-react` ya está; no hacen falta nuevos imports salvo quizá el tipo `MissingPerson` desde `@/lib/types`.
+| Hospital | Lat | Lng |
+|---|---|---|
+| Hospital Dr. Domingo Luciani (El Llanito) | 10.4730 | −66.8080 |
+| Hospital Universitario de Caracas | 10.4900 | −66.8910 |
+| Hospital Dr. José Gregorio Hernández – Pérez Carreño | 10.5120 | −66.9290 |
+| Cruz Roja Venezolana – Caracas (Cotiza) | 10.5030 | −66.9130 |
+| Hospital Periférico de Catia | 10.5150 | −66.9290 |
 
-## Validación
+### 3. Import de los 339 pacientes
+Vía la herramienta `insert`, parseando solo la hoja maestra. Para cada fila:
+- Normalizar nombre (trim, capitalize), edad numérica (ignorar si NaN/0/>120).
+- Cédula: quitar puntos/guiones, dejar solo dígitos; si queda vacía → `null`.
+- Teléfono: normalizar `0412-9970844` tal cual; vacío → `null`.
+- Mapear nombre exacto de hospital → uno de los 5 canónicos + `center_lat/lng` desde la tabla de arriba.
+- `status = 'stable'` (no hay info clínica salvo en Periférico de Catia, donde las observaciones traen "traumatismo…/caída…" → dejar tal cual en `notes`).
+- `registered_by = 'import:caracas-hospitales-2026'` (para poder revertir si hace falta).
 
-- Con varios desaparecidos geolocalizados recientes, deben aparecer mezclados por fecha en la lista.
-- Clic en uno → mapa se centra y abre el popup rosa correspondiente.
-- Apagar el chip "Desaparecidos" → desaparecen del mapa y de la lista.
-- Filtros de categoría/urgencia no los esconden; búsqueda y rango de tiempo sí.
+**Anti-duplicados:** `ON CONFLICT` no aplica (no hay clave natural fiable). En su lugar, antes del import correremos `DELETE FROM patients WHERE registered_by = 'import:caracas-hospitales-2026'`, así el import es idempotente.
+
+### 4. Mejoras de UI en `/pacientes`
+Aprovechar la data nueva sin rediseñar la página:
+
+- **Filtro por hospital**: chips horizontales arriba de la lista (igual estilo que las categorías de `/necesidades`), con conteo por hospital. "Todos · 339", "Pérez Carreño · 119", etc.
+- **Tarjeta de paciente**: mostrar cédula y teléfono cuando existan (con `tel:` clickable). Mantener la jerarquía actual.
+- **Buscador**: extender a cédula además de nombre/centro.
+- **KPIs del hero**: agregar un 4º KPI "Hospitales activos" (count distinct de `center_name` con pacientes activos).
+- **Empty state**: ya cubre el caso, no hace falta cambiar.
+
+### 5. Aprovechar la data en el mapa principal (`/`)
+Los 5 hospitales con coordenadas ya quedan en `health_centers`. Agregar una **capa opcional "Hospitales"** en el mapa (toggle, como ya existe el de Sismos/Desaparecidos) que renderiza marcadores 🏥 con popup: nombre + nº de pacientes activos + link "Ver pacientes" a `/pacientes?center=<id>`.
+
+`/pacientes` leerá `?center=` para preseleccionar el filtro de hospital.
+
+### 6. Estadísticas
+En `/estadisticas` agregar una sección "Pacientes en centros de salud" con:
+- Total pacientes, pacientes activos, dados de alta.
+- Top hospitales por carga (bar chart).
+- Pirámide de edades simple (3 rangos: <18, 18-60, >60) cuando hay edad.
+
+---
+
+## Detalles técnicos (para el equipo)
+
+- **No usar `createClient` de supabase-js en handlers `/api/*`** (restricción del proyecto). El import se hace con la herramienta `insert` desde el agente, no desde un endpoint.
+- Página `/pacientes` ya usa `fetch` directo a Supabase REST con anon key → el filtro por `center_name` será otro query param `center_name=eq.<x>`. No requiere cambios en RLS (la política ya permite SELECT público).
+- El campo `sex` no viene en el Excel → quedará `'no indicado'` por defecto.
+- `validateSearch` en la ruta `/pacientes` para parsear `?center=`.
+- Edad fuera de rango (>120 o ≤0) → `null` para evitar romper UI.
+
+## Orden de ejecución
+
+1. Migración: 3 columnas + índices + trigger updated_at si falta.
+2. Seed `health_centers` con los 5 hospitales y coords.
+3. Import idempotente de los 339 pacientes (con `registered_by` tag).
+4. Actualizar `src/routes/pacientes.tsx` (filtro por hospital, búsqueda extendida, cédula/teléfono en tarjeta, search-param).
+5. Toggle "Hospitales" en `src/components/MapView.tsx` + `src/routes/index.tsx`.
+6. Bloque de pacientes en `src/routes/estadisticas.tsx`.
+
+Tras el paso 3 deberías ver los 339 pacientes en `/pacientes` y poder buscarlos por nombre o cédula al instante.

@@ -1,13 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import {
   Search, X, HeartPulse, Loader2, RefreshCw, Plus,
-  MapPin, User, ClipboardList,
+  MapPin, User, ClipboardList, IdCard, Phone, Building2,
 } from "lucide-react";
+
+const searchSchema = z.object({
+  center: z.string().optional(),
+});
 
 export const Route = createFileRoute("/pacientes")({
   ssr: false,
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Pacientes en centros de salud — Venezuela Se Levanta" },
@@ -37,6 +43,9 @@ interface Patient {
   registered_by: string | null;
   discharged_at: string | null;
   created_at: string;
+  id_number: string | null;
+  phone: string | null;
+  address: string | null;
 }
 
 const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: string }> = {
@@ -74,7 +83,7 @@ function initials(name: string) {
 
 async function fetchPatients(): Promise<Patient[]> {
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/patients?order=created_at.desc&limit=200`,
+    `${SUPA_URL}/rest/v1/patients?order=created_at.desc&limit=2000`,
     {
       headers: {
         apikey: SUPA_ANON,
@@ -87,6 +96,9 @@ async function fetchPatients(): Promise<Patient[]> {
 }
 
 function PacientesPage() {
+  const navigate = useNavigate({ from: "/pacientes" });
+  const { center } = Route.useSearch();
+
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -111,26 +123,43 @@ function PacientesPage() {
 
   useEffect(() => { load(); }, []);
 
+  const setCenter = (c?: string) =>
+    navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
+
+  // counts overall (no filter applied)
   const counts = useMemo(() => ({
     all:        patients.length,
     active:     patients.filter((p) => p.status !== "discharged").length,
     discharged: patients.filter((p) => p.status === "discharged").length,
   }), [patients]);
 
+  // hospitals: name -> active count, sorted desc
+  const hospitals = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of patients) {
+      if (p.status === "discharged") continue;
+      m.set(p.center_name, (m.get(p.center_name) ?? 0) + 1);
+    }
+    return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
+  }, [patients]);
+
   const list = useMemo(() => {
     let src = patients;
     if (filter === "active")     src = src.filter((p) => p.status !== "discharged");
     if (filter === "discharged") src = src.filter((p) => p.status === "discharged");
+    if (center)                  src = src.filter((p) => p.center_name === center);
     if (q.trim().length >= 2) {
       const needle = q.trim().toLowerCase();
+      const digits = needle.replace(/\D/g, "");
       src = src.filter(
         (p) =>
           p.name.toLowerCase().includes(needle) ||
-          p.center_name.toLowerCase().includes(needle),
+          p.center_name.toLowerCase().includes(needle) ||
+          (digits.length >= 4 && (p.id_number ?? "").includes(digits)),
       );
     }
     return src;
-  }, [patients, filter, q]);
+  }, [patients, filter, q, center]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
@@ -155,10 +184,11 @@ function PacientesPage() {
           </button>
         </div>
 
-        <div className="relative mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="relative mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <Kpi tone="blue"    value={counts.all}        label="Total registrados" />
           <Kpi tone="yellow"  value={counts.active}     label="En tratamiento" />
           <Kpi tone="slate"   value={counts.discharged} label="Con alta médica" />
+          <Kpi tone="teal"    value={hospitals.length}  label="Hospitales activos" />
         </div>
       </section>
 
@@ -168,14 +198,45 @@ function PacientesPage() {
         />
       )}
 
-      <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 py-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60">
+      <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
+        {hospitals.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <button
+              onClick={() => setCenter(undefined)}
+              className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+                !center
+                  ? "bg-primary text-primary-foreground border-primary shadow"
+                  : "bg-card border-border text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Building2 className="h-3.5 w-3.5" /> Todos
+              <span className="ml-1 text-[10px] opacity-80">{counts.active}</span>
+            </button>
+            {hospitals.map(([name, n]) => (
+              <button
+                key={name}
+                onClick={() => setCenter(name)}
+                title={name}
+                className={`shrink-0 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition border max-w-[240px] ${
+                  center === name
+                    ? "bg-primary text-primary-foreground border-primary shadow"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span className="truncate">🏥 {name}</span>
+                <span className="text-[10px] opacity-80 shrink-0">{n}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[220px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar por nombre o centro de salud…"
+              placeholder="Buscar por nombre, cédula o centro…"
               className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-input bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             {q && (
@@ -211,13 +272,28 @@ function PacientesPage() {
             {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           </button>
         </div>
+
+        {(center || q || filter !== "active") && (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>
+              Mostrando <span className="font-bold text-foreground">{list.length}</span> resultado{list.length === 1 ? "" : "s"}
+              {center && <> en <span className="font-semibold text-foreground">{center}</span></>}
+            </span>
+            <button
+              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); }}
+              className="text-primary font-semibold hover:underline"
+            >
+              Limpiar
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {loading ? (
-          <div className="col-span-full flex flex-col gap-3">
+          <div className="col-span-full grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-32 rounded-2xl bg-muted animate-pulse" />
+              <div key={i} className="h-36 rounded-2xl bg-muted animate-pulse" />
             ))}
           </div>
         ) : list.length === 0 ? (
@@ -225,11 +301,11 @@ function PacientesPage() {
             <div className="text-4xl mb-3">🏥</div>
             <p className="font-bold text-base mb-1">No hay pacientes registrados</p>
             <p className="text-sm text-muted-foreground mb-4">
-              {q || filter !== "all" ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
+              {q || filter !== "all" || center ? "Prueba ajustar la búsqueda o cambiar el filtro." : "Sé el primero en registrar un paciente."}
             </p>
-            {(q || filter !== "all") ? (
+            {(q || filter !== "all" || center) ? (
               <button
-                onClick={() => { setQ(""); setFilter("all"); }}
+                onClick={() => { setQ(""); setFilter("all"); setCenter(undefined); }}
                 className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
               >
                 Limpiar filtros
@@ -249,13 +325,15 @@ function PacientesPage() {
       </div>
     </div>
   );
+
 }
 
-function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue" | "yellow" | "slate" }) {
+function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue" | "yellow" | "slate" | "teal" }) {
   const tones = {
     blue:   "from-blue-500/15 to-blue-500/5 text-blue-600",
     yellow: "from-yellow-500/15 to-yellow-500/5 text-yellow-600",
     slate:  "from-slate-500/15 to-slate-500/5 text-foreground",
+    teal:   "from-teal-500/15 to-teal-500/5 text-teal-600",
   } as const;
   return (
     <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-3 py-2.5`}>
@@ -307,6 +385,29 @@ function PatientCard({ patient: p }: { patient: Patient }) {
           </div>
         </div>
 
+        {(p.id_number || p.phone || p.address) && (
+          <div className="grid gap-1 text-[11px] text-muted-foreground border-t border-border/40 pt-2">
+            {p.id_number && (
+              <div className="flex items-center gap-1.5">
+                <IdCard className="h-3 w-3 shrink-0" />
+                <span className="font-mono font-semibold text-foreground/80">{p.id_number}</span>
+              </div>
+            )}
+            {p.phone && (
+              <div className="flex items-center gap-1.5">
+                <Phone className="h-3 w-3 shrink-0" />
+                <a href={`tel:${p.phone}`} className="font-semibold text-foreground/80 hover:text-primary">{p.phone}</a>
+              </div>
+            )}
+            {p.address && (
+              <div className="flex items-start gap-1.5">
+                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                <span className="line-clamp-1">{p.address}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {p.notes && (
           <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
             <ClipboardList className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -334,6 +435,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     name: "",
     age: "",
     sex: "no indicado",
+    id_number: "",
+    phone: "",
+    address: "",
     center_name: "",
     center_address: "",
     status: "stable" as PatientStatus,
@@ -358,6 +462,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         age:            f.age ? Number(f.age) : null,
         center_address: f.center_address.trim() || null,
         notes:          f.notes.trim() || null,
+        id_number:      f.id_number.trim().replace(/\D/g, "") || null,
+        phone:          f.phone.trim() || null,
+        address:        f.address.trim() || null,
       };
 
       const res = await fetch(`${SUPA_URL}/rest/v1/patients`, {
@@ -428,6 +535,23 @@ function PatientForm({ onDone }: { onDone: () => void }) {
       </select>
 
       <input
+        className={field}
+        placeholder="Cédula / ID"
+        value={f.id_number}
+        onChange={(e) => setF({ ...f, id_number: e.target.value })}
+        maxLength={20}
+        inputMode="numeric"
+      />
+      <input
+        className={field}
+        placeholder="Teléfono de contacto"
+        value={f.phone}
+        onChange={(e) => setF({ ...f, phone: e.target.value })}
+        maxLength={30}
+        inputMode="tel"
+      />
+
+      <input
         className={`${field} sm:col-span-2`}
         placeholder="Nombre del centro de salud *"
         value={f.center_name}
@@ -440,6 +564,13 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         placeholder="Dirección del centro (opcional)"
         value={f.center_address}
         onChange={(e) => setF({ ...f, center_address: e.target.value })}
+        maxLength={200}
+      />
+      <input
+        className={`${field} sm:col-span-2`}
+        placeholder="Dirección / residencia del paciente (opcional)"
+        value={f.address}
+        onChange={(e) => setF({ ...f, address: e.target.value })}
         maxLength={200}
       />
 
