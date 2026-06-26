@@ -8,6 +8,7 @@ import {
   ChevronDown, ChevronUp,
 } from "lucide-react";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 
 const searchSchema = z.object({
   center: z.string().optional(),
