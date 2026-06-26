@@ -17,6 +17,8 @@ import { PWAInstallBanner } from "@/components/PWAInstallBanner";
 import { Toaster } from "@/components/ui/sonner";
 import { Footer } from "@/components/Footer";
 import { DeadQueueBanner } from "@/components/DeadQueueBanner";
+import { LiveStatusBanner } from "@/components/LiveStatusBanner";
+import { RouteProgress } from "@/components/RouteProgress";
 
 
 function NotFoundComponent() {
@@ -113,7 +115,9 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="min-h-screen bg-background flex flex-col">
+        <RouteProgress />
         <Header />
+        <LiveStatusBanner />
         <DeadQueueBanner />
         <OfflineBanner />
         <main className="flex-1">
