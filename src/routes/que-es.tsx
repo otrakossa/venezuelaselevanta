@@ -342,20 +342,123 @@ function AboutPage() {
             />
           </ul>
           <div className="pt-2 flex flex-wrap gap-2">
-            <Link
-              to="/creditos"
-              hash="contacto"
+            <a
+              href="#contacto"
               className="inline-flex items-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold rounded-full px-5 py-2.5 text-sm hover:opacity-90 transition-opacity shadow-md"
             >
               <MessageSquare className="h-4 w-4" /> Escríbenos
-            </Link>
-            <Link
-              to="/creditos"
+            </a>
+            <a
+              href="#equipo"
               className="inline-flex items-center gap-2 bg-white border border-border text-[color:var(--midnight)] font-semibold rounded-full px-5 py-2.5 text-sm hover:border-[color:var(--sunrise)]/50 transition-colors"
             >
-              <Heart className="h-4 w-4 text-[color:var(--sunrise)]" /> Ver créditos
-            </Link>
+              <Heart className="h-4 w-4 text-[color:var(--sunrise)]" /> Conoce al equipo
+            </a>
           </div>
+        </section>
+
+        {/* Equipo */}
+        <section id="equipo" className="space-y-4 scroll-mt-20">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-[color:var(--sunrise)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Equipo core
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Quienes mantienen y desarrollan la plataforma.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {team.map((p) => (
+              <PersonCard key={p.name} person={p} large />
+            ))}
+          </div>
+        </section>
+
+        {/* Colaboradores */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <HandHeart className="h-5 w-5 text-[color:var(--gold)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Colaboradores
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Voluntarios, verificadores y comunidad que aporta día a día.
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {collaborators.map((p) => (
+              <PersonCard key={p.name} person={p} />
+            ))}
+          </div>
+        </section>
+
+        {/* Organizaciones */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-[color:var(--sky)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Organizaciones aliadas
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Instituciones y colectivos que apoyan la respuesta.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {organizations.map((o) => (
+              <OrgCard key={o.name} org={o} />
+            ))}
+          </div>
+        </section>
+
+        {/* Tecnología */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Code2 className="h-5 w-5 text-[color:var(--midnight)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Tecnología y datos abiertos
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Construido sobre proyectos libres y abiertos.
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {tech.map((t) => (
+              <li
+                key={t.name}
+                className="rounded-xl border border-border bg-card p-3 flex items-start gap-3 hover:border-[color:var(--sky)]/40 hover:shadow-md transition-all"
+              >
+                <div className="h-9 w-9 rounded-lg bg-[color:var(--sky)]/10 text-[color:var(--sky)] flex items-center justify-center font-display text-sm shrink-0">
+                  {t.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <a
+                    href={t.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-sm inline-flex items-center gap-1 hover:text-[color:var(--sunrise)] transition-colors"
+                  >
+                    {t.name} <ExternalLink className="h-3 w-3" />
+                  </a>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t.description}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Contacto */}
+        <section id="contacto" className="space-y-4 scroll-mt-20">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-[color:var(--sunrise)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Contacto
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Envíanos un mensaje y te responderemos pronto.
+          </p>
+          <ContactForm />
         </section>
 
         {/* Cierre */}
