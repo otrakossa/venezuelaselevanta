@@ -321,6 +321,7 @@ export function MapView({
               );
             })}
       </MapContainer>
+      <MapLegend />
     </div>
   );
 }
