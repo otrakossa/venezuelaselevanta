@@ -33,8 +33,8 @@ export function LiveStatusBanner() {
     sessionStorage.setItem(DISMISS_KEY, "1");
   };
 
-  const updateLabel = counts.lastUpdate
-    ? new Date(counts.lastUpdate).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" })
+  const updateLabel = stats.lastUpdate
+    ? new Date(stats.lastUpdate).toLocaleTimeString("es-VE", { hour: "2-digit", minute: "2-digit" })
     : "—";
 
   return (
@@ -46,9 +46,9 @@ export function LiveStatusBanner() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-2 sm:gap-4 text-xs sm:text-[13px]">
         <Activity className="h-3.5 w-3.5 text-[color:var(--gold)] shrink-0 hidden sm:block" aria-hidden />
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-x-auto no-scrollbar">
-          <Stat label="activos" value={counts.activeReports} tone="sunrise" />
+          <Stat label="activos" value={stats.activeReports} tone="sunrise" />
           <Sep />
-          <Stat label="desaparecidos" value={counts.stillMissing} tone="rose" />
+          <Stat label="desaparecidos" value={counts.missing} tone="rose" />
           <Sep />
           <Stat label="reunidos" value={counts.found} tone="emerald" />
           <Sep />
