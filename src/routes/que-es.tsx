@@ -424,6 +424,48 @@ function AboutPage() {
           </ul>
         </section>
 
+        {/* Otras iniciativas */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Network className="h-5 w-5 text-[color:var(--sky)]" />
+            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
+              Otras iniciativas ciudadanas
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            No estamos solos. Estos proyectos hermanos también responden al terremoto desde distintos frentes.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {INICIATIVAS.map((cat) => (
+              <div
+                key={cat.title}
+                className="rounded-2xl border border-border bg-card p-4 hover:border-[color:var(--sky)]/40 transition-colors"
+              >
+                <div className="font-display text-sm text-[color:var(--midnight)] leading-tight mb-2">
+                  {cat.title}
+                </div>
+                <ul className="space-y-1">
+                  {cat.links.map((url) => (
+                    <li key={url}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[color:var(--sky)] hover:underline inline-flex items-center gap-1 break-all"
+                      >
+                        {url.replace(/^https?:\/\//, "")}
+                        <ExternalLink className="h-2.5 w-2.5 shrink-0" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+
+
         {/* Contacto */}
         <section id="contacto" className="space-y-4 scroll-mt-20">
           <div className="flex items-center gap-2">
