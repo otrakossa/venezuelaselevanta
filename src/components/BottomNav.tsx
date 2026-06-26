@@ -1,13 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, Users, BarChart3, ShieldCheck, Plus } from "lucide-react";
+import { Map, Users, HeartPulse, HandHeart, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { to: "/", label: "Mapa", icon: Map },
   { to: "/desaparecidos", label: "Personas", icon: Users },
   // FAB sits in the middle slot
-  { to: "/estadisticas", label: "Stats", icon: BarChart3 },
-  { to: "/admin", label: "Admin", icon: ShieldCheck },
+  { to: "/pacientes", label: "Pacientes", icon: HeartPulse },
+  { to: "/necesidades", label: "Ayuda", icon: HandHeart },
 ] as const;
 
 /**

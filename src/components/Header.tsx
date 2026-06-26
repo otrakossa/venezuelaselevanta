@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, ShieldCheck, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
@@ -10,6 +10,8 @@ const NAV = [
   { to: "/", label: "Mapa", icon: Map },
   { to: "/reportar", label: "Reportar", icon: FilePlus },
   { to: "/desaparecidos", label: "Desaparecidos", icon: Users },
+  { to: "/pacientes", label: "Pacientes", icon: HeartPulse },
+  { to: "/necesidades", label: "Necesidades", icon: HandHeart },
   { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ] as const;
 
