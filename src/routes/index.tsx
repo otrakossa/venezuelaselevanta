@@ -5,7 +5,7 @@ import { MapViewLazy as MapView } from "@/components/MapViewLazy";
 import { CATEGORIES, CATEGORY_MAP, URGENCY_LABELS, STATUS_LABELS } from "@/lib/categories";
 import { useReports, useMissing } from "@/hooks/useReports";
 import { format } from "date-fns";
-import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users, RefreshCw } from "lucide-react";
+import { AlertTriangle, FilePlus, Map as MapIcon, X, ChevronUp, ChevronDown, BadgeCheck, ShieldCheck, Activity, Search, Users, RefreshCw, HandHeart } from "lucide-react";
 import { PushSubscribeButton } from "@/components/PushSubscribeButton";
 import heroImage from "@/assets/hero-rescate.jpg";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ import { WhatsAppShareButton } from "@/components/WhatsAppShareButton";
 import { ReportListSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { MapLegend } from "@/components/MapLegend";
 import { toast } from "sonner";
 
 type TrustMode = "all" | "verified" | "trusted";
