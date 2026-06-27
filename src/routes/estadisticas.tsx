@@ -438,7 +438,11 @@ function StatsPage() {
         ))}
       </div>
 
+      {/* Atendidos por zona */}
+      <PatientZonesSection stats={patientStats} />
+
       {/* Urgencia × categoría + Sismos */}
+
       <div className="grid lg:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-2xl p-4">
           <h3 className="font-display text-base mb-3">Urgencia por categoría</h3>
