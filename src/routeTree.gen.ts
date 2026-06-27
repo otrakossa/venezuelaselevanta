@@ -29,6 +29,7 @@ import { Route as ApiPublicReportsRouteImport } from './routes/api/public/report
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicGeocodeRouteImport } from './routes/api/public/geocode'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
+import { Route as ApiPublicPushManageRouteImport } from './routes/api/public/push/manage'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
@@ -134,6 +135,11 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPushManageRoute = ApiPublicPushManageRouteImport.update({
+  id: '/api/public/push/manage',
+  path: '/api/public/push/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPushBroadcastRoute = ApiPublicPushBroadcastRouteImport.update({
   id: '/api/public/push/broadcast',
   path: '/api/public/push/broadcast',
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
+  '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
+  '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
@@ -225,6 +233,7 @@ export interface FileRoutesById {
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
+  '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
+    | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
+    | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
@@ -302,6 +313,7 @@ export interface FileRouteTypes {
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
+    | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -328,6 +340,7 @@ export interface RootRouteChildren {
   ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
+  ApiPublicPushManageRoute: typeof ApiPublicPushManageRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -473,6 +486,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/push/manage': {
+      id: '/api/public/push/manage'
+      path: '/api/public/push/manage'
+      fullPath: '/api/public/push/manage'
+      preLoaderRoute: typeof ApiPublicPushManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/push/broadcast': {
       id: '/api/public/push/broadcast'
       path: '/api/public/push/broadcast'
@@ -520,6 +540,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
+  ApiPublicPushManageRoute: ApiPublicPushManageRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport
