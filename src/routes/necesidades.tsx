@@ -757,13 +757,15 @@ function NeedForm({ onDone }: { onDone: () => void }) {
           maxLength={40}
           required
         />
-        <input
-          className={`${field} sm:col-span-2`}
-          placeholder="Info adicional / pago (opcional)"
-          value={f.contact_info}
-          onChange={(e) => setF({ ...f, contact_info: e.target.value })}
-          maxLength={200}
-        />
+        {f.categories.includes("money") && (
+          <input
+            className={`${field} sm:col-span-2`}
+            placeholder="Datos de pago (banco, cuenta, Pago Móvil, etc.)"
+            value={f.contact_info}
+            onChange={(e) => setF({ ...f, contact_info: e.target.value })}
+            maxLength={200}
+          />
+        )}
       </div>
     </div>
   );
