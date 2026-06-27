@@ -31,7 +31,7 @@ export const Route = createFileRoute("/pacientes")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type PatientStatus = "stable" | "critical" | "recovering" | "discharged";
+type PatientStatus = "stable" | "critical" | "recovering" | "discharged" | "admitted";
 type Filter = "all" | "active" | "discharged";
 
 interface Patient {
@@ -61,6 +61,7 @@ const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: s
   critical:   { pill: "bg-red-500/15 text-red-700 dark:text-red-400",             dot: "bg-red-500",       label: "Crítico" },
   recovering: { pill: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500",   label: "Recuperándose" },
   discharged: { pill: "bg-neutral-500/15 text-neutral-600 dark:text-neutral-400", dot: "bg-neutral-500",   label: "Alta médica" },
+  admitted:   { pill: "bg-sky-500/15 text-sky-700 dark:text-sky-400",             dot: "bg-sky-500",       label: "Ingresado" },
 };
 
 const SEX_LABELS: Record<string, string> = {
@@ -465,7 +466,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue
 }
 
 function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: () => void }) {
-  const s = STATUS_STYLES[p.status];
+  const s = STATUS_STYLES[p.status] ?? STATUS_STYLES.stable;
   return (
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
       <div className="p-4 space-y-3">
