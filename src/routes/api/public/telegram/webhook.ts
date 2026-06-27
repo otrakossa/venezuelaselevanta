@@ -518,16 +518,32 @@ async function handleChat(chatId: number, text: string, session: Session | null)
   const userName = session?.userName;
   const greet    = userName ? `Claro ${userName}, ` : "Entendido, ";
 
-  const intent   = await detectIntent(text);
+  // Run intent detection and field extraction in parallel — extraction gives us
+  // description + address that detectIntent's schema doesn't cover.
+  const [intent, extracted] = await Promise.all([
+    detectIntent(text),
+    extractReportFields(text),
+  ]);
   // If Gemini timed out, fall back to keyword detection so the bot doesn't
   // promise an action via geminiConverse without ever starting the flow.
   const fallback = intent ? null : quickIntent(text);
 
   if (intent?.intent === "report" || fallback === "report") {
     const draft: Record<string, unknown> = {};
-    if (intent?.category && VALID_CATS.has(intent.category)) draft.category = intent.category;
-    if (intent?.urgency  && VALID_URGS.has(intent.urgency))  draft.urgency  = intent.urgency;
-    if (intent?.title)                                         draft.title    = String(intent.title).slice(0, 120);
+    if (intent?.category && VALID_CATS.has(intent.category))   draft.category    = intent.category;
+    else if (extracted?.category && VALID_CATS.has(extracted.category)) draft.category = extracted.category;
+    if (intent?.urgency  && VALID_URGS.has(intent.urgency))    draft.urgency     = intent.urgency;
+    else if (extracted?.urgency && VALID_URGS.has(extracted.urgency))   draft.urgency  = extracted.urgency;
+    if (intent?.title)                                           draft.title       = String(intent.title).slice(0, 120);
+    else if (extracted?.title)                                   draft.title       = String(extracted.title).slice(0, 120);
+    if (extracted?.description)                                  draft.description = extracted.description.slice(0, 1000);
+    if (extracted?.address)                                      draft._addr_hint  = extracted.address;
+
+    if (draft.category && draft.title && draft.description) {
+      setSession(chatId, "awaiting_media", { ...draft, media_urls: [], media_thumbs: [] });
+      await send(chatId, `${greet}voy a registrar: <b>${draft.title}</b>\n\n5/6 · ¿Adjuntar <b>fotos o videos</b>?`, mediaKb(false));
+      return;
+    }
     if (draft.category && draft.title) {
       setSession(chatId, "awaiting_description", draft);
       await send(chatId, `${greet}voy a registrar: <b>${draft.title}</b>\n\n3/6 · Agrega más detalles (o «-» para omitir):`);
