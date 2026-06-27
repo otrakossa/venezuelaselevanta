@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, Moon, Sun, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
@@ -20,19 +20,12 @@ export function Header() {
   const { reports } = useReports();
   const { isAuthenticated } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("vsos-dark") === "1";
-    setDark(stored);
-    document.documentElement.classList.toggle("dark", stored);
+    document.documentElement.classList.remove("dark");
+    localStorage.removeItem("vsos-dark");
   }, []);
-  const toggleDark = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("vsos-dark", next ? "1" : "0");
-  };
+
 
   const activeCount = reports.filter((r) => r.status === "active").length;
 
@@ -65,13 +58,6 @@ export function Header() {
               </span>
               <span className="text-[11px] font-semibold">{activeCount}</span>
             </div>
-            <button
-              onClick={toggleDark}
-              className="p-2 rounded-md hover:bg-white/10 transition-colors"
-              aria-label="Modo oscuro"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
             {isAuthenticated ? (
               <button
                 onClick={() => supabase.auth.signOut()}
