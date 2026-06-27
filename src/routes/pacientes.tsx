@@ -504,6 +504,22 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
           </div>
         </div>
 
+        {(p.state || p.sector) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {p.state && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-400">
+                <MapPin className="h-2.5 w-2.5" /> {p.state}
+              </span>
+            )}
+            {p.sector && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-400">
+                {p.sector}
+              </span>
+            )}
+          </div>
+        )}
+
+
         {(p.id_number || p.phone || p.address) && (
           <div className="grid gap-1 text-[11px] text-muted-foreground border-t border-border/40 pt-2">
             {p.id_number && (
