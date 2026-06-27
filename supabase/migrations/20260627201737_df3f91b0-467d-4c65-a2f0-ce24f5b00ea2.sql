@@ -1,0 +1,1 @@
+ALTER TABLE public.needs ADD COLUMN IF NOT EXISTS reporter_cedula varchar(30);

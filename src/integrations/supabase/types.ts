@@ -351,6 +351,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           quantity: string | null
+          reporter_cedula: string | null
           reporter_name: string | null
           status: string
           title: string
@@ -370,6 +371,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           quantity?: string | null
+          reporter_cedula?: string | null
           reporter_name?: string | null
           status?: string
           title: string
@@ -389,6 +391,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           quantity?: string | null
+          reporter_cedula?: string | null
           reporter_name?: string | null
           status?: string
           title?: string
