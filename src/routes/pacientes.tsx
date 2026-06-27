@@ -465,7 +465,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue
 }
 
 function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: () => void }) {
-  const s = STATUS_STYLES[p.status];
+  const s = STATUS_STYLES[p.status] ?? STATUS_STYLES.stable;
   return (
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
       <div className="p-4 space-y-3">
