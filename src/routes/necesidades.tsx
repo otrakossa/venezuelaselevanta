@@ -663,7 +663,10 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       <div className="space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
-          onChange={(name, c) =>
+          onChange={(name, c) => {
+            // Picking from the registry replaces the address with the canonical one,
+            // so reset the manual-edit flag so the reverse-geocoder can refine it if needed.
+            addressManuallyEdited.current = false;
             setF({
               ...f,
               center_name: name,
@@ -671,8 +674,8 @@ function NeedForm({ onDone }: { onDone: () => void }) {
               center_lat: c?.lat ?? null,
               center_lng: c?.lng ?? null,
               center_phone: c?.phone ?? "",
-            })
-          }
+            });
+          }}
           placeholder="Centro / comunidad donde se necesita *"
           required
         />
@@ -684,13 +687,26 @@ function NeedForm({ onDone }: { onDone: () => void }) {
           </p>
         )}
       </div>
-      <input
-        className={field}
-        placeholder="Dirección (opcional)"
-        value={f.center_address}
-        onChange={(e) => setF({ ...f, center_address: e.target.value })}
-        maxLength={200}
-      />
+      <div className="space-y-1">
+        <input
+          className={field}
+          placeholder="Dirección (opcional, se autocompleta al fijar el pin)"
+          value={f.center_address}
+          onChange={(e) => {
+            addressManuallyEdited.current = true;
+            setF({ ...f, center_address: e.target.value });
+          }}
+          maxLength={200}
+        />
+        {geocodingAddr && (
+          <p className="text-[11px] text-muted-foreground pl-1">Buscando dirección…</p>
+        )}
+        {!geocodingAddr && f.center_lat != null && !addressManuallyEdited.current && f.center_address && (
+          <p className="text-[11px] text-muted-foreground pl-1">
+            Dirección autocompletada — puedes editarla para complementar o corregir.
+          </p>
+        )}
+      </div>
       <div className="space-y-1.5">
         <label className="text-xs font-semibold text-muted-foreground pl-1">
           Ubicación en el mapa
