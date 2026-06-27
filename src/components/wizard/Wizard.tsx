@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, useRef, useEffect, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,6 +32,20 @@ export function Wizard({
   const step = steps[current];
   const isLast = current === total - 1;
   const isFirst = current === 0;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const top = window.scrollY + rect.top - 80;
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, [current]);
 
   const goNext = () => {
     if (step.isValid && !step.isValid()) {
@@ -51,7 +65,7 @@ export function Wizard({
   };
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 shadow-sm max-w-2xl mx-auto">
+    <div ref={containerRef} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 shadow-sm max-w-2xl mx-auto">
       {/* Header */}
       <div className="mb-5">
         <div className="flex justify-between items-center mb-3">
