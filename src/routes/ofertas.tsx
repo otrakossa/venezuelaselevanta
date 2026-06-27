@@ -369,9 +369,10 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "emer
     slate:   "from-slate-500/15 to-slate-500/5 text-slate-700 dark:text-slate-400",
   } as const;
   return (
-    <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-2 py-2`}>
-      <div className="text-xl sm:text-2xl font-black leading-none">{value}</div>
-      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium leading-tight">{label}</div>
+    <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-2 py-2 min-w-0`}>
+      <div className="text-lg sm:text-2xl font-black leading-none truncate">{value}</div>
+      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium leading-tight truncate">{label}</div>
+
     </div>
   );
 }
