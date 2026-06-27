@@ -233,7 +233,7 @@ function NecesidadesPage() {
               </button>
             )}
           </div>
-          <div className="flex gap-1 bg-muted/70 rounded-xl p-1 overflow-x-auto">
+          <div className="flex flex-wrap gap-1 bg-muted/70 rounded-xl p-1">
             {(["all", "critical", "high", "medium", "low"] as const).map((u) => (
               <button
                 key={u}
