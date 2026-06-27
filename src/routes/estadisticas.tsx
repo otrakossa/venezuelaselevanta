@@ -42,6 +42,23 @@ function StatsPage() {
   const { reports } = useReports();
   const { missing, counts: missingCounts } = useMissing();
   const { data: quakes = [] } = useUSGSQuakes(true);
+  const [patientZones, setPatientZones] = useState<PatientZone[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${SUPA_URL}/rest/v1/patients?select=state,sector&limit=10000`,
+          { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` } },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as PatientZone[];
+        if (!cancelled) setPatientZones(data);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const stats = useMemo(() => {
     const total = reports.length;
