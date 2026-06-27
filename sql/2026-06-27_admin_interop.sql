@@ -265,7 +265,7 @@ AS $$
          COUNT(*) FILTER (WHERE status IN ('discharged','reunited'))::bigint,
          MAX(created_at)
     FROM public.patients
-   GROUP BY COALESCE(source_label,'(sin fuente)')
+   GROUP BY COALESCE(NULLIF(registered_by,''),'(sin fuente)')
   ORDER BY 1, 3 DESC;
 $$;
 GRANT EXECUTE ON FUNCTION public.interop_source_overview() TO authenticated;
