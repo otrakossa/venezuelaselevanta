@@ -205,7 +205,7 @@ function OfertasPage() {
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mb-2">
               <PackageOpen className="h-3.5 w-3.5" /> ¡Quiero ayudar!
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofertas de ayuda</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofrecimiento de ayuda</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">
               Publica insumos, recursos o voluntariado que puedas aportar. Después puedes vincularlos a una necesidad concreta.
             </p>
