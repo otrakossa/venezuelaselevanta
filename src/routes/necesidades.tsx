@@ -526,16 +526,34 @@ function NeedForm({ onDone }: { onDone: () => void }) {
           })}
         </div>
       </div>
-      <select
-        className={`${field} sm:col-span-2`}
-        value={f.urgency}
-        onChange={(e) => setF({ ...f, urgency: e.target.value as NeedUrgency })}
-      >
-        <option value="critical">🔴 Urgencia crítica</option>
-        <option value="high">🟠 Urgencia alta</option>
-        <option value="medium">🟡 Urgencia media</option>
-        <option value="low">🟢 Urgencia baja</option>
-      </select>
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Urgencia *</label>
+        <div className="flex p-1 bg-muted rounded-xl gap-1">
+          {(["low","medium","high","critical"] as NeedUrgency[]).map((u) => {
+            const active = f.urgency === u;
+            const accent: Record<NeedUrgency, string> = {
+              low: "bg-emerald-100 text-emerald-800",
+              medium: "bg-[color:var(--gold)] text-[color:var(--midnight)]",
+              high: "bg-orange-200 text-orange-900",
+              critical: "bg-red-200 text-red-900",
+            };
+            const label: Record<NeedUrgency, string> = { low: "Baja", medium: "Media", high: "Alta", critical: "Crítica" };
+            return (
+              <button
+                key={u}
+                type="button"
+                onClick={() => setF({ ...f, urgency: u })}
+                aria-pressed={active}
+                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all min-h-[40px] ${
+                  active ? `${accent[u]} shadow-sm` : "text-muted-foreground"
+                }`}
+              >
+                {label[u]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Título de la necesidad *"
