@@ -15,6 +15,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { LocationSelect } from "@/components/LocationSelect";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { Wizard } from "@/components/wizard/Wizard";
+
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
@@ -465,9 +467,8 @@ function MissingForm({ onDone }: { onDone: () => void }) {
     );
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.name.trim()) return toast.error("Nombre requerido");
+  const submit = async () => {
+    if (!f.name.trim()) { toast.error("Nombre requerido"); return; }
     setBusy(true);
     const { error } = await supabase.from("missing_persons").insert({
       name: f.name.trim(),
@@ -484,17 +485,14 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       contact_email: f.contact_email.trim() || null,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(coords ? "Publicada y geolocalizada en el mapa" : "Reporte enviado");
     onDone();
   };
 
-  return (
-    <form onSubmit={submit} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm">
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <UserPlus className="h-4 w-4 text-primary" />
-        <h2 className="font-bold text-sm">Nuevo reporte de desaparecido</h2>
-      </div>
+
+  const stepPersona = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input className={field} placeholder="Nombre completo *" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required maxLength={100} />
       <input
         type="number"
@@ -508,69 +506,88 @@ function MissingForm({ onDone }: { onDone: () => void }) {
           if (v === "" || (Number(v) >= 0 && Number(v) <= 120)) setF({ ...f, age: v });
         }}
       />
-      <input className={`${field} sm:col-span-2`} placeholder="Descripción física (ropa, altura, señas)" value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} maxLength={500} />
-      <div className="sm:col-span-2 space-y-2">
-        <input
-          className={field}
-          placeholder="Última ubicación conocida (ej: Av. Bolívar, Caracas)"
-          value={f.last_seen_location}
-          onChange={(e) => { setF({ ...f, last_seen_location: e.target.value }); setCoords(null); }}
-          maxLength={200}
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={doGeocode}
-            disabled={geoBusy || !f.last_seen_location.trim()}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-50 font-semibold"
-          >
-            {geoBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
-            Localizar dirección
-          </button>
-          <button
-            type="button"
-            onClick={useMyLocation}
-            disabled={geoBusy}
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-50 font-semibold"
-          >
-            <Crosshair className="h-3.5 w-3.5" /> Mi ubicación
-          </button>
-          {coords && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-700 font-semibold">
-              <MapPin className="h-3 w-3" /> Aparecerá en el mapa ({coords.lat.toFixed(3)}, {coords.lng.toFixed(3)})
-              <button type="button" onClick={() => setCoords(null)} className="ml-1 opacity-70 hover:opacity-100" aria-label="Quitar">
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          )}
-          {!coords && (
-            <span className="text-[11px] text-muted-foreground">Sin coordenadas → solo aparece en la lista.</span>
-          )}
+      <textarea
+        className={`${field} sm:col-span-2 resize-none`}
+        rows={3}
+        placeholder="Descripción física (ropa, altura, señas particulares)"
+        value={f.description}
+        onChange={(e) => setF({ ...f, description: e.target.value })}
+        maxLength={500}
+      />
+    </div>
+  );
+
+  const stepUbicacion = (
+    <div className="space-y-3">
+      <input
+        className={field}
+        placeholder="Última ubicación conocida (ej: Av. Bolívar, Caracas)"
+        value={f.last_seen_location}
+        onChange={(e) => { setF({ ...f, last_seen_location: e.target.value }); setCoords(null); }}
+        maxLength={200}
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={doGeocode}
+          disabled={geoBusy || !f.last_seen_location.trim()}
+          className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-50 font-semibold"
+        >
+          {geoBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
+          Localizar dirección
+        </button>
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={geoBusy}
+          className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted disabled:opacity-50 font-semibold"
+        >
+          <Crosshair className="h-3.5 w-3.5" /> Mi ubicación
+        </button>
+        {coords ? (
+          <span className="inline-flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-700 font-semibold">
+            <MapPin className="h-3 w-3" /> En el mapa ({coords.lat.toFixed(3)}, {coords.lng.toFixed(3)})
+            <button type="button" onClick={() => setCoords(null)} className="ml-1 opacity-70 hover:opacity-100" aria-label="Quitar">
+              <X className="h-3 w-3" />
+            </button>
+          </span>
+        ) : (
+          <span className="text-[11px] text-muted-foreground">Sin coordenadas → solo aparece en la lista.</span>
+        )}
       </div>
-      <div className="sm:col-span-2">
-        <LocationSelect
-          state={f.state}
-          municipality={f.municipality}
-          parish={f.parish}
-          onChange={(v) => setF({ ...f, ...v })}
-        />
-      </div>
-      </div>
+      <LocationSelect
+        state={f.state}
+        municipality={f.municipality}
+        parish={f.parish}
+        onChange={(v) => setF({ ...f, ...v })}
+      />
+    </div>
+  );
+
+  const stepContacto = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input className={field} placeholder="Nombre del contacto" value={f.contact_name} onChange={(e) => setF({ ...f, contact_name: e.target.value })} maxLength={100} />
       <input className={field} placeholder="Teléfono del contacto" value={f.contact_phone} onChange={(e) => setF({ ...f, contact_phone: e.target.value })} maxLength={40} />
       <input type="email" className={`${field} sm:col-span-2`} placeholder="Email del contacto" value={f.contact_email} onChange={(e) => setF({ ...f, contact_email: e.target.value })} maxLength={150} />
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button type="button" onClick={onDone} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted">
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50 shadow-md shadow-primary/20"
-        >
-          {busy ? "Enviando…" : "Publicar reporte"}
-        </button>
-      </div>
-    </form>
+      <p className="sm:col-span-2 text-[11px] text-muted-foreground">
+        Al menos un medio de contacto ayuda a coordinar la búsqueda. Esta información se mantiene reservada.
+      </p>
+    </div>
+  );
+
+  return (
+    <Wizard
+      title="Nuevo reporte de desaparecido"
+      submitLabel="Publicar reporte"
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "persona", label: "Datos de la persona", content: stepPersona, isValid: () => f.name.trim().length > 0, invalidMessage: "El nombre es requerido" },
+        { key: "ubicacion", label: "Última ubicación conocida", content: stepUbicacion },
+        { key: "contacto", label: "Contacto del reportante", content: stepContacto },
+      ]}
+    />
   );
 }
+

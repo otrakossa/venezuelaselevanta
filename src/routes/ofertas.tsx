@@ -7,6 +7,8 @@ import {
   Search, X, PackageOpen, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, Link2, Check, Unlink2,
 } from "lucide-react";
+import { Wizard } from "@/components/wizard/Wizard";
+
 
 const searchSchema = z.object({
   need: fallback(z.string().uuid(), undefined as unknown as string).optional(),
@@ -636,10 +638,9 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.title.trim()) return toast.error("El título es requerido");
-    if (!f.contact_name.trim()) return toast.error("Tu nombre es requerido");
+  const submit = async () => {
+    if (!f.title.trim()) { toast.error("El título es requerido"); return; }
+    if (!f.contact_name.trim()) { toast.error("Tu nombre es requerido"); return; }
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
@@ -678,13 +679,8 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     }
   };
 
-  return (
-    <form onSubmit={submit} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm">
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <PackageOpen className="h-4 w-4 text-emerald-600" />
-        <h2 className="font-bold text-sm">Publicar oferta de ayuda</h2>
-      </div>
-
+  const stepQue = (
+    <div className="grid sm:grid-cols-2 gap-3">
       {prefilledNeed && (
         <div className="sm:col-span-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 text-xs">
           <div className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
@@ -694,7 +690,6 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
           <div className="text-muted-foreground">🏥 {prefilledNeed.center_name}</div>
         </div>
       )}
-
       <select
         className={field}
         value={f.category}
@@ -705,7 +700,6 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
           <option key={c} value={c}>{CATEGORY_META[c].emoji} {CATEGORY_META[c].label}</option>
         ))}
       </select>
-
       <input
         className={field}
         placeholder="Cantidad o detalle (ej: 100 mascarillas, 2 voluntarios…)"
@@ -713,7 +707,6 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, quantity: e.target.value })}
         maxLength={100}
       />
-
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Título de tu oferta *"
@@ -722,7 +715,6 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         required
         maxLength={150}
       />
-
       <textarea
         className={`${field} sm:col-span-2 resize-none`}
         placeholder="Describe lo que ofreces (opcional)"
@@ -731,15 +723,26 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, description: e.target.value })}
         maxLength={800}
       />
+    </div>
+  );
 
+  const stepDisponibilidad = (
+    <div className="space-y-3">
       <input
-        className={`${field} sm:col-span-2`}
+        className={field}
         placeholder="¿Dónde estás o desde dónde puedes entregar? (opcional)"
         value={f.location_desc}
         onChange={(e) => setF({ ...f, location_desc: e.target.value })}
         maxLength={200}
       />
+      <p className="text-[11px] text-muted-foreground">
+        Indica una ciudad, parroquia o zona aproximada para facilitar la coordinación logística.
+      </p>
+    </div>
+  );
 
+  const stepContacto = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input
         className={field}
         placeholder="Tu nombre *"
@@ -762,17 +765,22 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, contact_info: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button type="button" onClick={onDone} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted">Cancelar</button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-white font-bold disabled:opacity-50 shadow-md shadow-emerald-500/20"
-        >
-          {busy ? "Publicando…" : prefilledNeed ? "Publicar y vincular" : "Publicar oferta"}
-        </button>
-      </div>
-    </form>
+  return (
+    <Wizard
+      title="Publicar oferta de ayuda"
+      submitLabel={prefilledNeed ? "Publicar y vincular" : "Publicar oferta"}
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "que", label: "¿Qué ofreces?", content: stepQue, isValid: () => f.title.trim().length > 0, invalidMessage: "El título es requerido" },
+        { key: "disponibilidad", label: "Disponibilidad y zona", content: stepDisponibilidad },
+        { key: "contacto", label: "Tu contacto", content: stepContacto, isValid: () => f.contact_name.trim().length > 0, invalidMessage: "Tu nombre es requerido" },
+      ]}
+    />
   );
 }
+

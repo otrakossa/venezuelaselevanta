@@ -1,51 +1,80 @@
 ## Objetivo
 
-Aprovechar los nuevos campos `state`, `sector` y `health_center_id` recién añadidos a `patients` para mejorar la vista de Atendidos, las estadísticas y el cruce automático con desaparecidos.
+Llevar la experiencia "wizard" del reporte de incidentes a los otros 4 formularios de alta del sistema: `MissingForm` (desaparecidos), `PatientForm` (atendidos), `NeedForm` (necesidades) y `OfferForm` (ofertas). Cada formulario usará la cantidad de pasos que mejor le calce, reutilizando un único componente `<Wizard>` con la misma estética del wizard de reportes (barra de progreso naranja, "Paso N de M", botones Atrás/Siguiente/Enviar, validación por paso).
 
-## 1. UI de Atendidos (`/pacientes`)
+## 1. Componente reutilizable
 
-Mostrar y permitir filtrar por la nueva información geográfica.
+Crear `src/components/wizard/Wizard.tsx` con:
 
-- Añadir columnas/badges visibles: **Estado** y **Sector** en cada tarjeta/fila.
-- Nuevo bloque de filtros sobre el listado:
-  - Selector de Estado (poblado dinámicamente con `DISTINCT state` desde la tabla).
-  - Selector de Sector (dependiente del Estado seleccionado).
-  - Mantener el filtro existente por Centro de Salud y la búsqueda por nombre.
-- Contador "X atendidos en {Estado}/{Sector}" arriba del listado.
-- El filtro se aplica server-side (queries con `eq('state', ...)` / `eq('sector', ...)`) para no traer 510+ filas al cliente.
+- Props:
+  - `title: string`
+  - `steps: { key: string; label: string; isValid: () => boolean; content: ReactNode }[]`
+  - `submitLabel?: string` (por defecto "Enviar")
+  - `onSubmit: () => Promise<void> | void`
+  - `submitting?: boolean`
+  - `onCancel?: () => void`
+- Estado interno: `currentStep` (0..N-1).
+- UI: header con título + chip "Paso N de M", barra de progreso segmentada (mismo estilo `--sunrise` que `ReportForm`), etiqueta del paso, contenedor del contenido del paso activo, y footer con botones:
+  - Paso 1 → solo "Siguiente" (+ opcional "Cancelar").
+  - Pasos intermedios → "Atrás" + "Siguiente".
+  - Último paso → "Atrás" + botón principal "Enviar" (con loader).
+- Validación: `goNext` llama `steps[current].isValid()`; si falla, muestra `toast.error` con mensaje del paso (prop opcional `invalidMessage` por paso).
+- Accesibilidad: `role="progressbar"` con `aria-valuenow/min/max`, `aria-current` en step activo, botones con `min-h-[48px]`.
+- Sin lógica de datos; cada formulario sigue dueño de su estado y submit.
 
-## 2. Agregaciones por sector en `/estadisticas`
+Opcional pequeño: `src/components/wizard/useWizardSteps.ts` si simplifica memoización, pero no es obligatorio.
 
-Añadir una nueva sección "Atendidos por zona" debajo de los KPIs existentes.
+## 2. Migración por formulario
 
-- Gráfico de barras horizontal: top 15 sectores por cantidad de atendidos.
-- Tabla colapsable con desglose Estado → Sector → Conteo.
-- KPI agregado: "Sectores afectados con personas atendidas: N".
-- Reutilizar el componente `Card` + `recharts` ya presentes en la página.
-- Datos vía un único query agregado (`SELECT state, sector, count(*) ... GROUP BY`).
+Mantener exactamente la misma lógica de submit, validaciones y campos actuales; solo se reorganiza la presentación en pasos.
 
-## 3. Cruce sector ↔ desaparecidos
+### a. `MissingForm` (en `src/routes/desaparecidos.tsx`) — **3 pasos**
 
-Mejorar la función `suggest_patient_matches` (y su simétrica `suggest_missing_matches`) para que el sector del atendido pese como señal adicional contra `last_seen_location` del desaparecido.
+1. **Persona**: nombre, edad, foto, descripción/señas particulares.
+2. **Última ubicación**: dirección + `LocationSelect` (Estado/Municipio/Parroquia) + mapa / geolocate + coords (reutilizar `MiniMap`/`MapView` como ya hace el form).
+3. **Contacto**: nombre, teléfono, email del reportante + confirmación.
 
-- Migración SQL que reemplaza ambas funciones para añadir un bonus al score cuando:
-  - `patients.sector` aparece (case-insensitive, con `ILIKE '%sector%'`) dentro de `missing_persons.last_seen_location`, **o**
-  - hay alta similitud trigram entre `patients.sector` y `last_seen_location`.
-- Fórmula de score: `name_similarity * 0.7 + sector_match * 0.3` (manteniendo el umbral de edad ±2 años existente).
-- El umbral mínimo se ajusta a 0.40 para no perder coincidencias actuales.
-- Sin cambios en la UI de `MatchSuggestions`: ya muestra `score` y se beneficia automáticamente.
+### b. `PatientForm` (en `src/routes/pacientes.tsx`) — **2 pasos**
 
-## Detalles técnicos
+1. **Datos del atendido**: nombre, edad, sexo, estado del atendido (status), notas.
+2. **Centro y ubicación**: `HealthCenterPicker` (autocompleta estado/sector) + override manual de Estado/Sector si aplica + contacto opcional.
 
-- **Archivos a tocar**:
-  - `src/routes/pacientes.tsx` — filtros + columnas.
-  - `src/routes/estadisticas.tsx` (o equivalente del "Centro de Control") — nueva sección.
-  - Una migración SQL para `suggest_patient_matches` y `suggest_missing_matches`.
-- **Sin cambios** en: esquema de tablas, formularios de entrada, RLS, o el resto de rutas.
-- **Riesgos**: bajo. Las funciones de match son `SECURITY DEFINER` y solo las usa el panel admin; los filtros nuevos son aditivos.
+### c. `NeedForm` (en `src/routes/necesidades.tsx`) — **3 pasos**
+
+1. **Qué se necesita**: categoría/tipo, título, descripción, cantidad, urgencia.
+2. **Dónde**: `HealthCenterPicker` o ubicación libre + Estado/Municipio/Parroquia.
+3. **Contacto**: nombre + teléfono/email + confirmación.
+
+### d. `OfferForm` (en `src/routes/ofertas.tsx`) — **3 pasos**
+
+1. **Qué ofreces**: categoría/tipo, título, descripción, cantidad/capacidad.
+2. **Disponibilidad y zona**: ubicación (estado/municipio o radio), fecha/horario si existe.
+3. **Contacto**: nombre + teléfono/email + confirmación.
+
+En cada caso:
+- Reemplazar el `<form onSubmit={submit}>` actual por `<Wizard ... onSubmit={submit} />`.
+- Mover los campos al `content` del paso correspondiente sin cambiar nombres ni tipos de estado.
+- Mantener el toggle `showForm` y el `onDone` igual.
+
+## 3. Estética y consistencia
+
+- Mismas clases de input que `ReportForm` (`field` helper) para que los 5 formularios se vean idénticos.
+- Mismos colores: progreso `--sunrise`, foco `--sky`, texto `--midnight`.
+- Mobile-first: pasos verticales con secciones espaciadas (`space-y-6/7`), botones a ancho completo en footer en móvil y alineados a la derecha en desktop.
+
+## 4. Fuera de alcance
+
+- No tocar esquemas de DB, hooks (`useMissing`, `usePatients`, etc.), ni RLS.
+- No cambiar el wizard de reportes existente (solo se referencia su look).
+- Sin nuevos campos: solo redistribución visual.
+
+## Archivos a tocar
+
+- **Nuevos**: `src/components/wizard/Wizard.tsx` (y posiblemente `useWizardSteps.ts`).
+- **Editados**: `src/routes/desaparecidos.tsx`, `src/routes/pacientes.tsx`, `src/routes/necesidades.tsx`, `src/routes/ofertas.tsx`.
 
 ## Entregables
 
-1. `/pacientes` con filtros funcionales por Estado y Sector + visibilidad de esos campos.
-2. Sección "Atendidos por zona" en `/estadisticas`.
-3. Funciones de match actualizadas que ponderan coincidencia de sector.
+1. Componente `<Wizard>` reutilizable y documentado por props.
+2. Los 4 formularios (`MissingForm`, `PatientForm`, `NeedForm`, `OfferForm`) migrados a wizard con la cantidad de pasos indicada.
+3. Misma funcionalidad y validaciones que hoy, con UX consistente con el wizard de `ReportForm`.
