@@ -347,7 +347,8 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "red"
 }
 
 function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
-  const cat = CATEGORY_META[n.category];
+  const cats = n.categories.length > 0 ? n.categories : [n.category];
+  const primary = CATEGORY_META[cats[0]] ?? CATEGORY_META.other;
   const urg = URGENCY_STYLES[n.urgency];
   const [expanded, setExpanded] = useState(false);
 
@@ -355,10 +356,22 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
       <div className="p-4 flex-1 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-2xl leading-none shrink-0">{cat.emoji}</span>
-            <div className="min-w-0">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{cat.label}</div>
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <span className="text-2xl leading-none shrink-0 mt-0.5">{primary.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap gap-1 mb-1">
+                {cats.map((c) => {
+                  const m = CATEGORY_META[c] ?? CATEGORY_META.other;
+                  return (
+                    <span
+                      key={c}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide"
+                    >
+                      {m.emoji} {m.label}
+                    </span>
+                  );
+                })}
+              </div>
               <h3 className="font-bold text-sm leading-tight line-clamp-2">{n.title}</h3>
             </div>
           </div>
