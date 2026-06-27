@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
+import { Wizard } from "@/components/wizard/Wizard";
+
 
 const searchSchema = z.object({
   center: z.string().optional(),
