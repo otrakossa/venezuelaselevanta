@@ -25,10 +25,8 @@ export function Logo({
       : variant === "dark"
         ? "text-[color:var(--midnight)]"
         : "text-[color:var(--midnight)] dark:text-white";
-  const wordAccent =
-    variant === "light"
-      ? "text-vzla-yellow"
-      : "text-[color:var(--sunrise)]";
+  const wordAccent = "text-[color:var(--sunrise)]";
+
 
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
