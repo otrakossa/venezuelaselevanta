@@ -64,6 +64,8 @@ const CATEGORY_META: Record<Category, { emoji: string; label: string }> = {
   equipment:  { emoji: "🔧", label: "Equipos" },
   blood:      { emoji: "🩸", label: "Sangre" },
   money:      { emoji: "💰", label: "Dinero" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual" },
+  diapers:    { emoji: "👶", label: "Pañales" },
   other:      { emoji: "📦", label: "Otro" },
 };
 
