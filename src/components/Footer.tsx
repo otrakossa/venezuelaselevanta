@@ -90,6 +90,18 @@ export function Footer() {
         </div>
       </div>
 
+      <div className="border-t border-white/10 bg-black/20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 text-[11px] opacity-80 space-y-1">
+          <p className="font-semibold opacity-90">Aviso de responsabilidad</p>
+          <p>
+            Venezuela Se Levanta es una plataforma ciudadana de coordinación y no se hace
+            responsable por la veracidad ni exactitud de los reportes publicados por terceros.
+            Cada reporte es responsabilidad de quien lo ingresa. Verifica la información antes
+            de difundirla y ayúdanos reportando datos incorrectos.
+          </p>
+        </div>
+      </div>
+
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-[11px] opacity-70">
           <span>© 2026 Venezuela Se Levanta · CC BY 4.0 · Datos abiertos para la humanidad</span>
