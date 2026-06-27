@@ -151,6 +151,12 @@ function AdminPage() {
           <h1 className="text-2xl font-bold">Panel de moderación</h1>
           <p className="text-[11px] text-muted-foreground">Verifica, oculta o elimina reportes. {filtered.length} de {reports.length} visibles.</p>
         </div>
+        <Link
+          to="/admin/interop"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[color:var(--sunrise)] text-white text-xs font-bold hover:opacity-90"
+        >
+          🔗 Interoperabilidad
+        </Link>
       </div>
 
       {/* Tabs */}
