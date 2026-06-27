@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
+import { Wizard } from "@/components/wizard/Wizard";
+
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, PackageOpen,
