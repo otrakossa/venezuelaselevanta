@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
+import { LocationPickerInline } from "@/components/LocationPickerInline";
 import { Wizard } from "@/components/wizard/Wizard";
 
 import {
@@ -663,6 +664,16 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, center_address: e.target.value })}
         maxLength={200}
       />
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold text-muted-foreground pl-1">
+          Ubicación en el mapa
+        </label>
+        <LocationPickerInline
+          lat={f.center_lat}
+          lng={f.center_lng}
+          onChange={(lat, lng) => setF({ ...f, center_lat: lat, center_lng: lng })}
+        />
+      </div>
     </div>
   );
 
