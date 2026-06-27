@@ -257,9 +257,9 @@ AS $$
     FROM public.missing_persons
    GROUP BY COALESCE(source_label,'(sin fuente)')
   UNION ALL
-  SELECT 'patient'::text, COALESCE(source_label,'(sin fuente)')::text,
+  SELECT 'patient'::text, COALESCE(NULLIF(registered_by,''),'(sin fuente)')::text,
          COUNT(*)::bigint,
-         COUNT(*) FILTER (WHERE photo_url IS NOT NULL)::bigint,
+         0::bigint,
          0::bigint,
          COUNT(*) FILTER (WHERE matched_missing_id IS NOT NULL)::bigint,
          COUNT(*) FILTER (WHERE status IN ('discharged','reunited'))::bigint,
