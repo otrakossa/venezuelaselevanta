@@ -115,16 +115,9 @@ async function getDbStats(): Promise<SystemHealth["database"]> {
 }
 
 export const getSystemHealth = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<SystemHealth> => {
-    // Admin gate
-    const { data: isAdmin } = await (context as { supabase: any }).supabase.rpc("has_role", {
-      _user_id: (context as { userId: string }).userId,
-      _role: "admin",
-    });
-    if (!isAdmin) {
-      throw new Response("Forbidden", { status: 403 });
-    }
+  .handler(async (): Promise<SystemHealth> => {
+    await requireAdmin();
+
 
     const errors: string[] = [];
     const MB = 1024 * 1024;
