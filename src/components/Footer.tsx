@@ -97,9 +97,7 @@ export function Footer() {
               ⚠ Aviso de responsabilidad
             </p>
             <p className="opacity-95 leading-relaxed text-[13px]">
-              Plataforma ciudadana de coordinación.{" "}
-              <strong>No nos hacemos responsables por la veracidad</strong> de los reportes
-              de terceros. Verifica la información antes de difundirla.
+              Venezuela Se Levanta es una Plataforma ciudadana de coordinación. No nos hacemos responsables por la veracidad de los reportes de terceros. Verifica la información antes de difundirla.
             </p>
           </div>
         </div>
