@@ -187,10 +187,10 @@ function NecesidadesPage() {
       )}
 
       <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setCategory("all")}
-            className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+            className={`text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
               category === "all"
                 ? "bg-primary text-primary-foreground border-primary shadow"
                 : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -202,7 +202,7 @@ function NecesidadesPage() {
             <button
               key={c}
               onClick={() => setCategory(c)}
-              className={`shrink-0 inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+              className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
                 category === c
                   ? "bg-primary text-primary-foreground border-primary shadow"
                   : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -212,6 +212,7 @@ function NecesidadesPage() {
             </button>
           ))}
         </div>
+
 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
