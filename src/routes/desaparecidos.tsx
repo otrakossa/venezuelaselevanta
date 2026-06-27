@@ -252,7 +252,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "rose
   } as const;
   return (
     <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-3 py-2.5`}>
-      <div className="text-xl sm:text-2xl font-black leading-none">{value}</div>
+      <div className="text-xl sm:text-2xl font-black leading-none">{value.toLocaleString("es-VE")}</div>
       <div className="text-[11px] sm:text-xs text-muted-foreground mt-1 font-medium">{label}</div>
     </div>
   );
