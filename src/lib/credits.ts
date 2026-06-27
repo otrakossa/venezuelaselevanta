@@ -53,10 +53,16 @@ export const organizations: Organization[] = [
     logo: "/logo-ceesur.svg",
   },
   {
-    name: "Activistas por el Software Libre",
-    description: "Promueven tecnología libre y soberana",
+    name: "Mujeres Activistas XSL",
+    description: "Promueven tecnología libre y soberana con perspectiva de género",
     url: "https://activistasxsl.org/",
-    logo: "https://www.google.com/s2/favicons?domain=activistasxsl.org&sz=128",
+    logo: "/__l5e/assets-v1/0b028971-ada2-412e-bb1c-b1cd6c4e2392/logo-mujeres-xsl.png",
+  },
+  {
+    name: "Debates del Sur Global",
+    description: "Espacio de análisis y reflexión desde el Sur Global",
+    url: "https://debatesdelsurglobal.org",
+    logo: "/__l5e/assets-v1/c775755c-f510-4920-a0e7-231e7cc679fa/logo-debates-sur-global.png",
   },
 ];
 
