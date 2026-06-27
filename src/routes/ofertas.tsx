@@ -206,33 +206,48 @@ function OfertasPage() {
         />
       )}
 
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-emerald-500/10 via-card to-card p-5 sm:p-7 mb-5">
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-emerald-500/10 via-card to-card p-4 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
-        <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mb-2">
-              <PackageOpen className="h-3.5 w-3.5" /> ¡Quiero ayudar!
+        <div className="relative">
+          <div className="flex items-center justify-between gap-2 mb-2 sm:hidden">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 min-w-0">
+              <PackageOpen className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">¡Quiero ayudar!</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofrecimiento de ayuda</h1>
-            <p className="text-sm text-muted-foreground mt-1 max-w-prose">
-              Publica insumos, recursos o voluntariado que puedas aportar. Después puedes vincularlos a una necesidad concreta.
-            </p>
+            <button
+              onClick={() => setShowForm((s) => !s)}
+              className="shrink-0 inline-flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-lg shadow-emerald-500/30 active:scale-[0.98] transition"
+            >
+              {showForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+              {showForm ? "Cerrar" : "Publicar"}
+            </button>
           </div>
-          <button
-            onClick={() => setShowForm((s) => !s)}
-            className="shrink-0 inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/30 hover:opacity-95 active:scale-[0.98] transition"
-          >
-            {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showForm ? "Cerrar" : "Publicar ayuda"}
-          </button>
+          <div className="sm:flex sm:items-end sm:justify-between sm:gap-4">
+            <div className="min-w-0">
+              <div className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mb-2">
+                <PackageOpen className="h-3.5 w-3.5" /> ¡Quiero ayudar!
+              </div>
+              <h1 className="text-xl sm:text-3xl font-black tracking-tight">Ofrecimiento de ayuda</h1>
+              <p className="text-sm text-muted-foreground mt-1 max-w-prose">
+                Publica insumos, recursos o voluntariado que puedas aportar. Después puedes vincularlos a una necesidad concreta.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowForm((s) => !s)}
+              className="hidden sm:inline-flex shrink-0 items-center gap-2 bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/30 hover:opacity-95 active:scale-[0.98] transition"
+            >
+              {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+              {showForm ? "Cerrar" : "Publicar ayuda"}
+            </button>
+          </div>
         </div>
 
-        <div className="relative mt-5 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="relative mt-4 sm:mt-5 grid grid-cols-3 gap-2 sm:gap-3">
           <Kpi tone="emerald" value={counts.available} label="📦 Disponibles" />
           <Kpi tone="amber"   value={counts.matched}   label="🔗 Vinculadas" />
           <Kpi tone="slate"   value={counts.delivered} label="✅ Entregadas" />
         </div>
       </section>
+
 
       {showForm && (
         <OfferForm
