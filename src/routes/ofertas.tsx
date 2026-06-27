@@ -58,17 +58,17 @@ interface Offer {
   created_at: string;
 }
 
-const CATEGORY_META: Record<Category, { emoji: string; label: string }> = {
-  medicine:   { emoji: "💊", label: "Medicinas" },
-  food:       { emoji: "🍎", label: "Alimentos" },
-  water:      { emoji: "💧", label: "Agua" },
-  volunteers: { emoji: "🤝", label: "Voluntarios" },
-  equipment:  { emoji: "🔧", label: "Equipos" },
-  blood:      { emoji: "🩸", label: "Sangre" },
-  money:      { emoji: "💰", label: "Dinero" },
-  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual" },
-  diapers:    { emoji: "👶", label: "Pañales" },
-  other:      { emoji: "📦", label: "Otro" },
+const CATEGORY_META: Record<Category, { emoji: string; label: string; icon: LucideIcon; color: string }> = {
+  medicine:   { emoji: "💊", label: "Medicinas",             icon: Pill,        color: "#DC2626" },
+  food:       { emoji: "🍎", label: "Alimentos",             icon: Apple,       color: "#16A34A" },
+  water:      { emoji: "💧", label: "Agua",                  icon: Droplet,     color: "#2563EB" },
+  volunteers: { emoji: "🤝", label: "Voluntarios",           icon: HandHelping, color: "#EA580C" },
+  equipment:  { emoji: "🔧", label: "Equipos",               icon: Wrench,      color: "#7C3AED" },
+  blood:      { emoji: "🩸", label: "Sangre",                icon: Droplets,    color: "#B91C1C" },
+  money:      { emoji: "💰", label: "Dinero",                icon: Banknote,    color: "#CA8A04" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual", icon: SprayCan,    color: "#0EA5E9" },
+  diapers:    { emoji: "👶", label: "Pañales",               icon: Baby,        color: "#DB2777" },
+  other:      { emoji: "📦", label: "Otro",                  icon: Package,     color: "#6B7280" },
 };
 
 function timeAgo(iso: string): string {
