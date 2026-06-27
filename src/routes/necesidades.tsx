@@ -37,6 +37,7 @@ interface Need {
   lat: number | null;
   lng: number | null;
   category: NeedCategory;
+  categories: NeedCategory[];
   title: string;
   description: string | null;
   quantity: string | null;
@@ -84,7 +85,8 @@ function timeAgo(iso: string): string {
 async function fetchNeeds(statusFilter: "active" | "fulfilled", category: NeedCategory | "all"): Promise<Need[]> {
   const statusQ =
     statusFilter === "active" ? "status=in.(open,partial)" : "status=eq.fulfilled";
-  const catQ = category !== "all" ? `&category=eq.${category}` : "";
+  // `cs` = contains: matches rows whose `categories` array includes the selected one.
+  const catQ = category !== "all" ? `&categories=cs.{${category}}` : "";
   const res = await fetch(
     `${SUPA_URL}/rest/v1/needs?${statusQ}${catQ}&order=created_at.desc&limit=200`,
     {
@@ -95,7 +97,17 @@ async function fetchNeeds(statusFilter: "active" | "fulfilled", category: NeedCa
     },
   );
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const rows = (await res.json()) as Need[];
+  // Backfill `categories` in memory in case some old row was missed.
+  return rows.map((r) => ({
+    ...r,
+    categories:
+      Array.isArray(r.categories) && r.categories.length > 0
+        ? r.categories
+        : r.category
+        ? [r.category]
+        : [],
+  }));
 }
 
 function NecesidadesPage() {
@@ -335,7 +347,8 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "red"
 }
 
 function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
-  const cat = CATEGORY_META[n.category];
+  const cats = n.categories.length > 0 ? n.categories : [n.category];
+  const primary = CATEGORY_META[cats[0]] ?? CATEGORY_META.other;
   const urg = URGENCY_STYLES[n.urgency];
   const [expanded, setExpanded] = useState(false);
 
@@ -343,10 +356,22 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col">
       <div className="p-4 flex-1 space-y-3">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-2xl leading-none shrink-0">{cat.emoji}</span>
-            <div className="min-w-0">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{cat.label}</div>
+          <div className="flex items-start gap-2 min-w-0 flex-1">
+            <span className="text-2xl leading-none shrink-0 mt-0.5">{primary.emoji}</span>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap gap-1 mb-1">
+                {cats.map((c) => {
+                  const m = CATEGORY_META[c] ?? CATEGORY_META.other;
+                  return (
+                    <span
+                      key={c}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide"
+                    >
+                      {m.emoji} {m.label}
+                    </span>
+                  );
+                })}
+              </div>
               <h3 className="font-bold text-sm leading-tight line-clamp-2">{n.title}</h3>
             </div>
           </div>
@@ -431,7 +456,7 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
 
 function NeedForm({ onDone }: { onDone: () => void }) {
   const [f, setF] = useState({
-    category:      "other" as NeedCategory,
+    categories:    [] as NeedCategory[],
     title:         "",
     description:   "",
     quantity:      "",
@@ -448,14 +473,26 @@ function NeedForm({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
+  const toggleCat = (c: NeedCategory) => {
+    setF((prev) => ({
+      ...prev,
+      categories: prev.categories.includes(c)
+        ? prev.categories.filter((x) => x !== c)
+        : [...prev.categories, c],
+    }));
+  };
+
   const submit = async () => {
-    if (!f.title.trim())       { toast.error("El título es requerido"); return; }
-    if (!f.center_name.trim()) { toast.error("El nombre del centro es requerido"); return; }
+    if (f.categories.length === 0) { toast.error("Selecciona al menos una categoría"); return; }
+    if (!f.title.trim())           { toast.error("El título es requerido"); return; }
+    if (!f.center_name.trim())     { toast.error("El nombre del centro es requerido"); return; }
 
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
-        category:       f.category,
+        // `category` keeps the first one for backward compatibility with old code paths.
+        category:       f.categories[0],
+        categories:     f.categories,
         title:          f.title.trim(),
         description:    f.description.trim() || null,
         quantity:       f.quantity.trim() || null,
@@ -495,24 +532,36 @@ function NeedForm({ onDone }: { onDone: () => void }) {
   const stepQue = (
     <div className="grid sm:grid-cols-2 gap-3">
       <div className="sm:col-span-2">
-        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-1 uppercase tracking-wider">
+          Categorías * <span className="text-muted-foreground font-medium normal-case">(puedes elegir varias)</span>
+        </label>
+        {f.categories.length > 0 && (
+          <p className="text-[11px] text-muted-foreground mb-2">
+            {f.categories.length} seleccionada{f.categories.length === 1 ? "" : "s"}
+          </p>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
           {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => {
             const meta = CATEGORY_META[c];
-            const active = f.category === c;
+            const active = f.categories.includes(c);
             const Icon = meta.icon;
             return (
               <button
                 key={c}
                 type="button"
-                onClick={() => setF({ ...f, category: c })}
+                onClick={() => toggleCat(c)}
                 aria-pressed={active}
-                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
+                className={`relative flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
                   active
                     ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
                     : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
                 }`}
               >
+                {active && (
+                  <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-[color:var(--sunrise)] text-white text-[10px] font-bold flex items-center justify-center">
+                    ✓
+                  </span>
+                )}
                 <div
                   className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
                     active ? "text-white" : "bg-muted text-muted-foreground"
@@ -651,7 +700,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       onSubmit={submit}
       onCancel={onDone}
       steps={[
-        { key: "que", label: "¿Qué se necesita?", content: stepQue, isValid: () => f.title.trim().length > 0, invalidMessage: "El título es requerido" },
+        { key: "que", label: "¿Qué se necesita?", content: stepQue, isValid: () => f.categories.length > 0 && f.title.trim().length > 0, invalidMessage: f.categories.length === 0 ? "Selecciona al menos una categoría" : "El título es requerido" },
         { key: "donde", label: "¿Dónde se necesita?", content: stepDonde, isValid: () => f.center_name.trim().length > 0, invalidMessage: "El nombre del centro es requerido" },
         { key: "contacto", label: "Contacto", content: stepContacto },
       ]}
