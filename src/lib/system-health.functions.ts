@@ -1,5 +1,42 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { getRequest } from "@tanstack/react-start/server";
+
+// Production Supabase project (matches src/integrations/supabase/client.ts).
+// Hardcoded so token validation works in Lovable preview too, where
+// process.env.SUPABASE_URL points to the old/legacy Lovable Cloud project.
+const PROD_SUPABASE_URL = "https://advebubtfjgxwpjxprok.supabase.co";
+const PROD_SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdmVidWJ0ZmpneHdwanhwcm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDcyMTMsImV4cCI6MjA5ODAyMzIxM30.e4w9nrHsaNRP-enNPS-beZ0Kns7KxvRtVXxRDLECS5U";
+
+async function requireAdmin(): Promise<{ userId: string; token: string }> {
+  const request = getRequest();
+  const authHeader = request?.headers?.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    throw new Response("Unauthorized", { status: 401 });
+  }
+  const token = authHeader.slice(7);
+  // Validate the token against the production project's Auth server.
+  const userRes = await fetch(`${PROD_SUPABASE_URL}/auth/v1/user`, {
+    headers: { apikey: PROD_SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+  });
+  if (!userRes.ok) throw new Response("Unauthorized", { status: 401 });
+  const user = (await userRes.json()) as { id?: string };
+  if (!user.id) throw new Response("Unauthorized", { status: 401 });
+  // Admin role check via RPC, scoped to the user via their bearer token.
+  const roleRes = await fetch(`${PROD_SUPABASE_URL}/rest/v1/rpc/has_role`, {
+    method: "POST",
+    headers: {
+      apikey: PROD_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ _user_id: user.id, _role: "admin" }),
+  });
+  if (!roleRes.ok) throw new Response("Forbidden", { status: 403 });
+  const isAdmin = (await roleRes.json()) as boolean;
+  if (!isAdmin) throw new Response("Forbidden", { status: 403 });
+  return { userId: user.id, token };
+}
 
 export type HealthMetric = {
   ok: boolean;
@@ -78,16 +115,9 @@ async function getDbStats(): Promise<SystemHealth["database"]> {
 }
 
 export const getSystemHealth = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<SystemHealth> => {
-    // Admin gate
-    const { data: isAdmin } = await (context as { supabase: any }).supabase.rpc("has_role", {
-      _user_id: (context as { userId: string }).userId,
-      _role: "admin",
-    });
-    if (!isAdmin) {
-      throw new Response("Forbidden", { status: 403 });
-    }
+  .handler(async (): Promise<SystemHealth> => {
+    await requireAdmin();
+
 
     const errors: string[] = [];
     const MB = 1024 * 1024;
