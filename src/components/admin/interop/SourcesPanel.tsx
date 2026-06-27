@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { sbx } from "./_client";
 import { Loader2, RefreshCw, ImageIcon, MapPin, CheckCircle2, Link2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -25,7 +25,7 @@ export function SourcesPanel() {
 
   const load = async () => {
     setLoading(true); setErr(null);
-    const { data, error } = await supabase.rpc("interop_source_overview");
+    const { data, error } = await sbx.rpc<Row[]>("interop_source_overview");
     if (error) setErr(error.message);
     else setRows((data ?? []) as Row[]);
     setLoading(false);

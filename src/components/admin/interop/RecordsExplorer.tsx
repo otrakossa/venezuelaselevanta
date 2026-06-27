@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { sbx } from "./_client";
 import { Loader2, Search, ExternalLink, CheckCircle2, MapPin, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
