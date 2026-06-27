@@ -468,9 +468,10 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     center_lat:    null as number | null,
     center_lng:    null as number | null,
     center_phone:  "" as string,
-    contact_name:  "",
-    contact_phone: "",
-    contact_info:  "",
+    contact_name:    "",
+    reporter_cedula: "",
+    contact_phone:   "",
+    contact_info:    "",
   });
   const [busy, setBusy] = useState(false);
   const [geocodingAddr, setGeocodingAddr] = useState(false);
