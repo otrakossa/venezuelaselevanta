@@ -1,74 +1,51 @@
-## Análisis del reporte de Luisana (Maxsl)
+## Objetivo
 
-Revisé cada observación contra el código actual. Esto es lo que **ya está hecho**, lo que **está parcial** y lo que **falta**.
+Aprovechar los nuevos campos `state`, `sector` y `health_center_id` recién añadidos a `patients` para mejorar la vista de Atendidos, las estadísticas y el cruce automático con desaparecidos.
 
-### Ya implementado (no requiere trabajo)
-- Hero dismissible con CTA "Reportar" + slogan en `/` (`HERO_DISMISS_KEY`).
-- Nav con indicador de sección activa (Header + BottomNav, `pathname === item.to` → fondo sunrise).
-- Clustering en el mapa (`react-leaflet-cluster`).
-- Filtros por categoría, urgencia, ventana temporal y modo confianza.
-- Pull-to-refresh en lista y estadísticas (`usePullToRefresh`).
-- Marcar como "encontrada" en `/desaparecidos` (un clic, actualiza `status` + `found_date`).
-- Service Worker / PWA con cola offline (IndexedDB).
-- Geolocalización + EXIF + reverse geocoding en el formulario.
-- Toasts de éxito/error (`sonner`) en envíos.
-- Mobile-first: BottomNav, safe-area-insets, mapa a viewport completo.
+## 1. UI de Atendidos (`/pacientes`)
 
-### Lo que falta o está débil — propuesta de trabajo
+Mostrar y permitir filtrar por la nueva información geográfica.
 
-**Fase 1 — Onboarding y claridad (alta prioridad, impacto inmediato)**
+- Añadir columnas/badges visibles: **Estado** y **Sector** en cada tarjeta/fila.
+- Nuevo bloque de filtros sobre el listado:
+  - Selector de Estado (poblado dinámicamente con `DISTINCT state` desde la tabla).
+  - Selector de Sector (dependiente del Estado seleccionado).
+  - Mantener el filtro existente por Centro de Salud y la búsqueda por nombre.
+- Contador "X atendidos en {Estado}/{Sector}" arriba del listado.
+- El filtro se aplica server-side (queries con `eq('state', ...)` / `eq('sector', ...)`) para no traer 510+ filas al cliente.
 
-1. **Rediseñar el hero del home como "3 acciones principales"** (responde a las 3 preguntas universales del reporte):
-   - Bloque 1: **Reportar / Buscar desaparecido** → `/desaparecidos`
-   - Bloque 2: **Reportar incidente** → `/reportar`
-   - Bloque 3: **Quiero ayudar** → `/ofertas`
-   - Cada tarjeta con icono grande, color distinto, microcopy de 1 línea ("¿No sabes nada de un familiar?", "¿Viste algo que la gente debe saber?", "¿Tienes recursos, tiempo o transporte?"). Mantener el slogan, eliminar el CTA único actual.
-   - El hero deja de ser "decorativo+dismiss" y pasa a ser **funcional** — sigue siendo dismissible, pero por defecto se ve y guía.
+## 2. Agregaciones por sector en `/estadisticas`
 
-2. **Banner de estado en vivo** (sticky bajo el header, dismissible):
-   - "X reportes activos · Y desaparecidos · Z encontrados · Última actualización: hh:mm"
-   - Enlace a línea de emergencia oficial (171 / Protección Civil).
-   - Solo en `/` y rutas principales; se calcula de los hooks ya existentes.
+Añadir una nueva sección "Atendidos por zona" debajo de los KPIs existentes.
 
-3. **Búsqueda por nombre desde el mapa**: añadir un input de búsqueda en la barra flotante del mapa que filtre marcadores de desaparecidos por nombre (ya existe el server-side search en `/desaparecidos`, lo reutilizamos en el cliente para los marcadores cargados).
+- Gráfico de barras horizontal: top 15 sectores por cantidad de atendidos.
+- Tabla colapsable con desglose Estado → Sector → Conteo.
+- KPI agregado: "Sectores afectados con personas atendidas: N".
+- Reutilizar el componente `Card` + `recharts` ya presentes en la página.
+- Datos vía un único query agregado (`SELECT state, sector, count(*) ... GROUP BY`).
 
-**Fase 2 — Formulario en pasos (wizard)**
+## 3. Cruce sector ↔ desaparecidos
 
-4. Convertir `ReportForm` (374 líneas, single-page) en un wizard de 3 pasos visibles:
-   - Paso 1: Qué pasó (categoría + título + descripción + urgencia)
-   - Paso 2: Dónde (mapa + dirección + estado/municipio/parroquia)
-   - Paso 3: Quién reporta (nombre + medios + enviar)
-   - Barra de progreso arriba, botones "Atrás / Siguiente / Enviar".
-   - Validación en tiempo real por paso (no dejar avanzar sin campos obligatorios) con mensajes inline bajo cada campo.
-   - Mantener toda la lógica actual de EXIF, geocoding, offline queue.
+Mejorar la función `suggest_patient_matches` (y su simétrica `suggest_missing_matches`) para que el sector del atendido pese como señal adicional contra `last_seen_location` del desaparecido.
 
-**Fase 3 — UX visual y accesibilidad**
+- Migración SQL que reemplaza ambas funciones para añadir un bonus al score cuando:
+  - `patients.sector` aparece (case-insensitive, con `ILIKE '%sector%'`) dentro de `missing_persons.last_seen_location`, **o**
+  - hay alta similitud trigram entre `patients.sector` y `last_seen_location`.
+- Fórmula de score: `name_similarity * 0.7 + sector_match * 0.3` (manteniendo el umbral de edad ±2 años existente).
+- El umbral mínimo se ajusta a 0.40 para no perder coincidencias actuales.
+- Sin cambios en la UI de `MatchSuggestions`: ya muestra `score` y se beneficia automáticamente.
 
-5. **Leyenda del mapa**: panel colapsable abajo-derecha con los colores/iconos de cada categoría y el marcador de desaparecidos. Se muestra plegado por defecto en mobile.
+## Detalles técnicos
 
-6. **Indicadores de carga en navegación entre rutas**: barra de progreso superior (tipo nprogress) conectada al estado del router de TanStack. Hoy hay skeletons por ruta pero no señal visible durante la transición.
+- **Archivos a tocar**:
+  - `src/routes/pacientes.tsx` — filtros + columnas.
+  - `src/routes/estadisticas.tsx` (o equivalente del "Centro de Control") — nueva sección.
+  - Una migración SQL para `suggest_patient_matches` y `suggest_missing_matches`.
+- **Sin cambios** en: esquema de tablas, formularios de entrada, RLS, o el resto de rutas.
+- **Riesgos**: bajo. Las funciones de match son `SECURITY DEFINER` y solo las usa el panel admin; los filtros nuevos son aditivos.
 
-7. **"Última actualización"** visible en cada ficha de desaparecido y de reporte (`updated_at` relativo: "hace 12 min"). Ya tenemos los datos, falta exponerlos en `ReportDetailSheet` y en las tarjetas de `/desaparecidos`.
+## Entregables
 
-8. **Accesibilidad WCAG 2.1 AA**:
-   - Auditar contraste del sunrise `#FF6B35` sobre fondos cream/blanco; bajar a `#E85A28` (ya usado en hover) donde no alcance 4.5:1.
-   - Asegurar `aria-current="page"` en nav activa, `aria-label` en todos los botones-icono, focus visible en todos los interactivos.
-   - Tamaño mínimo táctil 44×44 px en chips de filtro y botones de acción mobile (varios hoy son 32–36 px).
-
-**Fase 4 — Anti-duplicados (más profunda, opcional según prioridad)**
-
-9. Al crear un desaparecido, antes de guardar buscar coincidencias por nombre + edad aproximada y mostrar "¿Esta persona ya fue reportada? Súmate al caso existente en vez de duplicar". Si elige sumarse → añade un comentario/confirmación al caso original. Esto requiere ajuste de UX y un endpoint de búsqueda fuzzy; lo dejo separado porque toca tabla y flujo.
-
-### Detalles técnicos
-
-- Archivos principales a tocar: `src/routes/index.tsx` (hero), `src/components/Header.tsx` (aria-current), `src/components/ReportForm.tsx` (wizard), `src/components/MapView.tsx` (leyenda + buscador), `src/components/ReportDetailSheet.tsx` (updated_at), `src/routes/desaparecidos.tsx` (updated_at + búsqueda preventiva), `src/styles.css` (tokens de contraste y focus).
-- Nuevo componente `LiveStatusBanner.tsx` consumiendo `useReports` + `useMissing`.
-- Nuevo componente `RouteProgress.tsx` con el router state.
-- Sin cambios de esquema en la base salvo que aprobemos la Fase 4.
-
-### Orden sugerido de implementación
-
-Fase 1 → Fase 3 (puntos 5–8) → Fase 2 → Fase 4.
-La Fase 1 ataca la queja central (parálisis por análisis) con cambios localizados y bajo riesgo. La Fase 2 es la más invasiva y la dejo después de tener el banner/leyenda/contraste listos para no mezclar regresiones.
-
-¿Avanzo con las cuatro fases en ese orden, o prefieres recortar (por ejemplo, dejar el wizard fuera o saltarte la Fase 4)?
+1. `/pacientes` con filtros funcionales por Estado y Sector + visibilidad de esos campos.
+2. Sección "Atendidos por zona" en `/estadisticas`.
+3. Funciones de match actualizadas que ponderan coincidencia de sector.
