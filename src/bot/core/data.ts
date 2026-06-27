@@ -69,6 +69,32 @@ export async function supabaseInsertReturning(
   return rows[0] ?? null;
 }
 
+// Llamada a una función RPC (PostgREST /rpc/<fn>).
+export async function supabaseRpc(
+  fn: string,
+  body: Record<string, unknown>,
+): Promise<Record<string, unknown>[]> {
+  try {
+    const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: {
+        apikey: SUPA_ANON,
+        Authorization: `Bearer ${SUPA_ANON}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      console.error("[rpc]", fn, await res.text().catch(() => ""));
+      return [];
+    }
+    return res.json();
+  } catch (e) {
+    console.error("[rpc]", fn, e);
+    return [];
+  }
+}
+
 export async function supabasePatch(
   table: string,
   filter: string,

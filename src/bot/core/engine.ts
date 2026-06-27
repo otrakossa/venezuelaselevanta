@@ -45,6 +45,16 @@ import {
   onNeedCategoryCallback,
   startNeed,
 } from "./flows/need";
+import {
+  HELP_FLOW_ENABLED,
+  handleHelpCategoryText,
+  handleHelpLocation,
+  handleHelpPickText,
+  handleHelpTextLocation,
+  onHelpCategoryCallback,
+  onHelpPickCallback,
+  startHelp,
+} from "./flows/help";
 
 const HELP_TEXT =
   "<b>Comandos disponibles:</b>\n\n" +
@@ -80,6 +90,10 @@ export async function handle(incoming: IncomingMessage, ctx: EngineCtx): Promise
       return onUrgencyCallback(ctx, session, data.slice(4));
     if (data.startsWith("ncat:") && session.state === "need_category")
       return onNeedCategoryCallback(ctx, session, data.slice(5));
+    if (data.startsWith("ncat:") && session.state === "help_category")
+      return onHelpCategoryCallback(ctx, session, data.slice(5));
+    if (data.startsWith("hneed:") && session.state === "help_pick")
+      return onHelpPickCallback(ctx, session, data.slice(6));
     return;
   }
 
@@ -95,6 +109,7 @@ export async function handle(incoming: IncomingMessage, ctx: EngineCtx): Promise
   if (text.startsWith("/encontrado"))
     return handleEncontrado(ctx, text.replace(/^\/encontrado\s*/i, "").trim());
   if (text === "/necesidad" && NEEDS_FLOW_ENABLED) return startNeed(ctx);
+  if (text === "/ayudar" && HELP_FLOW_ENABLED) return startHelp(ctx);
   if (text === "/ayuda" || text === "/help") {
     await ctx.send(HELP_TEXT);
     return;
@@ -179,4 +194,12 @@ export async function handle(incoming: IncomingMessage, ctx: EngineCtx): Promise
     return handleNeedTextLocation(ctx, session, text);
   if (session.state === "need_responsible") return handleNeedResponsible(ctx, session, text);
   if (session.state === "need_confirm") return handleNeedConfirm(ctx, session, text);
+
+  // ── Flujo "quiero ayudar" (Fase 3, gated por BOT_HELP_FLOW) ────────────
+  if (session.state === "help_category" && text && !text.startsWith("/"))
+    return handleHelpCategoryText(ctx);
+  if (session.state === "help_location") return handleHelpLocation(ctx, session, incoming);
+  if (session.state === "help_text_location" && text && !text.startsWith("/"))
+    return handleHelpTextLocation(ctx, session, text);
+  if (session.state === "help_pick") return handleHelpPickText(ctx);
 }

@@ -3,9 +3,10 @@ import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { LocationSelect } from "@/components/LocationSelect";
 import {
   Search, X, PackageOpen, Loader2, RefreshCw, Plus, Phone, User,
-  Info, ChevronDown, Link2, Check, Unlink2,
+  Info, ChevronDown, Link2, Check, Unlink2, Sparkles, MapPin,
 } from "lucide-react";
 
 const searchSchema = z.object({
@@ -52,6 +53,42 @@ interface Offer {
   location_desc: string | null;
   status: OfferStatus | "open"; // tolerate legacy 'open'
   created_at: string;
+  // Geo (Fase 3) — opcionales; alimentan el matching por cercanía.
+  state?: string | null;
+  municipality?: string | null;
+  parish?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+}
+
+type SuggestRow = {
+  need_id: string;
+  title: string;
+  category: Category;
+  urgency: string;
+  status: "open" | "partial" | "fulfilled";
+  center_name: string;
+  tier: number;
+  distance_km: number | null;
+};
+
+const TIER_LABEL = ["Misma parroquia", "Mismo municipio", "Mismo estado", "Otra zona"];
+
+async function fetchSuggestions(offer: Offer): Promise<SuggestRow[]> {
+  const res = await fetch(`${SUPA_URL}/rest/v1/rpc/suggest_needs_for_offer`, {
+    method: "POST",
+    headers: { ...HEADERS, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      p_category: offer.category ?? null,
+      p_lat: offer.lat ?? null,
+      p_lng: offer.lng ?? null,
+      p_state: offer.state ?? null,
+      p_municipality: offer.municipality ?? null,
+      p_parish: offer.parish ?? null,
+    }),
+  });
+  if (!res.ok) return [];
+  return res.json();
 }
 
 const CATEGORY_META: Record<Category, { emoji: string; label: string }> = {
@@ -510,6 +547,15 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
   const [needs, setNeeds] = useState<NeedLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<SuggestRow[]>([]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchSuggestions(offer)
+      .then((r) => { if (alive) setSuggestions(r); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [offer]);
 
   useEffect(() => {
     let alive = true;
@@ -590,6 +636,45 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
         </div>
 
         <div className="overflow-y-auto px-3 py-2 flex-1">
+          {suggestions.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center gap-1.5 px-1 mb-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                <Sparkles className="h-3.5 w-3.5" /> Sugeridas por cercanía
+              </div>
+              <ul className="space-y-1.5">
+                {suggestions.map((s) => (
+                  <li key={s.need_id}>
+                    <button
+                      onClick={() => link({ id: s.need_id, title: s.title, category: s.category, center_name: s.center_name, status: s.status })}
+                      disabled={linking !== null}
+                      className="w-full text-left p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 transition disabled:opacity-50 flex items-center gap-3"
+                    >
+                      <span className="text-xl">{catMeta(s.category).emoji}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-sm line-clamp-1">{s.title}</div>
+                        <div className="text-[11px] text-muted-foreground line-clamp-1">🏥 {s.center_name}</div>
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                            <MapPin className="h-2.5 w-2.5" /> {TIER_LABEL[s.tier] ?? "Otra zona"}
+                          </span>
+                          {s.distance_km != null && (
+                            <span className="text-[10px] text-muted-foreground">~{Math.round(s.distance_km)} km</span>
+                          )}
+                        </div>
+                      </div>
+                      {linking === s.need_id ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Link2 className="h-4 w-4 text-emerald-600" />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="border-t border-border/60 my-2.5" />
+              <div className="px-1 text-[11px] font-semibold text-muted-foreground mb-1">O busca manualmente</div>
+            </div>
+          )}
           {loading ? (
             <div className="py-10 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
           ) : needs.length === 0 ? (
@@ -637,8 +722,10 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     contact_phone: "",
     contact_info: "",
   });
+  const [loc, setLoc] = useState({ state: "", municipality: "", parish: "" });
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30";
+  const labelCls = "text-xs font-semibold text-foreground mb-1 block";
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -652,6 +739,9 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         description: f.description.trim() || null,
         quantity: f.quantity.trim() || null,
         location_desc: f.location_desc.trim() || null,
+        state: loc.state || null,
+        municipality: loc.municipality || null,
+        parish: loc.parish || null,
         contact_name: f.contact_name.trim(),
         contact_phone: f.contact_phone.trim() || null,
         contact_info: f.contact_info.trim() || null,
@@ -743,6 +833,16 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, location_desc: e.target.value })}
         maxLength={200}
       />
+
+      <div className="sm:col-span-2">
+        <label className={labelCls}>Tu zona (DIVIPOL) — ayuda a sugerir necesidades cercanas</label>
+        <LocationSelect
+          state={loc.state}
+          municipality={loc.municipality}
+          parish={loc.parish}
+          onChange={setLoc}
+        />
+      </div>
 
       <input
         className={field}
