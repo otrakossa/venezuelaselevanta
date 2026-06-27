@@ -1,0 +1,1 @@
+ALTER TABLE public.missing_persons ADD COLUMN IF NOT EXISTS matched_patient_id uuid;

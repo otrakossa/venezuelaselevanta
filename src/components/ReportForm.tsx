@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { CATEGORIES } from "@/lib/categories";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CATEGORIES, URGENCY_LABELS, STATUS_LABELS, CATEGORY_MAP } from "@/lib/categories";
 import { ClientOnly } from "./ClientOnly";
-import { MapView } from "./MapView";
-import { Locate, Send, Camera, X, Loader2 } from "lucide-react";
+import { MapViewLazy as MapView } from "./MapViewLazy";
+import {
+  Locate, Send, Camera, X, Loader2, ArrowLeft, ArrowRight,
+  Check, MapPin as MapPinIcon, AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
 import exifr from "exifr";
 import type { Report } from "@/lib/types";
@@ -18,7 +20,16 @@ const MAX_SIZE_MB = 10;
 
 type Preview = { url: string; type: string; name: string };
 
+const URGENCY_ORDER = ["low", "medium", "high", "critical"] as const;
+const URGENCY_ACCENT: Record<string, string> = {
+  low: "bg-emerald-100 text-emerald-800",
+  medium: "bg-[color:var(--gold)] text-[color:var(--midnight)]",
+  high: "bg-orange-200 text-orange-900",
+  critical: "bg-red-200 text-red-900",
+};
+
 export function ReportForm({ existingReports }: { existingReports: Report[] }) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [form, setForm] = useState({
     title: "",
     category: "medical",
@@ -41,7 +52,6 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const geocodeAbort = useRef<AbortController | null>(null);
 
-  // Auto reverse-geocode when coords change (and user hasn't manually edited address)
   useEffect(() => {
     if (!coords) return;
     if (addressTouched && form.address.trim().length > 0) return;
@@ -57,8 +67,6 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
             const detected = !f.state ? detectStateFromAddress(addr) : null;
             return { ...f, address: addr, state: detected ?? f.state };
           });
-        } else {
-          toast.info("No se detectó la dirección. Puedes escribirla manualmente.", { duration: 3000 });
         }
       })
       .finally(() => {
@@ -95,10 +103,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     }
     const merged = [...files, ...allowed].slice(0, MAX_FILES);
     setFiles(merged);
-    setPreviews(
-      merged.map((f) => ({ url: URL.createObjectURL(f), type: f.type, name: f.name })),
-    );
-    // EXIF GPS from first image (if no coords yet)
+    setPreviews(merged.map((f) => ({ url: URL.createObjectURL(f), type: f.type, name: f.name })));
     const firstImage = allowed.find((f) => f.type.startsWith("image/"));
     if (firstImage && !coords) {
       try {
@@ -107,9 +112,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           setCoords({ lat: gps.latitude, lng: gps.longitude });
           toast.success("📸 Ubicación extraída de la foto");
         }
-      } catch {
-        /* no exif */
-      }
+      } catch {/* no exif */}
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -117,9 +120,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const removeFile = (idx: number) => {
     const next = files.filter((_, i) => i !== idx);
     setFiles(next);
-    setPreviews(
-      next.map((f) => ({ url: URL.createObjectURL(f), type: f.type, name: f.name })),
-    );
+    setPreviews(next.map((f) => ({ url: URL.createObjectURL(f), type: f.type, name: f.name })));
   };
 
   const resetForm = () => {
@@ -132,25 +133,23 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     setFiles([]);
     setPreviews([]);
     setAddressTouched(false);
+    setStep(1);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!coords) return toast.error("Selecciona una ubicación o usa 📍 Mi ubicación");
-    if (!form.title.trim()) return toast.error("Ingresa un título");
+  const submit = async () => {
+    if (!coords) { setStep(2); return toast.error("Selecciona una ubicación o usa 📍 Mi ubicación"); }
+    if (!form.title.trim()) { setStep(1); return toast.error("Ingresa un título"); }
     setSubmitting(true);
 
     const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
-
-    // Upload media first (skip if offline → queue without media)
     let mediaUrls: string[] = [];
     if (!isOffline && files.length > 0) {
       toast.loading(`Subiendo ${files.length} archivo${files.length > 1 ? "s" : ""}...`, { id: "up" });
       try {
         mediaUrls = await uploadMany(files);
         toast.success(`Archivos subidos`, { id: "up" });
-      } catch (err) {
+      } catch {
         toast.error("No se pudieron subir los archivos", { id: "up" });
       }
     }
@@ -189,10 +188,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    const error = res.ok ? null : { message: data?.error ?? "Error al enviar el reporte" };
+    const data = await res.json().catch(() => ({}));
     setSubmitting(false);
-    if (error) {
+    if (!res.ok) {
       await enqueueReport(payload);
       window.dispatchEvent(new Event("queue:changed"));
       toast.warning("Conexión inestable. Reporte guardado para reintentar.");
@@ -204,171 +202,336 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
     resetForm();
   };
 
-  const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring";
-  const label = "text-xs font-semibold text-foreground mb-1 block";
+  // Step validation
+  const step1Valid = useMemo(() => form.title.trim().length > 0 && !!form.category && !!form.urgency, [form.title, form.category, form.urgency]);
+  const step2Valid = !!coords;
+
+  const goNext = () => {
+    if (step === 1) {
+      if (!step1Valid) return toast.error("Completa título, categoría y urgencia");
+      setStep(2);
+    } else if (step === 2) {
+      if (!step2Valid) return toast.error("Marca la ubicación en el mapa o usa 📍 Mi ubicación");
+      setStep(3);
+    }
+  };
+  const goBack = () => { if (step > 1) setStep((step - 1) as 1 | 2); };
+
+  const stepLabel = step === 1 ? "Qué pasa" : step === 2 ? "Dónde" : "Evidencia y envío";
   const canAddMore = files.length < MAX_FILES;
+  const selectedCat = CATEGORY_MAP[form.category];
+
+  const field = "w-full px-4 py-3 rounded-xl bg-muted/50 border border-transparent focus:bg-background focus:border-[color:var(--sky)] outline-none transition-all text-[color:var(--midnight)] placeholder:text-muted-foreground/50 text-sm";
 
   return (
-    <form onSubmit={submit} className="grid lg:grid-cols-2 gap-4 pb-24 lg:pb-0">
-      <div className="space-y-3 order-2 lg:order-1">
-        <div>
-          <label className={label}>Título del incidente *</label>
-          <input className={field} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required maxLength={120} placeholder="Ej. Edificio colapsado en Av. Bolívar" />
+    <div className="max-w-2xl mx-auto">
+      {/* Stepper Header */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-[color:var(--midnight)]">Iniciar reporte</h2>
+          <span className="text-xs font-semibold text-[color:var(--sunrise)] bg-[color:var(--sunrise)]/10 px-3 py-1 rounded-full whitespace-nowrap">
+            Paso {step} de 3
+          </span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={label}>Categoría *</label>
-            <select className={field} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-              {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.emoji} {c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={label}>Urgencia *</label>
-            <select className={field} value={form.urgency} onChange={(e) => setForm({ ...form, urgency: e.target.value })}>
-              <option value="critical">🔴 Crítico</option>
-              <option value="high">🟠 Alto</option>
-              <option value="medium">🟡 Medio</option>
-              <option value="low">🟢 Bajo</option>
-            </select>
-          </div>
+        <div className="flex gap-2 mb-2" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
+          {[1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className={`h-2 flex-1 rounded-full transition-colors ${s <= step ? "bg-[color:var(--sunrise)]" : "bg-muted"}`}
+            />
+          ))}
         </div>
-        <div>
-          <label className={label}>Descripción</label>
-          <textarea className={field} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} maxLength={1000} />
-        </div>
-        <div>
-          <label className={label}>
-            Dirección {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}
-          </label>
-          <input
-            className={field}
-            value={form.address}
-            onChange={(e) => { setForm({ ...form, address: e.target.value }); setAddressTouched(true); }}
-            placeholder={geocoding ? "Detectando dirección..." : "Ej: Av. Bolívar, Caracas"}
-            maxLength={200}
-          />
-        </div>
+        <p className="text-sm text-muted-foreground font-medium">{stepLabel}</p>
+      </div>
 
-        <LocationSelect
-          state={form.state}
-          municipality={form.municipality}
-          parish={form.parish}
-          onChange={(v) => setForm({ ...form, ...v })}
-        />
+      {/* STEP 1 — Qué pasa */}
+      {step === 1 && (
+        <div className="space-y-7">
+          <section>
+            <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {CATEGORIES.filter((c) => c.slug !== "earthquake").map((c) => {
+                const active = form.category === c.slug;
+                const Icon = c.icon;
+                return (
+                  <button
+                    key={c.slug}
+                    type="button"
+                    onClick={() => setForm({ ...form, category: c.slug })}
+                    aria-pressed={active}
+                    className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
+                      active
+                        ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                        : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
+                    }`}
+                  >
+                    <div
+                      className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                        active ? "text-white" : "bg-muted text-muted-foreground"
+                      }`}
+                      style={active ? { background: c.color } : undefined}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-[11px] font-bold leading-tight">{c.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-        {/* Photo + Location actions */}
-        <div className="grid grid-cols-2 gap-2">
+          <section>
+            <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Urgencia *</label>
+            <div className="flex p-1 bg-muted rounded-xl gap-1">
+              {URGENCY_ORDER.map((u) => {
+                const active = form.urgency === u;
+                return (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setForm({ ...form, urgency: u })}
+                    aria-pressed={active}
+                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all min-h-[40px] ${
+                      active ? `${URGENCY_ACCENT[u]} shadow-sm` : "text-muted-foreground"
+                    }`}
+                  >
+                    {URGENCY_LABELS[u].label}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Título *</label>
+              <input
+                type="text"
+                className={field}
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                maxLength={120}
+                placeholder="Ej. Edificio colapsado en Av. Bolívar"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Descripción</label>
+              <textarea
+                className={`${field} resize-none`}
+                rows={4}
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                maxLength={1000}
+                placeholder="Detalla lo que ocurre, cuántas personas, qué se necesita..."
+              />
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* STEP 2 — Dónde */}
+      {step === 2 && (
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Toca el mapa para fijar la ubicación exacta del incidente, o usa tu GPS.
+          </p>
+          <div className="h-[320px] sm:h-[420px] rounded-2xl overflow-hidden border border-border">
+            <ClientOnly fallback={<div className="h-full bg-muted animate-pulse" />}>
+              <MapView
+                reports={existingReports}
+                onMapClick={(lat, lng) => setCoords({ lat, lng })}
+                pickedLocation={coords}
+              />
+            </ClientOnly>
+          </div>
+
           <button
             type="button"
             onClick={geolocate}
-            className="flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-3 rounded-lg bg-[color:var(--sky)] text-white active:scale-[0.98] transition"
+            className="w-full flex items-center justify-center gap-2 text-sm font-semibold px-3 py-3 rounded-xl bg-[color:var(--sky)] text-white active:scale-[0.98] transition min-h-[48px]"
           >
-            <Locate className="h-4 w-4" /> Mi ubicación
+            <Locate className="h-4 w-4" /> Usar mi ubicación
           </button>
-          <label
-            className={`flex items-center justify-center gap-1.5 text-sm font-semibold px-3 py-3 rounded-lg bg-muted text-foreground border border-border active:scale-[0.98] transition cursor-pointer ${!canAddMore ? "opacity-50 pointer-events-none" : ""}`}
-          >
-            <Camera className="h-4 w-4" />
-            {files.length === 0
-              ? "Foto / video"
-              : `${files.length}/${MAX_FILES} · agregar`}
+
+          {coords ? (
+            <div className="flex items-center gap-2 text-xs bg-emerald-50 text-emerald-800 rounded-xl px-3 py-2.5 border border-emerald-200">
+              <MapPinIcon className="h-4 w-4 shrink-0" />
+              <span className="font-mono">{coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs bg-amber-50 text-amber-800 rounded-xl px-3 py-2.5 border border-amber-200">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>Aún no hay ubicación seleccionada.</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">
+              Dirección {geocoding && <Loader2 className="inline h-3 w-3 animate-spin ml-1" />}
+            </label>
             <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/mp4,video/webm,video/quicktime"
-              capture="environment"
-              multiple
-              onChange={onFilesChange}
-              className="hidden"
+              className={field}
+              value={form.address}
+              onChange={(e) => { setForm({ ...form, address: e.target.value }); setAddressTouched(true); }}
+              placeholder={geocoding ? "Detectando dirección..." : "Av. Bolívar, Caracas"}
+              maxLength={200}
             />
-          </label>
-        </div>
-        {coords && (
-          <div className="text-[11px] text-muted-foreground bg-muted/60 rounded-md px-2 py-1.5">
-            📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
           </div>
-        )}
-        {previews.length > 0 && (
-          <div className="grid grid-cols-3 gap-2">
-            {previews.map((p, i) => (
-              <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                {p.type.startsWith("video/") ? (
-                  <video src={p.url} className="w-full h-full object-cover" muted />
-                ) : (
-                  <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeFile(i)}
-                  className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white"
-                  aria-label="Quitar archivo"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+
+          <LocationSelect
+            state={form.state}
+            municipality={form.municipality}
+            parish={form.parish}
+            onChange={(v) => setForm({ ...form, ...v })}
+          />
+        </div>
+      )}
+
+      {/* STEP 3 — Evidencia y envío */}
+      {step === 3 && (
+        <div className="space-y-6">
+          <section>
+            <label className="block text-xs font-bold text-[color:var(--midnight)] mb-2 uppercase tracking-wider">
+              Foto o video <span className="text-muted-foreground font-medium normal-case">(opcional, hasta {MAX_FILES})</span>
+            </label>
+            <label
+              className={`flex items-center justify-center gap-2 text-sm font-semibold px-3 py-3 rounded-xl bg-muted text-foreground border border-dashed border-border active:scale-[0.98] transition cursor-pointer min-h-[56px] ${!canAddMore ? "opacity-50 pointer-events-none" : ""}`}
+            >
+              <Camera className="h-5 w-5" />
+              {files.length === 0
+                ? "Agregar foto o video"
+                : `${files.length}/${MAX_FILES} · agregar más`}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/mp4,video/webm,video/quicktime"
+                capture="environment"
+                multiple
+                onChange={onFilesChange}
+                className="hidden"
+              />
+            </label>
+            {previews.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {previews.map((p, i) => (
+                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-border bg-muted">
+                    {p.type.startsWith("video/") ? (
+                      <video src={p.url} className="w-full h-full object-cover" muted />
+                    ) : (
+                      <img src={p.url} alt={p.name} className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white"
+                      aria-label="Quitar archivo"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            )}
+          </section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={label}>Tu nombre (opcional)</label>
-            <input className={field} value={form.reporter_name} onChange={(e) => setForm({ ...form, reporter_name: e.target.value })} placeholder="Anónimo" maxLength={80} />
-          </div>
-          <div>
-            <label className={label}>Personas afectadas</label>
-            <input type="number" min="0" className={field} value={form.affected_count} onChange={(e) => setForm({ ...form, affected_count: e.target.value })} />
-          </div>
-        </div>
-        <div>
-          <label className={label}>Estado</label>
-          <select className={field} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-            <option value="active">Activo</option>
-            <option value="attending">En atención</option>
-            <option value="resolved">Resuelto</option>
-          </select>
-        </div>
+          <section className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Tu nombre</label>
+              <input
+                className={field}
+                value={form.reporter_name}
+                onChange={(e) => setForm({ ...form, reporter_name: e.target.value })}
+                placeholder="Anónimo"
+                maxLength={80}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Afectados</label>
+              <input
+                type="number"
+                min="0"
+                className={field}
+                value={form.affected_count}
+                onChange={(e) => setForm({ ...form, affected_count: e.target.value })}
+                placeholder="0"
+              />
+            </div>
+          </section>
 
-        {/* Desktop submit */}
-        <button
-          type="submit"
-          disabled={submitting}
-          className="hidden lg:flex w-full items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:opacity-90 transition disabled:opacity-50"
-        >
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          {submitting ? "Enviando..." : "Enviar reporte"}
-        </button>
-      </div>
+          <section>
+            <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Estado del caso</label>
+            <select
+              className={field}
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              {Object.entries(STATUS_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </section>
 
-      <div className="space-y-2 order-1 lg:order-2">
-        <p className="text-xs text-muted-foreground">
-          Toca el mapa para fijar la ubicación exacta del incidente.
-        </p>
-        <div className="h-[280px] lg:h-[520px] rounded-lg overflow-hidden border border-border">
-          <ClientOnly fallback={<div className="h-full bg-muted animate-pulse" />}>
-            <MapView
-              reports={existingReports}
-              onMapClick={(lat, lng) => setCoords({ lat, lng })}
-              pickedLocation={coords}
+          {/* Summary */}
+          <section className="rounded-2xl border border-border bg-card p-4 space-y-2.5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[color:var(--midnight)] mb-1">Resumen</h3>
+            <SummaryRow label="Título" value={form.title || "—"} />
+            <SummaryRow label="Categoría" value={selectedCat ? `${selectedCat.emoji} ${selectedCat.name}` : "—"} />
+            <SummaryRow label="Urgencia" value={URGENCY_LABELS[form.urgency]?.label ?? "—"} />
+            <SummaryRow
+              label="Ubicación"
+              value={coords ? `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}` : "—"}
             />
-          </ClientOnly>
+            {form.address && <SummaryRow label="Dirección" value={form.address} />}
+            {(form.state || form.municipality) && (
+              <SummaryRow label="Zona" value={[form.state, form.municipality, form.parish].filter(Boolean).join(" · ")} />
+            )}
+            <SummaryRow label="Adjuntos" value={files.length ? `${files.length} archivo${files.length > 1 ? "s" : ""}` : "Ninguno"} />
+          </section>
+        </div>
+      )}
+
+      {/* Footer actions (inline, no float) */}
+      <div className="mt-8 pt-4 border-t border-border">
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={goBack}
+            disabled={step === 1 || submitting}
+            className="px-4 sm:px-6 py-3.5 rounded-xl text-foreground font-semibold border border-border hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 min-h-[48px]"
+          >
+            <ArrowLeft className="h-4 w-4" /> Atrás
+          </button>
+          {step < 3 ? (
+            <button
+              type="button"
+              onClick={goNext}
+              className="flex-1 bg-[color:var(--sky)] hover:opacity-90 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-[color:var(--sky)]/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98] min-h-[48px]"
+            >
+              Continuar <ArrowRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={submit}
+              disabled={submitting}
+              className="flex-1 bg-[color:var(--sunrise)] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-[color:var(--sunrise)]/30 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-60 min-h-[48px]"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {submitting ? "Enviando..." : "Enviar reporte"}
+            </button>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Mobile sticky submit, above the bottom nav */}
-      <div
-        className="lg:hidden fixed inset-x-0 z-[950] bg-card/95 backdrop-blur border-t border-border px-3 py-3"
-        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
-      >
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 bg-[color:var(--sunrise)] text-white font-semibold py-3 rounded-lg shadow-lg shadow-[color:var(--sunrise)]/30 active:scale-[0.99] transition disabled:opacity-60"
-        >
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          {submitting ? "Enviando..." : "Enviar reporte"}
-        </button>
-      </div>
-    </form>
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3 text-sm">
+      <span className="text-muted-foreground shrink-0">{label}</span>
+      <span className="text-[color:var(--midnight)] font-medium text-right break-words">{value}</span>
+    </div>
   );
 }

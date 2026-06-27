@@ -62,30 +62,22 @@ export async function subscribePush(prefs: PushPrefs): Promise<{ endpoint: strin
   const p256dh = json.keys?.p256dh ?? bufToB64Url(sub.getKey("p256dh"));
   const auth = json.keys?.auth ?? bufToB64Url(sub.getKey("auth"));
 
-  // Upsert by endpoint
-  const { data: existing } = await supabase
-    .from("push_subscriptions")
-    .select("id")
-    .eq("endpoint", endpoint)
-    .maybeSingle();
-
-  const payload = {
-    endpoint,
-    p256dh,
-    auth,
-    lat: prefs.lat ?? null,
-    lng: prefs.lng ?? null,
-    radius_km: prefs.radius_km,
-    user_agent: navigator.userAgent.slice(0, 200),
-  };
-
-  if (existing) {
-    const { error } = await supabase.from("push_subscriptions").update(payload).eq("id", existing.id);
-    if (error) throw error;
-  } else {
-    const { error } = await supabase.from("push_subscriptions").insert(payload);
-    if (error) throw error;
-  }
+  // Upsert via server route (uses service role; RLS restricts client-side UPDATE).
+  const res = await fetch("/api/public/push/manage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "upsert",
+      endpoint,
+      p256dh,
+      auth,
+      lat: prefs.lat ?? null,
+      lng: prefs.lng ?? null,
+      radius_km: prefs.radius_km,
+      user_agent: navigator.userAgent.slice(0, 200),
+    }),
+  });
+  if (!res.ok) throw new Error("No se pudo guardar la suscripción");
 
   localStorage.setItem(STORAGE_KEY, endpoint);
   return { endpoint };
@@ -99,7 +91,11 @@ export async function unsubscribePush(): Promise<void> {
     if (sub) await sub.unsubscribe();
   } catch (_) {}
   if (endpoint) {
-    await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+    await fetch("/api/public/push/manage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "unsubscribe", endpoint }),
+    });
     localStorage.removeItem(STORAGE_KEY);
   }
 }

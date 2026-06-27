@@ -4,9 +4,12 @@ import { toast } from "sonner";
 import { SitePicker } from "@/components/SitePicker";
 import { LocationSelect } from "@/components/LocationSelect";
 import { type Site, SITE_TYPES, invalidateSitesCache } from "@/hooks/useSites";
+import { Wizard } from "@/components/wizard/Wizard";
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, PackageOpen,
+  Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
+  type LucideIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/necesidades")({
@@ -23,7 +26,7 @@ export const Route = createFileRoute("/necesidades")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type NeedCategory = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "other";
+type NeedCategory = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type NeedUrgency  = "critical" | "high" | "medium" | "low";
 type NeedStatus   = "open" | "partial" | "fulfilled";
 
@@ -48,15 +51,17 @@ interface Need {
   updated_at: string;
 }
 
-const CATEGORY_META: Record<NeedCategory, { emoji: string; label: string }> = {
-  medicine:   { emoji: "💊", label: "Medicinas" },
-  food:       { emoji: "🍎", label: "Alimentos" },
-  water:      { emoji: "💧", label: "Agua" },
-  volunteers: { emoji: "🤝", label: "Voluntarios" },
-  equipment:  { emoji: "🔧", label: "Equipos" },
-  blood:      { emoji: "🩸", label: "Sangre" },
-  money:      { emoji: "💰", label: "Dinero" },
-  other:      { emoji: "📦", label: "Otro" },
+const CATEGORY_META: Record<NeedCategory, { emoji: string; label: string; icon: LucideIcon; color: string }> = {
+  medicine:   { emoji: "💊", label: "Medicinas",             icon: Pill,        color: "#DC2626" },
+  food:       { emoji: "🍎", label: "Alimentos",             icon: Apple,       color: "#16A34A" },
+  water:      { emoji: "💧", label: "Agua",                  icon: Droplet,     color: "#2563EB" },
+  volunteers: { emoji: "🤝", label: "Voluntarios",           icon: HandHelping, color: "#EA580C" },
+  equipment:  { emoji: "🔧", label: "Equipos",               icon: Wrench,      color: "#7C3AED" },
+  blood:      { emoji: "🩸", label: "Sangre",                icon: Droplets,    color: "#B91C1C" },
+  money:      { emoji: "💰", label: "Dinero",                icon: Banknote,    color: "#CA8A04" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual", icon: SprayCan,    color: "#0EA5E9" },
+  diapers:    { emoji: "👶", label: "Pañales",               icon: Baby,        color: "#DB2777" },
+  other:      { emoji: "📦", label: "Otro",                  icon: Package,     color: "#6B7280" },
 };
 
 const URGENCY_STYLES: Record<NeedUrgency, { pill: string; dot: string; label: string; emoji: string }> = {
@@ -189,10 +194,10 @@ function NecesidadesPage() {
       )}
 
       <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setCategory("all")}
-            className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+            className={`text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
               category === "all"
                 ? "bg-primary text-primary-foreground border-primary shadow"
                 : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -204,7 +209,7 @@ function NecesidadesPage() {
             <button
               key={c}
               onClick={() => setCategory(c)}
-              className={`shrink-0 inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+              className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
                 category === c
                   ? "bg-primary text-primary-foreground border-primary shadow"
                   : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -214,6 +219,7 @@ function NecesidadesPage() {
             </button>
           ))}
         </div>
+
 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
@@ -234,7 +240,7 @@ function NecesidadesPage() {
               </button>
             )}
           </div>
-          <div className="flex gap-1 bg-muted/70 rounded-xl p-1 overflow-x-auto">
+          <div className="flex flex-wrap gap-1 bg-muted/70 rounded-xl p-1">
             {(["all", "critical", "high", "medium", "low"] as const).map((u) => (
               <button
                 key={u}
@@ -438,6 +444,9 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     quantity:      "",
     urgency:       "high" as NeedUrgency,
     center_address: "",
+    center_lat:    null as number | null,
+    center_lng:    null as number | null,
+    center_phone:  "" as string,
     contact_name:  "",
     contact_phone: "",
     contact_info:  "",
@@ -465,10 +474,9 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.title.trim())   return toast.error("El título es requerido");
-    if (!siteName.trim())  return toast.error("El punto / centro es requerido");
+  const submit = async () => {
+    if (!f.title.trim())  { toast.error("El título es requerido"); return; }
+    if (!siteName.trim()) { toast.error("El punto / centro es requerido"); return; }
 
     setBusy(true);
     try {
@@ -551,39 +559,69 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     }
   };
 
-  return (
-    <form
-      onSubmit={submit}
-      className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm"
-    >
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <HandHeart className="h-4 w-4 text-primary" />
-        <h2 className="font-bold text-sm">Publicar necesidad</h2>
+  const stepQue = (
+    <div className="grid sm:grid-cols-2 gap-3">
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => {
+            const meta = CATEGORY_META[c];
+            const active = f.category === c;
+            const Icon = meta.icon;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setF({ ...f, category: c })}
+                aria-pressed={active}
+                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
+                  active
+                    ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                    : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                    active ? "text-white" : "bg-muted text-muted-foreground"
+                  }`}
+                  style={active ? { background: meta.color } : undefined}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-
-      <select
-        className={field}
-        value={f.category}
-        onChange={(e) => setF({ ...f, category: e.target.value as NeedCategory })}
-      >
-        {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => (
-          <option key={c} value={c}>
-            {CATEGORY_META[c].emoji} {CATEGORY_META[c].label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        className={field}
-        value={f.urgency}
-        onChange={(e) => setF({ ...f, urgency: e.target.value as NeedUrgency })}
-      >
-        <option value="critical">🔴 Urgencia crítica</option>
-        <option value="high">🟠 Urgencia alta</option>
-        <option value="medium">🟡 Urgencia media</option>
-        <option value="low">🟢 Urgencia baja</option>
-      </select>
-
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Urgencia *</label>
+        <div className="flex p-1 bg-muted rounded-xl gap-1">
+          {(["low","medium","high","critical"] as NeedUrgency[]).map((u) => {
+            const active = f.urgency === u;
+            const accent: Record<NeedUrgency, string> = {
+              low: "bg-emerald-100 text-emerald-800",
+              medium: "bg-[color:var(--gold)] text-[color:var(--midnight)]",
+              high: "bg-orange-200 text-orange-900",
+              critical: "bg-red-200 text-red-900",
+            };
+            const label: Record<NeedUrgency, string> = { low: "Baja", medium: "Media", high: "Alta", critical: "Crítica" };
+            return (
+              <button
+                key={u}
+                type="button"
+                onClick={() => setF({ ...f, urgency: u })}
+                aria-pressed={active}
+                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all min-h-[40px] ${
+                  active ? `${accent[u]} shadow-sm` : "text-muted-foreground"
+                }`}
+              >
+                {label[u]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Título de la necesidad *"
@@ -592,7 +630,6 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         required
         maxLength={150}
       />
-
       <textarea
         className={`${field} sm:col-span-2 resize-none`}
         placeholder="Descripción detallada (opcional)"
@@ -601,7 +638,6 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, description: e.target.value })}
         maxLength={800}
       />
-
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Cantidad o detalle (ej: 50 bolsas de suero, 3 voluntarios...)"
@@ -609,14 +645,18 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, quantity: e.target.value })}
         maxLength={100}
       />
+    </div>
+  );
 
-      <div className="sm:col-span-2">
+  const stepDonde = (
+    <div className="space-y-3">
+      <div>
         <label className={label}>Punto / centro donde se necesita <span className="text-[color:var(--sunrise)]">*</span></label>
         <SitePicker value={siteName} onSelect={pickSite} placeholder="Busca o crea un punto…" required />
       </div>
 
       {isNewSite && (
-        <div className="sm:col-span-2">
+        <div>
           <label className={label}>Tipo de punto</label>
           <select className={field} value={siteType} onChange={(e) => setSiteType(e.target.value)}>
             {SITE_TYPES.map((t) => (
@@ -626,7 +666,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         </div>
       )}
 
-      <div className="sm:col-span-2">
+      <div>
         <label className={label}>Ubicación (DIVIPOL)</label>
         <LocationSelect
           state={loc.state}
@@ -637,7 +677,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       </div>
 
       <input
-        className={`${field} sm:col-span-2`}
+        className={field}
         placeholder="Dirección (opcional)"
         value={f.center_address}
         onChange={(e) => setF({ ...f, center_address: e.target.value })}
@@ -646,7 +686,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
 
       {isNewSite && (
         <>
-          <div className="sm:col-span-2 text-xs font-semibold text-muted-foreground">
+          <div className="text-xs font-semibold text-muted-foreground">
             Responsable del punto (opcional)
           </div>
           <input
@@ -665,7 +705,11 @@ function NeedForm({ onDone }: { onDone: () => void }) {
           />
         </>
       )}
+    </div>
+  );
 
+  const stepContacto = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input
         className={field}
         placeholder="Nombre del contacto (opcional)"
@@ -687,23 +731,22 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, contact_info: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button
-          type="button"
-          onClick={onDone}
-          className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50 shadow-md shadow-primary/20"
-        >
-          {busy ? "Publicando…" : "Publicar necesidad"}
-        </button>
-      </div>
-    </form>
+  return (
+    <Wizard
+      title="Publicar necesidad"
+      submitLabel="Publicar necesidad"
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "que", label: "¿Qué se necesita?", content: stepQue, isValid: () => f.title.trim().length > 0, invalidMessage: "El título es requerido" },
+        { key: "donde", label: "¿Dónde se necesita?", content: stepDonde, isValid: () => siteName.trim().length > 0, invalidMessage: "El punto / centro es requerido" },
+        { key: "contacto", label: "Contacto", content: stepContacto },
+      ]}
+    />
   );
 }
+

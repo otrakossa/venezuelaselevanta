@@ -71,8 +71,10 @@ function TabLink({
   return (
     <Link
       to={to}
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors",
+        "flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold transition-colors min-h-[48px] min-w-[44px]",
         active
           ? "text-[color:var(--sunrise)]"
           : "text-muted-foreground active:text-foreground",

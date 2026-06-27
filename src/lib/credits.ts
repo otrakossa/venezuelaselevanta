@@ -35,28 +35,34 @@ export const collaborators: Person[] = [
 
 export const organizations: Organization[] = [
   {
+    name: "Codex Tecnología",
+    description: "Desarrollo, infraestructura y mantenimiento",
+    url: "https://codextecnologia.com",
+    logo: "/logo-codex.png",
+  },
+  {
     name: "Fundación Casa del Bosque",
     description: "Organización aliada · activismo tecnopolítico",
     url: "https://x.com/fcbosque",
     logo: "/logo-fcbosque.png",
   },
   {
-    name: "Activistas por el Software Libre",
-    description: "Promueven tecnología libre y soberana",
+    name: "CEESUR",
+    description: "Centro de Estudios Estratégicos del Sur Global",
+    url: "https://ceesur.org",
+    logo: "/logo-ceesur.svg",
+  },
+  {
+    name: "Mujeres Activistas XSL",
+    description: "Promueven tecnología libre y soberana con perspectiva de género",
     url: "https://activistasxsl.org/",
-    logo: "https://www.google.com/s2/favicons?domain=activistasxsl.org&sz=128",
+    logo: "/__l5e/assets-v1/0b028971-ada2-412e-bb1c-b1cd6c4e2392/logo-mujeres-xsl.png",
   },
   {
-    name: "Venezuela Te Busca",
-    description: "Plataforma colaborativa de búsqueda de personas desaparecidas",
-    url: "https://venezuelatebusca.com",
-    logo: "https://www.google.com/s2/favicons?domain=venezuelatebusca.com&sz=128",
-  },
-  {
-    name: "Codex Tecnología",
-    description: "Desarrollo, infraestructura y mantenimiento",
-    url: "https://codextecnologia.com",
-    logo: "/logo-codex.png",
+    name: "Debates del Sur Global",
+    description: "Espacio de análisis y reflexión desde el Sur Global",
+    url: "https://debatesdelsurglobal.org",
+    logo: "/__l5e/assets-v1/c775755c-f510-4920-a0e7-231e7cc679fa/logo-debates-sur-global.png",
   },
 ];
 

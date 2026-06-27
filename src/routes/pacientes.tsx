@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
+import { Wizard } from "@/components/wizard/Wizard";
+
 
 const searchSchema = z.object({
   center: z.string().optional(),
@@ -29,7 +31,7 @@ export const Route = createFileRoute("/pacientes")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type PatientStatus = "stable" | "critical" | "recovering" | "discharged";
+type PatientStatus = "stable" | "critical" | "recovering" | "discharged" | "admitted";
 type Filter = "all" | "active" | "discharged";
 
 interface Patient {
@@ -49,6 +51,8 @@ interface Patient {
   id_number: string | null;
   phone: string | null;
   address: string | null;
+  state: string | null;
+  sector: string | null;
   matched_missing_id: string | null;
 }
 
@@ -57,6 +61,7 @@ const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: s
   critical:   { pill: "bg-red-500/15 text-red-700 dark:text-red-400",             dot: "bg-red-500",       label: "Crítico" },
   recovering: { pill: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500",   label: "Recuperándose" },
   discharged: { pill: "bg-neutral-500/15 text-neutral-600 dark:text-neutral-400", dot: "bg-neutral-500",   label: "Alta médica" },
+  admitted:   { pill: "bg-sky-500/15 text-sky-700 dark:text-sky-400",             dot: "bg-sky-500",       label: "Ingresado" },
 };
 
 const SEX_LABELS: Record<string, string> = {
@@ -121,6 +126,8 @@ function AtendidosPage() {
   const [showForm, setShowForm] = useState(false);
   const [page, setPage] = useState(1);
   const [showAllChips, setShowAllChips] = useState(false);
+  const [stateFilter, setStateFilter] = useState<string>("");
+  const [sectorFilter, setSectorFilter] = useState<string>("");
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -138,7 +145,8 @@ function AtendidosPage() {
   };
 
   useEffect(() => { load(); }, []);
-  useEffect(() => { setPage(1); }, [q, filter, center]);
+  useEffect(() => { setPage(1); }, [q, filter, center, stateFilter, sectorFilter]);
+  useEffect(() => { setSectorFilter(""); }, [stateFilter]);
 
   const setCenter = (c?: string) =>
     navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
@@ -160,11 +168,30 @@ function AtendidosPage() {
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
   }, [patients]);
 
+  // distinct states & sectors (dependent)
+  const statesList = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of patients) if (p.state) s.add(p.state);
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [patients]);
+
+  const sectorsList = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of patients) {
+      if (!p.sector) continue;
+      if (stateFilter && p.state !== stateFilter) continue;
+      s.add(p.sector);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [patients, stateFilter]);
+
   const list = useMemo(() => {
     let src = patients;
     if (filter === "active")     src = src.filter((p) => p.status !== "discharged");
     if (filter === "discharged") src = src.filter((p) => p.status === "discharged");
     if (center)                  src = src.filter((p) => p.center_name === center);
+    if (stateFilter)             src = src.filter((p) => p.state === stateFilter);
+    if (sectorFilter)            src = src.filter((p) => p.sector === sectorFilter);
     if (q.trim().length >= 2) {
       const needle = q.trim().toLowerCase();
       const digits = needle.replace(/\D/g, "");
@@ -172,11 +199,12 @@ function AtendidosPage() {
         (p) =>
           p.name.toLowerCase().includes(needle) ||
           p.center_name.toLowerCase().includes(needle) ||
+          (p.sector ?? "").toLowerCase().includes(needle) ||
           (digits.length >= 4 && (p.id_number ?? "").includes(digits)),
       );
     }
     return src;
-  }, [patients, filter, q, center]);
+  }, [patients, filter, q, center, stateFilter, sectorFilter]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative overflow-x-hidden">
@@ -308,14 +336,39 @@ function AtendidosPage() {
           </button>
         </div>
 
-        {(center || q || filter !== "active") && (
+        {(statesList.length > 0 || sectorsList.length > 0) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-input bg-card font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">Todos los estados</option>
+              {statesList.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select
+              value={sectorFilter}
+              onChange={(e) => setSectorFilter(e.target.value)}
+              disabled={sectorsList.length === 0}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-input bg-card font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            >
+              <option value="">{stateFilter ? "Todos los sectores" : "Selecciona un estado"}</option>
+              {sectorsList.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        )}
+
+        {(center || q || filter !== "active" || stateFilter || sectorFilter) && (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span>
-              Mostrando <span className="font-bold text-foreground">{list.length}</span> resultado{list.length === 1 ? "" : "s"}
-              {center && <> en <span className="font-semibold text-foreground">{center}</span></>}
+              Mostrando <span className="font-bold text-foreground">{list.length}</span> atendido{list.length === 1 ? "" : "s"}
+              {(stateFilter || sectorFilter) && (
+                <> en <span className="font-semibold text-foreground">{[sectorFilter, stateFilter].filter(Boolean).join(", ")}</span></>
+              )}
+              {center && <> · <span className="font-semibold text-foreground">{center}</span></>}
             </span>
             <button
-              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); }}
+              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); setStateFilter(""); setSectorFilter(""); }}
               className="text-primary font-semibold hover:underline"
             >
               Limpiar
@@ -323,6 +376,7 @@ function AtendidosPage() {
           </div>
         )}
       </div>
+
 
       {(() => {
         const total = list.length;
@@ -412,7 +466,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue
 }
 
 function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: () => void }) {
-  const s = STATUS_STYLES[p.status];
+  const s = STATUS_STYLES[p.status] ?? STATUS_STYLES.stable;
   return (
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
       <div className="p-4 space-y-3">
@@ -452,6 +506,22 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
             )}
           </div>
         </div>
+
+        {(p.state || p.sector) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {p.state && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-400">
+                <MapPin className="h-2.5 w-2.5" /> {p.state}
+              </span>
+            )}
+            {p.sector && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-400">
+                {p.sector}
+              </span>
+            )}
+          </div>
+        )}
+
 
         {(p.id_number || p.phone || p.address) && (
           <div className="grid gap-1 text-[11px] text-muted-foreground border-t border-border/40 pt-2">
@@ -515,6 +585,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     address: "",
     center_name: "",
     center_address: "",
+    center_lat: null as number | null,
+    center_lng: null as number | null,
+    center_phone: "" as string,
     status: "stable" as PatientStatus,
     notes: "",
   });
@@ -522,10 +595,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
 
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.name.trim())        return toast.error("El nombre es requerido");
-    if (!f.center_name.trim()) return toast.error("El nombre del centro es requerido");
+  const submit = async () => {
+    if (!f.name.trim())        { toast.error("El nombre es requerido"); return; }
+    if (!f.center_name.trim()) { toast.error("El nombre del centro es requerido"); return; }
 
     setBusy(true);
     try {
@@ -536,6 +608,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         sex:            f.sex || null,
         age:            f.age ? Number(f.age) : null,
         center_address: f.center_address.trim() || null,
+        center_lat:     f.center_lat,
+        center_lng:     f.center_lng,
         notes:          f.notes.trim() || null,
         id_number:      f.id_number.trim().replace(/\D/g, "") || null,
         phone:          f.phone.trim() || null,
@@ -568,16 +642,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     }
   };
 
-  return (
-    <form
-      onSubmit={submit}
-      className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm"
-    >
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <HeartPulse className="h-4 w-4 text-primary" />
-        <h2 className="font-bold text-sm">Registrar atendido</h2>
-      </div>
-
+  const stepDatos = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Nombre completo *"
@@ -586,7 +652,6 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         required
         maxLength={100}
       />
-
       <input
         type="number"
         min="0"
@@ -608,7 +673,6 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         <option value="masculino">Masculino</option>
         <option value="femenino">Femenino</option>
       </select>
-
       <input
         className={field}
         placeholder="Cédula / ID"
@@ -625,14 +689,52 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         maxLength={30}
         inputMode="tel"
       />
+      <select
+        className={`${field} sm:col-span-2`}
+        value={f.status}
+        onChange={(e) => setF({ ...f, status: e.target.value as PatientStatus })}
+      >
+        <option value="stable">Estable</option>
+        <option value="critical">Crítico</option>
+        <option value="recovering">Recuperándose</option>
+        <option value="discharged">Alta médica</option>
+      </select>
+      <textarea
+        className={`${field} sm:col-span-2 resize-none`}
+        placeholder="Notas adicionales (diagnóstico, observaciones…)"
+        rows={3}
+        value={f.notes}
+        onChange={(e) => setF({ ...f, notes: e.target.value })}
+        maxLength={500}
+      />
+    </div>
+  );
 
-      <div className="sm:col-span-2">
+  const stepCentro = (
+    <div className="grid sm:grid-cols-2 gap-3">
+      <div className="sm:col-span-2 space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
-          onChange={(name) => setF({ ...f, center_name: name })}
+          onChange={(name, c) =>
+            setF({
+              ...f,
+              center_name: name,
+              center_address: c?.address ?? (c ? [c.city, c.state].filter(Boolean).join(", ") : ""),
+              center_lat: c?.lat ?? null,
+              center_lng: c?.lng ?? null,
+              center_phone: c?.phone ?? "",
+            })
+          }
           placeholder="Nombre del centro de salud *"
           required
         />
+        {(f.center_lat != null || f.center_phone) && (
+          <p className="text-[11px] text-muted-foreground pl-1">
+            {f.center_lat != null && <span>📍 ubicación geolocalizada</span>}
+            {f.center_lat != null && f.center_phone && <span> · </span>}
+            {f.center_phone && <span>📞 {f.center_phone}</span>}
+          </p>
+        )}
       </div>
       <input
         className={`${field} sm:col-span-2`}
@@ -648,43 +750,21 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, address: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
-      <select
-        className={`${field} sm:col-span-2`}
-        value={f.status}
-        onChange={(e) => setF({ ...f, status: e.target.value as PatientStatus })}
-      >
-        <option value="stable">Estable</option>
-        <option value="critical">Crítico</option>
-        <option value="recovering">Recuperándose</option>
-        <option value="discharged">Alta médica</option>
-      </select>
-
-      <textarea
-        className={`${field} sm:col-span-2 resize-none`}
-        placeholder="Notas adicionales (diagnóstico, observaciones…)"
-        rows={3}
-        value={f.notes}
-        onChange={(e) => setF({ ...f, notes: e.target.value })}
-        maxLength={500}
-      />
-
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button
-          type="button"
-          onClick={onDone}
-          className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50 shadow-md shadow-primary/20"
-        >
-          {busy ? "Guardando…" : "Registrar atendido"}
-        </button>
-      </div>
-    </form>
+  return (
+    <Wizard
+      title="Registrar atendido"
+      submitLabel="Registrar atendido"
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "datos", label: "Datos del atendido", content: stepDatos, isValid: () => f.name.trim().length > 0, invalidMessage: "El nombre es requerido" },
+        { key: "centro", label: "Centro de salud y ubicación", content: stepCentro, isValid: () => f.center_name.trim().length > 0, invalidMessage: "El nombre del centro es requerido" },
+      ]}
+    />
   );
 }
+

@@ -418,6 +418,7 @@ export type Database = {
           center_name: string
           created_at: string
           discharged_at: string | null
+          health_center_id: string | null
           id: string
           id_number: string | null
           matched_missing_id: string | null
@@ -425,7 +426,9 @@ export type Database = {
           notes: string | null
           phone: string | null
           registered_by: string | null
+          sector: string | null
           sex: string | null
+          state: string | null
           status: string
         }
         Insert: {
@@ -437,6 +440,7 @@ export type Database = {
           center_name: string
           created_at?: string
           discharged_at?: string | null
+          health_center_id?: string | null
           id?: string
           id_number?: string | null
           matched_missing_id?: string | null
@@ -444,7 +448,9 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           registered_by?: string | null
+          sector?: string | null
           sex?: string | null
+          state?: string | null
           status?: string
         }
         Update: {
@@ -456,6 +462,7 @@ export type Database = {
           center_name?: string
           created_at?: string
           discharged_at?: string | null
+          health_center_id?: string | null
           id?: string
           id_number?: string | null
           matched_missing_id?: string | null
@@ -463,10 +470,19 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           registered_by?: string | null
+          sector?: string | null
           sex?: string | null
+          state?: string | null
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "patients_health_center_id_fkey"
+            columns: ["health_center_id"]
+            isOneToOne: false
+            referencedRelation: "health_centers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "patients_matched_missing_id_fkey"
             columns: ["matched_missing_id"]

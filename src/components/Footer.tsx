@@ -90,12 +90,20 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between text-[11px] opacity-70">
-          <span>© 2026 Venezuela Se Levanta · CC BY 4.0 · Datos abiertos para la humanidad</span>
-          <span>{"\n"}</span>
+      <div className="border-t border-white/10 bg-black/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+          <div className="rounded-lg px-4 py-3 text-sm">
+            <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs mb-1">
+              ⚠ Aviso de responsabilidad
+            </p>
+            <p className="opacity-95 leading-relaxed text-[13px]">
+              Esta plataforma es un espacio abierto y colaborativo, nutrido por el esfuerzo de todas las personas que deciden sumarse. Cada participante es responsable de la información que aporta y comparte. Te invitamos a verificar los datos antes de difundirlos y a ser parte activa de esta red.
+            </p>
+          </div>
         </div>
       </div>
+
+
     </footer>
   );
 }

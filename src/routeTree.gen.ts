@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
+import { Route as QueEsRouteImport } from './routes/que-es'
 import { Route as PacientesRouteImport } from './routes/pacientes'
 import { Route as OfertasRouteImport } from './routes/ofertas'
 import { Route as NecesidadesRouteImport } from './routes/necesidades'
@@ -19,13 +20,17 @@ import { Route as DonarRouteImport } from './routes/donar'
 import { Route as DesaparecidosRouteImport } from './routes/desaparecidos'
 import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
+import { Route as AdminInteropRouteImport } from './routes/admin.interop'
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
+import { Route as ApiPublicGeocodeRouteImport } from './routes/api/public/geocode'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
+import { Route as ApiPublicPushManageRouteImport } from './routes/api/public/push/manage'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
@@ -38,6 +43,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const ReportarRoute = ReportarRouteImport.update({
   id: '/reportar',
   path: '/reportar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QueEsRoute = QueEsRouteImport.update({
+  id: '/que-es',
+  path: '/que-es',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PacientesRoute = PacientesRouteImport.update({
@@ -80,14 +90,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportesIdRoute = ReportesIdRouteImport.update({
@@ -105,9 +115,24 @@ const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
   path: '/api/reports.csv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminInteropRoute = AdminInteropRouteImport.update({
+  id: '/admin/interop',
+  path: '/admin/interop',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
   id: '/api/public/reports',
   path: '/api/public/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicGeocodeRoute = ApiPublicGeocodeRouteImport.update({
+  id: '/api/public/geocode',
+  path: '/api/public/geocode',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicTelegramWebhookRoute =
@@ -116,6 +141,11 @@ const ApiPublicTelegramWebhookRoute =
     path: '/api/public/telegram/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPushManageRoute = ApiPublicPushManageRouteImport.update({
+  id: '/api/public/push/manage',
+  path: '/api/public/push/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPushBroadcastRoute = ApiPublicPushBroadcastRouteImport.update({
   id: '/api/public/push/broadcast',
   path: '/api/public/push/broadcast',
@@ -135,7 +165,6 @@ const ApiPublicHooksIngestUsgsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -144,20 +173,25 @@ export interface FileRoutesByFullPath {
   '/necesidades': typeof NecesidadesRoute
   '/ofertas': typeof OfertasRoute
   '/pacientes': typeof PacientesRoute
+  '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/api/public/geocode': typeof ApiPublicGeocodeRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
+  '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -166,21 +200,26 @@ export interface FileRoutesByTo {
   '/necesidades': typeof NecesidadesRoute
   '/ofertas': typeof OfertasRoute
   '/pacientes': typeof PacientesRoute
+  '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/admin': typeof AdminIndexRoute
+  '/api/public/geocode': typeof ApiPublicGeocodeRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
+  '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -189,22 +228,27 @@ export interface FileRoutesById {
   '/necesidades': typeof NecesidadesRoute
   '/ofertas': typeof OfertasRoute
   '/pacientes': typeof PacientesRoute
+  '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/admin/': typeof AdminIndexRoute
+  '/api/public/geocode': typeof ApiPublicGeocodeRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
+  '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -213,20 +257,25 @@ export interface FileRouteTypes {
     | '/necesidades'
     | '/ofertas'
     | '/pacientes'
+    | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/admin/'
+    | '/api/public/geocode'
+    | '/api/public/health'
     | '/api/public/reports'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
+    | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -235,20 +284,25 @@ export interface FileRouteTypes {
     | '/necesidades'
     | '/ofertas'
     | '/pacientes'
+    | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/admin'
+    | '/api/public/geocode'
+    | '/api/public/health'
     | '/api/public/reports'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
+    | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
   id:
     | '__root__'
     | '/'
-    | '/admin'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -257,21 +311,26 @@ export interface FileRouteTypes {
     | '/necesidades'
     | '/ofertas'
     | '/pacientes'
+    | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/admin/'
+    | '/api/public/geocode'
+    | '/api/public/health'
     | '/api/public/reports'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
+    | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
   CreditosRoute: typeof CreditosRoute
   DesaparecidosRoute: typeof DesaparecidosRoute
@@ -280,15 +339,21 @@ export interface RootRouteChildren {
   NecesidadesRoute: typeof NecesidadesRoute
   OfertasRoute: typeof OfertasRoute
   PacientesRoute: typeof PacientesRoute
+  QueEsRoute: typeof QueEsRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AdminInteropRoute: typeof AdminInteropRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
+  ApiPublicPushManageRoute: typeof ApiPublicPushManageRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
 }
 
@@ -306,6 +371,13 @@ declare module '@tanstack/react-router' {
       path: '/reportar'
       fullPath: '/reportar'
       preLoaderRoute: typeof ReportarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/que-es': {
+      id: '/que-es'
+      path: '/que-es'
+      fullPath: '/que-es'
+      preLoaderRoute: typeof QueEsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pacientes': {
@@ -364,18 +436,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reportes/$id': {
@@ -399,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsDotcsvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/interop': {
+      id: '/admin/interop'
+      path: '/admin/interop'
+      fullPath: '/admin/interop'
+      preLoaderRoute: typeof AdminInteropRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/reports': {
       id: '/api/public/reports'
       path: '/api/public/reports'
@@ -406,11 +485,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/geocode': {
+      id: '/api/public/geocode'
+      path: '/api/public/geocode'
+      fullPath: '/api/public/geocode'
+      preLoaderRoute: typeof ApiPublicGeocodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
       path: '/api/public/telegram/webhook'
       fullPath: '/api/public/telegram/webhook'
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/push/manage': {
+      id: '/api/public/push/manage'
+      path: '/api/public/push/manage'
+      fullPath: '/api/public/push/manage'
+      preLoaderRoute: typeof ApiPublicPushManageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/push/broadcast': {
@@ -439,7 +539,6 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
   CreditosRoute: CreditosRoute,
   DesaparecidosRoute: DesaparecidosRoute,
@@ -448,15 +547,21 @@ const rootRouteChildren: RootRouteChildren = {
   NecesidadesRoute: NecesidadesRoute,
   OfertasRoute: OfertasRoute,
   PacientesRoute: PacientesRoute,
+  QueEsRoute: QueEsRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AdminInteropRoute: AdminInteropRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
   ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
+  ApiPublicPushManageRoute: ApiPublicPushManageRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
 }
 export const routeTree = rootRouteImport

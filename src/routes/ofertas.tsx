@@ -3,11 +3,15 @@ import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { LocationSelect } from "@/components/LocationSelect";
 import {
   Search, X, PackageOpen, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, Link2, Check, Unlink2, Sparkles, MapPin,
+  Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
+  type LucideIcon,
 } from "lucide-react";
+import { Wizard } from "@/components/wizard/Wizard";
+import { ESTADOS, MUNICIPIOS } from "@/lib/venezuela-divipol";
+
 
 const searchSchema = z.object({
   need: fallback(z.string().uuid(), undefined as unknown as string).optional(),
@@ -18,9 +22,9 @@ export const Route = createFileRoute("/ofertas")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Ofertas de ayuda — Venezuela Se Levanta" },
+      { title: "Ofrecimiento de ayuda — Venezuela Se Levanta" },
       { name: "description", content: "Publica recursos, insumos o voluntariado disponibles y vincúlalos con las necesidades de la comunidad." },
-      { property: "og:title", content: "Ofertas de ayuda — Venezuela Se Levanta" },
+      { property: "og:title", content: "Ofrecimiento de ayuda — Venezuela Se Levanta" },
       { property: "og:description", content: "Quien quiera ayudar puede publicar lo que ofrece y conectarlo con quienes lo necesitan." },
     ],
   }),
@@ -30,7 +34,7 @@ export const Route = createFileRoute("/ofertas")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "other";
+type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type OfferStatus = "available" | "matched" | "delivered" | "cancelled";
 type NeedLite = {
   id: string;
@@ -53,12 +57,12 @@ interface Offer {
   location_desc: string | null;
   status: OfferStatus | "open"; // tolerate legacy 'open'
   created_at: string;
-  // Geo (Fase 3) — opcionales; alimentan el matching por cercanía.
-  state?: string | null;
-  municipality?: string | null;
-  parish?: string | null;
-  lat?: number | null;
-  lng?: number | null;
+  // Geo (Fase 3) — alimentan el matching por cercanía (DIVIPOL + haversine).
+  state: string | null;
+  municipality: string | null;
+  parish: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 type SuggestRow = {
@@ -91,15 +95,17 @@ async function fetchSuggestions(offer: Offer): Promise<SuggestRow[]> {
   return res.json();
 }
 
-const CATEGORY_META: Record<Category, { emoji: string; label: string }> = {
-  medicine:   { emoji: "💊", label: "Medicinas" },
-  food:       { emoji: "🍎", label: "Alimentos" },
-  water:      { emoji: "💧", label: "Agua" },
-  volunteers: { emoji: "🤝", label: "Voluntarios" },
-  equipment:  { emoji: "🔧", label: "Equipos" },
-  blood:      { emoji: "🩸", label: "Sangre" },
-  money:      { emoji: "💰", label: "Dinero" },
-  other:      { emoji: "📦", label: "Otro" },
+const CATEGORY_META: Record<Category, { emoji: string; label: string; icon: LucideIcon; color: string }> = {
+  medicine:   { emoji: "💊", label: "Medicinas",             icon: Pill,        color: "#DC2626" },
+  food:       { emoji: "🍎", label: "Alimentos",             icon: Apple,       color: "#16A34A" },
+  water:      { emoji: "💧", label: "Agua",                  icon: Droplet,     color: "#2563EB" },
+  volunteers: { emoji: "🤝", label: "Voluntarios",           icon: HandHelping, color: "#EA580C" },
+  equipment:  { emoji: "🔧", label: "Equipos",               icon: Wrench,      color: "#7C3AED" },
+  blood:      { emoji: "🩸", label: "Sangre",                icon: Droplets,    color: "#B91C1C" },
+  money:      { emoji: "💰", label: "Dinero",                icon: Banknote,    color: "#CA8A04" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual", icon: SprayCan,    color: "#0EA5E9" },
+  diapers:    { emoji: "👶", label: "Pañales",               icon: Baby,        color: "#DB2777" },
+  other:      { emoji: "📦", label: "Otro",                  icon: Package,     color: "#6B7280" },
 };
 
 // Fallback defensivo: una categoría fuera del enum no debe tumbar toda la página.
@@ -244,7 +250,7 @@ function OfertasPage() {
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mb-2">
               <PackageOpen className="h-3.5 w-3.5" /> ¡Quiero ayudar!
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofertas de ayuda</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofrecimiento de ayuda</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">
               Publica insumos, recursos o voluntariado que puedas aportar. Después puedes vincularlos a una necesidad concreta.
             </p>
@@ -254,7 +260,7 @@ function OfertasPage() {
             className="shrink-0 inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/30 hover:opacity-95 active:scale-[0.98] transition"
           >
             {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showForm ? "Cerrar" : "Publicar oferta"}
+            {showForm ? "Cerrar" : "Publicar ayuda"}
           </button>
         </div>
 
@@ -278,10 +284,10 @@ function OfertasPage() {
       )}
 
       <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setCategory("all")}
-            className={`shrink-0 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+            className={`text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
               category === "all"
                 ? "bg-emerald-500 text-white border-emerald-500 shadow"
                 : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -293,7 +299,7 @@ function OfertasPage() {
             <button
               key={c}
               onClick={() => setCategory(c)}
-              className={`shrink-0 inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+              className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
                 category === c
                   ? "bg-emerald-500 text-white border-emerald-500 shadow"
                   : "bg-card border-border text-muted-foreground hover:text-foreground"
@@ -303,6 +309,7 @@ function OfertasPage() {
             </button>
           ))}
         </div>
+
 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
@@ -349,7 +356,7 @@ function OfertasPage() {
         ) : list.length === 0 ? (
           <div className="col-span-full py-16 text-center">
             <div className="text-4xl mb-3">🤝</div>
-            <p className="font-bold text-base mb-1">No hay ofertas {tab === "available" ? "disponibles" : tab === "matched" ? "vinculadas" : "entregadas"}</p>
+            <p className="font-bold text-base mb-1">No hay ayudas {tab === "available" ? "disponibles" : tab === "matched" ? "vinculadas" : "entregadas"}</p>
             <p className="text-sm text-muted-foreground mb-4">
               {q || category !== "all" ? "Prueba ajustar los filtros." : "Sé la primera persona en ofrecer ayuda."}
             </p>
@@ -358,7 +365,7 @@ function OfertasPage() {
                 onClick={() => setShowForm(true)}
                 className="text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold"
               >
-                Publicar oferta
+                Publicar ayuda
               </button>
             )}
           </div>
@@ -455,8 +462,15 @@ function OfferCard({ offer: o, onMatch, onChanged }: { offer: Offer; onMatch: ()
           </div>
         )}
 
-        {o.location_desc && (
-          <div className="text-xs text-muted-foreground">📍 {o.location_desc}</div>
+        {(o.state || o.municipality || o.location_desc) && (
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            {(o.municipality || o.state) && (
+              <div className="font-semibold text-foreground/80">
+                📍 {[o.municipality, o.state].filter(Boolean).join(", ")}
+              </div>
+            )}
+            {o.location_desc && <div className="line-clamp-2 italic">{o.location_desc}</div>}
+          </div>
         )}
 
         {(o.contact_name || o.contact_phone || o.contact_info) && (
@@ -717,20 +731,23 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     title: prefilledNeed ? `Oferta para: ${prefilledNeed.title}` : "",
     description: "",
     quantity: "",
+    state: "",
+    city: "",
+    address: "",
     location_desc: "",
     contact_name: "",
     contact_phone: "",
     contact_info: "",
   });
-  const [loc, setLoc] = useState({ state: "", municipality: "", parish: "" });
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30";
-  const labelCls = "text-xs font-semibold text-foreground mb-1 block";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.title.trim()) return toast.error("El título es requerido");
-    if (!f.contact_name.trim()) return toast.error("Tu nombre es requerido");
+  const submit = async () => {
+    if (!f.title.trim()) { toast.error("El título es requerido"); return; }
+    if (!f.state) { toast.error("Selecciona el estado"); return; }
+    if (!f.city.trim()) { toast.error("Indica la ciudad o municipio"); return; }
+    if (!f.address.trim()) { toast.error("Indica la dirección de entrega"); return; }
+    if (!f.contact_name.trim()) { toast.error("Tu nombre es requerido"); return; }
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
@@ -738,10 +755,11 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         title: f.title.trim(),
         description: f.description.trim() || null,
         quantity: f.quantity.trim() || null,
-        location_desc: f.location_desc.trim() || null,
-        state: loc.state || null,
-        municipality: loc.municipality || null,
-        parish: loc.parish || null,
+        state: f.state || null,
+        municipality: f.city.trim() || null,
+        parish: null,
+        location_desc:
+          [f.address.trim(), f.location_desc.trim()].filter(Boolean).join(" — ") || null,
         contact_name: f.contact_name.trim(),
         contact_phone: f.contact_phone.trim() || null,
         contact_info: f.contact_info.trim() || null,
@@ -772,13 +790,8 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     }
   };
 
-  return (
-    <form onSubmit={submit} className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm">
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <PackageOpen className="h-4 w-4 text-emerald-600" />
-        <h2 className="font-bold text-sm">Publicar oferta de ayuda</h2>
-      </div>
-
+  const stepQue = (
+    <div className="grid sm:grid-cols-2 gap-3">
       {prefilledNeed && (
         <div className="sm:col-span-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 px-3 py-2 text-xs">
           <div className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
@@ -788,18 +801,41 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
           <div className="text-muted-foreground">🏥 {prefilledNeed.center_name}</div>
         </div>
       )}
-
-      <select
-        className={field}
-        value={f.category}
-        onChange={(e) => setF({ ...f, category: e.target.value as Category })}
-        disabled={!!prefilledNeed}
-      >
-        {(Object.keys(CATEGORY_META) as Category[]).map((c) => (
-          <option key={c} value={c}>{CATEGORY_META[c].emoji} {CATEGORY_META[c].label}</option>
-        ))}
-      </select>
-
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {(Object.keys(CATEGORY_META) as Category[]).map((c) => {
+            const meta = CATEGORY_META[c];
+            const active = f.category === c;
+            const Icon = meta.icon;
+            const disabled = !!prefilledNeed && f.category !== c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => !prefilledNeed && setF({ ...f, category: c })}
+                aria-pressed={active}
+                disabled={disabled}
+                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                  active
+                    ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                    : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                    active ? "text-white" : "bg-muted text-muted-foreground"
+                  }`}
+                  style={active ? { background: meta.color } : undefined}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <input
         className={field}
         placeholder="Cantidad o detalle (ej: 100 mascarillas, 2 voluntarios…)"
@@ -807,7 +843,6 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, quantity: e.target.value })}
         maxLength={100}
       />
-
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Título de tu oferta *"
@@ -816,7 +851,6 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         required
         maxLength={150}
       />
-
       <textarea
         className={`${field} sm:col-span-2 resize-none`}
         placeholder="Describe lo que ofreces (opcional)"
@@ -825,25 +859,89 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, description: e.target.value })}
         maxLength={800}
       />
+    </div>
+  );
 
-      <input
-        className={`${field} sm:col-span-2`}
-        placeholder="¿Dónde estás o desde dónde puedes entregar? (opcional)"
-        value={f.location_desc}
-        onChange={(e) => setF({ ...f, location_desc: e.target.value })}
-        maxLength={200}
-      />
+  const municipios = f.state ? (MUNICIPIOS[f.state] ?? []) : [];
 
-      <div className="sm:col-span-2">
-        <label className={labelCls}>Tu zona (DIVIPOL) — ayuda a sugerir necesidades cercanas</label>
-        <LocationSelect
-          state={loc.state}
-          municipality={loc.municipality}
-          parish={loc.parish}
-          onChange={setLoc}
-        />
+  const stepDisponibilidad = (
+    <div className="space-y-3">
+      <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 text-[11px] text-emerald-800 dark:text-emerald-300">
+        📍 La ubicación es <b>clave</b> para canalizar rápidamente la entrega de la ayuda. Indica dónde estás o desde dónde puedes entregar.
       </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Estado *</label>
+          <select
+            className={field}
+            value={f.state}
+            onChange={(e) => setF({ ...f, state: e.target.value, city: "" })}
+            required
+          >
+            <option value="">— Selecciona el estado —</option>
+            {ESTADOS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Ciudad / Municipio *</label>
+          {municipios.length > 0 ? (
+            <select
+              className={field}
+              value={f.city}
+              onChange={(e) => setF({ ...f, city: e.target.value })}
+              required
+            >
+              <option value="">— Selecciona —</option>
+              {municipios.map((m) => <option key={m} value={m}>{m}</option>)}
+              <option value="__other__">Otra ciudad…</option>
+            </select>
+          ) : (
+            <input
+              className={field}
+              placeholder="Selecciona primero un estado"
+              value={f.city}
+              onChange={(e) => setF({ ...f, city: e.target.value })}
+              disabled={!f.state}
+              maxLength={120}
+            />
+          )}
+          {f.city === "__other__" && (
+            <input
+              className={`${field} mt-2`}
+              placeholder="Escribe la ciudad / municipio"
+              onChange={(e) => setF({ ...f, city: e.target.value })}
+              maxLength={120}
+              autoFocus
+            />
+          )}
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Dirección de entrega *</label>
+          <input
+            className={field}
+            placeholder="Parroquia, sector, calle, punto de referencia…"
+            value={f.address}
+            onChange={(e) => setF({ ...f, address: e.target.value })}
+            required
+            maxLength={250}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Notas logísticas (opcional)</label>
+          <input
+            className={field}
+            placeholder="Horario disponible, si puedes trasladarlo, etc."
+            value={f.location_desc}
+            onChange={(e) => setF({ ...f, location_desc: e.target.value })}
+            maxLength={200}
+          />
+        </div>
+      </div>
+    </div>
+  );
 
+  const stepContacto = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input
         className={field}
         placeholder="Tu nombre *"
@@ -866,17 +964,22 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         onChange={(e) => setF({ ...f, contact_info: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button type="button" onClick={onDone} className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted">Cancelar</button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-emerald-500 text-white font-bold disabled:opacity-50 shadow-md shadow-emerald-500/20"
-        >
-          {busy ? "Publicando…" : prefilledNeed ? "Publicar y vincular" : "Publicar oferta"}
-        </button>
-      </div>
-    </form>
+  return (
+    <Wizard
+      title="Publicar ofrecimiento de ayuda"
+      submitLabel={prefilledNeed ? "Publicar y vincular" : "Publicar ayuda"}
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "que", label: "¿Qué ofreces?", content: stepQue, isValid: () => f.title.trim().length > 0, invalidMessage: "El título es requerido" },
+        { key: "disponibilidad", label: "Ubicación de entrega", content: stepDisponibilidad, isValid: () => !!f.state && f.city.trim().length > 0 && f.city !== "__other__" && f.address.trim().length > 0, invalidMessage: "Estado, ciudad y dirección son requeridos" },
+        { key: "contacto", label: "Tu contacto", content: stepContacto, isValid: () => f.contact_name.trim().length > 0, invalidMessage: "Tu nombre es requerido" },
+      ]}
+    />
   );
 }
+
