@@ -594,10 +594,9 @@ function PatientForm({ onDone }: { onDone: () => void }) {
 
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.name.trim())        return toast.error("El nombre es requerido");
-    if (!f.center_name.trim()) return toast.error("El nombre del centro es requerido");
+  const submit = async () => {
+    if (!f.name.trim())        { toast.error("El nombre es requerido"); return; }
+    if (!f.center_name.trim()) { toast.error("El nombre del centro es requerido"); return; }
 
     setBusy(true);
     try {
@@ -642,16 +641,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     }
   };
 
-  return (
-    <form
-      onSubmit={submit}
-      className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm"
-    >
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <HeartPulse className="h-4 w-4 text-primary" />
-        <h2 className="font-bold text-sm">Registrar atendido</h2>
-      </div>
-
+  const stepDatos = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Nombre completo *"
@@ -660,7 +651,6 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         required
         maxLength={100}
       />
-
       <input
         type="number"
         min="0"
@@ -682,7 +672,6 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         <option value="masculino">Masculino</option>
         <option value="femenino">Femenino</option>
       </select>
-
       <input
         className={field}
         placeholder="Cédula / ID"
@@ -699,7 +688,29 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         maxLength={30}
         inputMode="tel"
       />
+      <select
+        className={`${field} sm:col-span-2`}
+        value={f.status}
+        onChange={(e) => setF({ ...f, status: e.target.value as PatientStatus })}
+      >
+        <option value="stable">Estable</option>
+        <option value="critical">Crítico</option>
+        <option value="recovering">Recuperándose</option>
+        <option value="discharged">Alta médica</option>
+      </select>
+      <textarea
+        className={`${field} sm:col-span-2 resize-none`}
+        placeholder="Notas adicionales (diagnóstico, observaciones…)"
+        rows={3}
+        value={f.notes}
+        onChange={(e) => setF({ ...f, notes: e.target.value })}
+        maxLength={500}
+      />
+    </div>
+  );
 
+  const stepCentro = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <div className="sm:col-span-2 space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
@@ -738,43 +749,21 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, address: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
-      <select
-        className={`${field} sm:col-span-2`}
-        value={f.status}
-        onChange={(e) => setF({ ...f, status: e.target.value as PatientStatus })}
-      >
-        <option value="stable">Estable</option>
-        <option value="critical">Crítico</option>
-        <option value="recovering">Recuperándose</option>
-        <option value="discharged">Alta médica</option>
-      </select>
-
-      <textarea
-        className={`${field} sm:col-span-2 resize-none`}
-        placeholder="Notas adicionales (diagnóstico, observaciones…)"
-        rows={3}
-        value={f.notes}
-        onChange={(e) => setF({ ...f, notes: e.target.value })}
-        maxLength={500}
-      />
-
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button
-          type="button"
-          onClick={onDone}
-          className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50 shadow-md shadow-primary/20"
-        >
-          {busy ? "Guardando…" : "Registrar atendido"}
-        </button>
-      </div>
-    </form>
+  return (
+    <Wizard
+      title="Registrar atendido"
+      submitLabel="Registrar atendido"
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "datos", label: "Datos del atendido", content: stepDatos, isValid: () => f.name.trim().length > 0, invalidMessage: "El nombre es requerido" },
+        { key: "centro", label: "Centro de salud y ubicación", content: stepCentro, isValid: () => f.center_name.trim().length > 0, invalidMessage: "El nombre del centro es requerido" },
+      ]}
+    />
   );
 }
+
