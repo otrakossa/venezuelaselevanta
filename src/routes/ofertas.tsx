@@ -659,6 +659,9 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
 
   const submit = async () => {
     if (!f.title.trim()) { toast.error("El título es requerido"); return; }
+    if (!f.state) { toast.error("Selecciona el estado"); return; }
+    if (!f.city.trim()) { toast.error("Indica la ciudad o municipio"); return; }
+    if (!f.address.trim()) { toast.error("Indica la dirección de entrega"); return; }
     if (!f.contact_name.trim()) { toast.error("Tu nombre es requerido"); return; }
     setBusy(true);
     try {
@@ -667,6 +670,9 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         title: f.title.trim(),
         description: f.description.trim() || null,
         quantity: f.quantity.trim() || null,
+        state: f.state,
+        city: f.city.trim(),
+        address: f.address.trim(),
         location_desc: f.location_desc.trim() || null,
         contact_name: f.contact_name.trim(),
         contact_phone: f.contact_phone.trim() || null,
