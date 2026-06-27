@@ -26,7 +26,7 @@ function ClickToPin({ onPick }: { onPick: (lat: number, lng: number) => void }) 
 function Recenter({ lat, lng }: { lat: number | null; lng: number | null }) {
   const map = useMap();
   useEffect(() => {
-    if (isValidCoords(lat) && isValidCoords(lng)) {
+    if (isValidCoords(lat, lng)) {
       map.flyTo([lat as number, lng as number], Math.max(map.getZoom(), 14), { duration: 0.5 });
     }
   }, [lat, lng, map]);
