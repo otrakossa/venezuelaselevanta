@@ -501,19 +501,33 @@ async function executeBroadcast(adminChatId: number, message: string): Promise<v
   await send(adminChatId, `✅ Broadcast completado: <b>${sent}</b> enviados, <b>${failed}</b> fallaron.`);
 }
 
+// ── Keyword fallback (used when detectIntent() times out or fails) ────────
+// No field extraction — the flow starts from step 1 without pre-filled data.
+function quickIntent(text: string): "register_missing" | "search_missing" | "report" | "status" | null {
+  const t = text.toLowerCase();
+  if (/desapareci|perdid[ao]\b|no (lo|la|los|las) encuentro|no aparece/.test(t)) return "register_missing";
+  if (/\bbusco?\s+a\s|\bbuscar?\s+a\s|dónde está|donde esta/.test(t))            return "search_missing";
+  if (/\breportar?\b|incidente|colaps|atrapado|herido|rescate|vía bloqueada/.test(t)) return "report";
+  if (/estadístic|cifras|cuántos/.test(t))                                         return "status";
+  return null;
+}
+
 // ── Conversational handler ────────────────────────────────────────────────
 async function handleChat(chatId: number, text: string, session: Session | null): Promise<void> {
   const history  = session?.history ?? [];
   const userName = session?.userName;
   const greet    = userName ? `Claro ${userName}, ` : "Entendido, ";
 
-  const intent = await detectIntent(text);
+  const intent   = await detectIntent(text);
+  // If Gemini timed out, fall back to keyword detection so the bot doesn't
+  // promise an action via geminiConverse without ever starting the flow.
+  const fallback = intent ? null : quickIntent(text);
 
-  if (intent?.intent === "report") {
+  if (intent?.intent === "report" || fallback === "report") {
     const draft: Record<string, unknown> = {};
-    if (intent.category && VALID_CATS.has(intent.category)) draft.category = intent.category;
-    if (intent.urgency  && VALID_URGS.has(intent.urgency))  draft.urgency  = intent.urgency;
-    if (intent.title)                                         draft.title    = String(intent.title).slice(0, 120);
+    if (intent?.category && VALID_CATS.has(intent.category)) draft.category = intent.category;
+    if (intent?.urgency  && VALID_URGS.has(intent.urgency))  draft.urgency  = intent.urgency;
+    if (intent?.title)                                         draft.title    = String(intent.title).slice(0, 120);
     if (draft.category && draft.title) {
       setSession(chatId, "awaiting_description", draft);
       await send(chatId, `${greet}voy a registrar: <b>${draft.title}</b>\n\n3/6 · Agrega más detalles (o «-» para omitir):`);
@@ -529,16 +543,16 @@ async function handleChat(chatId: number, text: string, session: Session | null)
     await send(chatId, `${greet}voy a ayudarte a registrar el incidente.\n\n1/6 · Elige la <b>categoría</b>:`, categoryKb());
     return;
   }
-  if (intent?.intent === "register_missing") {
+  if (intent?.intent === "register_missing" || fallback === "register_missing") {
     await send(chatId, `${greet}voy a registrar a la persona desaparecida.`);
     return startMissingPerson(chatId);
   }
-  if (intent?.intent === "search_missing") {
-    if (intent.query) { await handleBuscar(chatId, intent.query); return; }
+  if (intent?.intent === "search_missing" || fallback === "search_missing") {
+    if (intent?.query) { await handleBuscar(chatId, intent.query); return; }
     await send(chatId, `¿Cómo se llama la persona que buscas?`);
     return;
   }
-  if (intent?.intent === "status") return handleEstado(chatId);
+  if (intent?.intent === "status" || fallback === "status") return handleEstado(chatId);
 
   const stats    = await getQuickStats();
   const response = await geminiConverse(history, text, stats, userName);
