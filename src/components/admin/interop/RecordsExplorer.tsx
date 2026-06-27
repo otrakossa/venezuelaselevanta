@@ -43,7 +43,7 @@ export function RecordsExplorer() {
   useEffect(() => {
     (async () => {
       const tbl = kind === "missing" ? "missing_persons" : "patients";
-      const { data } = await supabase.from(tbl).select("source_label").not("source_label", "is", null).limit(2000);
+      const { data } = await sbx.from(tbl).select("source_label").not("source_label", "is", null).limit(2000);
       const set = new Set<string>();
       (data ?? []).forEach((r: { source_label: string | null }) => r.source_label && set.add(r.source_label));
       setSources(Array.from(set).sort());
@@ -59,7 +59,7 @@ export function RecordsExplorer() {
         kind === "missing"
           ? "id,name,age,last_seen_location,status,source_label,source_url,photo_url,matched_patient_id,last_seen_lat,last_seen_lng,created_at"
           : "id,name,age,center_name,status,source_label,source_url,photo_url,matched_missing_id,created_at";
-      let q = supabase.from(tbl).select(cols, { count: "exact" });
+      let q = sbx.from(tbl).select(cols, { count: "exact" });
       if (debounced) q = q.ilike("name", `%${debounced}%`);
       if (source) q = q.eq("source_label", source);
       if (status) q = q.eq("status", status);
@@ -97,7 +97,7 @@ export function RecordsExplorer() {
   const markFound = async (id: string) => {
     if (!confirm("¿Marcar como encontrada?")) return;
     const note = prompt("Nota opcional:") ?? null;
-    const { error } = await supabase.rpc("mark_missing_found", { p_id: id, p_note: note });
+    const { error } = await sbx.rpc("mark_missing_found", { p_id: id, p_note: note });
     if (error) toast.error(error.message);
     else { toast.success("Marcada como encontrada"); setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: "found" } : r)); }
   };

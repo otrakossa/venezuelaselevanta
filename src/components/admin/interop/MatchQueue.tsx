@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { sbx } from "@/integrations/sbx/client";
 import { Loader2, RefreshCw, Check, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -29,7 +29,7 @@ export function MatchQueue() {
   const load = useCallback(async () => {
     setLoading(true); setPairs([]); setScanned(0);
     // Pull recent unmatched missing_persons and call suggest RPC per row.
-    const { data: missing, error } = await supabase
+    const { data: missing, error } = await sbx
       .from("missing_persons")
       .select("id,name,age,last_seen_location,source_label")
       .is("matched_patient_id", null)
@@ -39,7 +39,7 @@ export function MatchQueue() {
     if (error) { toast.error(error.message); setLoading(false); return; }
 
     // dismissed pairs to filter
-    const { data: dismissals } = await supabase.from("match_dismissals").select("missing_id,patient_id");
+    const { data: dismissals } = await sbx.from("match_dismissals").select("missing_id,patient_id");
     const dismissed = new Set((dismissals ?? []).map((d) => `${d.missing_id}:${d.patient_id}`));
 
     const out: Pair[] = [];
@@ -47,7 +47,7 @@ export function MatchQueue() {
     for (const m of missing ?? []) {
       i++;
       setScanned(i);
-      const { data: suggs } = await supabase.rpc("suggest_patient_matches", { p_missing_id: m.id });
+      const { data: suggs } = await sbx.rpc("suggest_patient_matches", { p_missing_id: m.id });
       for (const s of suggs ?? []) {
         const key = `${m.id}:${s.patient_id}`;
         if (dismissed.has(key)) continue;
@@ -75,7 +75,7 @@ export function MatchQueue() {
 
   const confirm = async (p: Pair) => {
     setBusy(`${p.missing_id}:${p.patient_id}`);
-    const { error } = await supabase.rpc("link_missing_to_patient", {
+    const { error } = await sbx.rpc("link_missing_to_patient", {
       p_missing_id: p.missing_id, p_patient_id: p.patient_id,
     });
     setBusy(null);
@@ -87,7 +87,7 @@ export function MatchQueue() {
   const dismiss = async (p: Pair) => {
     const reason = prompt("Motivo (opcional):") ?? null;
     setBusy(`${p.missing_id}:${p.patient_id}`);
-    const { error } = await supabase.from("match_dismissals").insert({
+    const { error } = await sbx.from("match_dismissals").insert({
       missing_id: p.missing_id, patient_id: p.patient_id, reason,
     });
     setBusy(null);

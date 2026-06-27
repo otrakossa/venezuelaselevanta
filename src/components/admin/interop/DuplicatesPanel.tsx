@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { sbx } from "@/integrations/sbx/client";
 import { Loader2, RefreshCw, Combine, ShieldX, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ export function DuplicatesPanel() {
   const load = async () => {
     setLoading(true);
     const since = new Date(Date.now() - days * 86400_000).toISOString();
-    const { data, error } = await supabase.rpc("find_duplicate_candidates", { p_since: since, p_limit: 100 });
+    const { data, error } = await sbx.rpc("find_duplicate_candidates", { p_since: since, p_limit: 100 });
     if (error) toast.error(error.message);
     else setItems((data ?? []) as Candidate[]);
     setLoading(false);
@@ -47,7 +47,7 @@ export function DuplicatesPanel() {
     const loserId  = winner === "a" ? c.b_id : c.a_id;
     const key = `${c.a_id}:${c.b_id}`;
     setBusy(key);
-    const { error } = await supabase.rpc("merge_missing_persons", { p_winner_id: winnerId, p_loser_id: loserId });
+    const { error } = await sbx.rpc("merge_missing_persons", { p_winner_id: winnerId, p_loser_id: loserId });
     setBusy(null);
     if (error) return toast.error(error.message);
     toast.success("Fusionado");
@@ -57,7 +57,7 @@ export function DuplicatesPanel() {
   const whitelist = async (c: Candidate) => {
     const key = `${c.a_id}:${c.b_id}`;
     setBusy(key);
-    const { error } = await supabase.from("dedupe_whitelist").insert({ a_id: c.a_id, b_id: c.b_id });
+    const { error } = await sbx.from("dedupe_whitelist").insert({ a_id: c.a_id, b_id: c.b_id });
     setBusy(null);
     if (error) return toast.error(error.message);
     toast.success("Marcado como no duplicado");
