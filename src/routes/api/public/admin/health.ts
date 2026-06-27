@@ -1,11 +1,41 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { SystemHealth } from "@/lib/system-health.types";
 
-const PROD_SUPABASE_URL =
-  process.env.SUPABASE_URL || "https://advebubtfjgxwpjxprok.supabase.co";
-const PROD_SUPABASE_ANON_KEY =
-  process.env.SUPABASE_PUBLISHABLE_KEY ||
+const PROD_PROJECT_REF = "advebubtfjgxwpjxprok";
+const PROD_SUPABASE_URL_FALLBACK = `https://${PROD_PROJECT_REF}.supabase.co`;
+const PROD_SUPABASE_ANON_KEY_FALLBACK =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdmVidWJ0ZmpneHdwanhwcm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDcyMTMsImV4cCI6MjA5ODAyMzIxM30.e4w9nrHsaNRP-enNPS-beZ0Kns7KxvRtVXxRDLECS5U";
+
+function getProdSupabaseConfig() {
+  // Do not read the generic SUPABASE_* variables here: in this project they can
+  // still point at the legacy backend in preview/VPS environments.
+  const url = process.env.NEW_SUPABASE_URL || PROD_SUPABASE_URL_FALLBACK;
+  const anonKey = process.env.NEW_SUPABASE_PUBLISHABLE_KEY || PROD_SUPABASE_ANON_KEY_FALLBACK;
+  return { url: url.replace(/\/$/, ""), anonKey };
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const part = token.split(".")[1];
+    if (!part) return null;
+    const normalized = part.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    return JSON.parse(Buffer.from(padded, "base64").toString("utf8")) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function safeAuthDebug(token: string) {
+  const payload = decodeJwtPayload(token);
+  const issuer = typeof payload?.iss === "string" ? payload.iss : null;
+  return {
+    projectRef: PROD_PROJECT_REF,
+    tokenIssuerMatchesProduction: issuer ? issuer.includes(PROD_PROJECT_REF) : false,
+    tokenAudience: typeof payload?.aud === "string" ? payload.aud : null,
+    tokenSubjectPresent: typeof payload?.sub === "string" && payload.sub.length > 0,
+  };
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -19,40 +49,59 @@ function json(body: unknown, status = 200) {
 
 async function requireAdmin(request: Request): Promise<{ token: string; userId: string } | Response> {
   const authHeader = request.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+  if (!authHeader?.startsWith("Bearer ")) {
+    return json({ error: "Unauthorized: missing bearer token", projectRef: PROD_PROJECT_REF }, 401);
+  }
 
   const token = authHeader.slice(7);
-  const userRes = await fetch(`${PROD_SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: PROD_SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+  const cfg = getProdSupabaseConfig();
+  const authDebug = safeAuthDebug(token);
+
+  const userRes = await fetch(`${cfg.url}/auth/v1/user`, {
+    headers: { apikey: cfg.anonKey, Authorization: `Bearer ${token}` },
   });
-  if (!userRes.ok) return json({ error: "Unauthorized" }, 401);
+  if (!userRes.ok) {
+    return json(
+      {
+        error: "Unauthorized: token rejected by production auth",
+        status: userRes.status,
+        ...authDebug,
+      },
+      401,
+    );
+  }
 
   const user = (await userRes.json()) as { id?: string };
-  if (!user.id) return json({ error: "Unauthorized" }, 401);
+  if (!user.id) {
+    return json({ error: "Unauthorized: user payload missing id", ...authDebug }, 401);
+  }
 
-  const roleRes = await fetch(`${PROD_SUPABASE_URL}/rest/v1/rpc/has_role`, {
+  const roleRes = await fetch(`${cfg.url}/rest/v1/rpc/has_role`, {
     method: "POST",
     headers: {
-      apikey: PROD_SUPABASE_ANON_KEY,
+      apikey: cfg.anonKey,
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ _user_id: user.id, _role: "admin" }),
   });
-  if (!roleRes.ok) return json({ error: "Forbidden" }, 403);
+  if (!roleRes.ok) {
+    return json({ error: "Forbidden: admin role check failed", status: roleRes.status, projectRef: PROD_PROJECT_REF }, 403);
+  }
 
   const isAdmin = (await roleRes.json()) as boolean;
-  if (!isAdmin) return json({ error: "Forbidden" }, 403);
+  if (!isAdmin) return json({ error: "Forbidden: admin role required", projectRef: PROD_PROJECT_REF }, 403);
 
   return { token, userId: user.id };
 }
 
 async function getDbStats(token: string): Promise<SystemHealth["database"]> {
   try {
-    const res = await fetch(`${PROD_SUPABASE_URL}/rest/v1/rpc/admin_db_stats`, {
+    const cfg = getProdSupabaseConfig();
+    const res = await fetch(`${cfg.url}/rest/v1/rpc/admin_db_stats`, {
       method: "POST",
       headers: {
-        apikey: PROD_SUPABASE_ANON_KEY,
+        apikey: cfg.anonKey,
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },

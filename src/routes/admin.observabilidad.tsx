@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,7 +89,8 @@ function ObservabilityPage() {
   const [showSql, setShowSql] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
+    if (!isAuthenticated || roleLoading || !isAdmin) return;
     setLoading(true);
     setErr(null);
     try {
@@ -128,24 +129,22 @@ function ObservabilityPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, isAdmin, roleLoading]);
 
   useEffect(() => {
-    if (!isAdmin) return;
+    if (!isAuthenticated || roleLoading || !isAdmin) return;
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin]);
+  }, [isAuthenticated, roleLoading, isAdmin, load]);
 
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (autorefresh && isAdmin) {
+    if (autorefresh && isAuthenticated && !roleLoading && isAdmin) {
       timerRef.current = setInterval(load, 15000);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autorefresh, isAdmin]);
+  }, [autorefresh, isAuthenticated, roleLoading, isAdmin, load]);
 
   const overall = useMemo<Level>(() => {
     if (!data) return "ok";
