@@ -90,29 +90,31 @@ export function Footer() {
         </div>
       </div>
 
-      <div
-        className="border-t border-[color:var(--sunrise)]/40"
-        style={{ background: "rgba(255,107,53,0.08)" }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-sm space-y-2">
-          <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs">
-            ⚠ Aviso de responsabilidad
-          </p>
-          <p className="opacity-95 leading-relaxed">
-            Venezuela Se Levanta es una plataforma ciudadana de coordinación y{" "}
-            <strong>no se hace responsable por la veracidad ni exactitud</strong> de los
-            reportes publicados por terceros. Cada reporte es responsabilidad de quien lo
-            ingresa. Verifica la información antes de difundirla y ayúdanos reportando
-            datos incorrectos.
-          </p>
+      <div className="border-t border-white/10 bg-black/30">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 grid gap-6 md:grid-cols-2 md:items-center">
+          {/* Izquierda: copyright */}
+          <div className="text-xs opacity-75 text-center md:text-left">
+            © 2026 Venezuela Se Levanta · CC BY 4.0
+            <div className="opacity-60 mt-0.5">Datos abiertos para la humanidad</div>
+          </div>
+
+          {/* Derecha: disclaimer destacado */}
+          <div
+            className="rounded-lg border border-[color:var(--sunrise)]/40 px-4 py-3 text-sm"
+            style={{ background: "rgba(255,107,53,0.08)" }}
+          >
+            <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs mb-1">
+              ⚠ Aviso de responsabilidad
+            </p>
+            <p className="opacity-95 leading-relaxed text-[13px]">
+              Plataforma ciudadana de coordinación.{" "}
+              <strong>No nos hacemos responsables por la veracidad</strong> de los reportes
+              de terceros. Verifica la información antes de difundirla.
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="border-t border-white/10 bg-black/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 text-[11px] opacity-70 text-center sm:text-left">
-          © 2026 Venezuela Se Levanta · CC BY 4.0 · Datos abiertos para la humanidad
-        </div>
-      </div>
 
     </footer>
   );
