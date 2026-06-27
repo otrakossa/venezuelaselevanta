@@ -23,3 +23,20 @@ jobs:
       # (no el runtime de Bun), que es donde MSW intercepta fetch de forma
       # fiable. Node ya viene en los runners de ubuntu.
       - run: bun run test
+
+  db:
+    name: RPC matching (Supabase local)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start
+      # Reaplica migraciones de cero (los tests siembran sus propias fixtures).
+      - run: supabase db reset
+      - run: bun run test:db

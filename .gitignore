@@ -38,3 +38,7 @@ dist-ssr
 /blob-report/
 /playwright/.cache/
 coverage
+
+# Supabase CLI (local)
+supabase/.branches/
+supabase/.temp/

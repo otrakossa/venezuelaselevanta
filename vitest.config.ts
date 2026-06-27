@@ -1,38 +1,54 @@
-// ── Config de Vitest para los tests de núcleo/integración del bot ──────────
-// NO importa el config de Vite de la app a propósito: el plugin de TanStack
-// Start + nitro no aplican en modo test y solo añadirían fragilidad. Solo
-// replicamos el alias `@/` (igual que tsconfig.json) y corremos en Node.
+// ── Config de Vitest ───────────────────────────────────────────────────────
+// Dos proyectos:
+//   • "core" — núcleo del bot + webhook. Node + MSW (intercepta todo el I/O).
+//     `test.env` puebla process.env ANTES del module-load (data.ts/nlp.ts leen
+//     env al importar). Valores FALSOS; el I/O real lo corta MSW.
+//   • "db"   — RPC de matching contra Supabase LOCAL real (Fase 4). Sin MSW;
+//     se conecta como superusuario al Postgres local (puerto 54322).
 //
-// `test.env` puebla process.env ANTES de cargar cualquier módulo, lo cual es
-// imprescindible porque src/bot/core/{data,nlp}.ts leen el env en module-load
-// (`const SUPA_URL = process.env.SUPABASE_URL!`). Son valores FALSOS: el I/O
-// real lo intercepta MSW (ver tests/setup). GEMINI_API_KEY va NO vacío para
-// que el camino "con Gemini" se ejercite (geminiJSON corta si está vacío).
+// `bun run test` corre SOLO "core" (no necesita Docker) → seguro en CI y local.
+// `bun run test:db` corre SOLO "db" (requiere `supabase start`).
 import { defineConfig } from "vitest/config";
 import { fileURLToPath } from "node:url";
 
+const alias = { "@": fileURLToPath(new URL("./src", import.meta.url)) };
+
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-    },
-  },
+  resolve: { alias },
   test: {
-    environment: "node",
-    globals: false,
-    setupFiles: ["./tests/setup/vitest.setup.ts"],
-    include: ["tests/**/*.test.ts"],
-    // tests/db/** corre contra Supabase local (Fase 4): otro proyecto, sin MSW.
-    exclude: ["tests/db/**", "node_modules/**", ".output/**", "dist/**"],
-    env: {
-      SUPABASE_URL: "http://127.0.0.1:54321",
-      SUPABASE_PUBLISHABLE_KEY: "test-anon-key",
-      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
-      GEMINI_API_KEY: "test-gemini-key",
-      TELEGRAM_BOT_TOKEN: "test-bot-token",
-      // Flujos gated activados para poder testearlos (Fase 1).
-      BOT_NEEDS_FLOW: "1",
-      BOT_HELP_FLOW: "1",
-    },
+    projects: [
+      {
+        resolve: { alias },
+        test: {
+          name: "core",
+          environment: "node",
+          setupFiles: ["./tests/setup/vitest.setup.ts"],
+          include: ["tests/**/*.test.ts"],
+          exclude: ["tests/db/**", "node_modules/**", ".output/**", "dist/**"],
+          env: {
+            SUPABASE_URL: "http://127.0.0.1:54321",
+            SUPABASE_PUBLISHABLE_KEY: "test-anon-key",
+            SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+            GEMINI_API_KEY: "test-gemini-key",
+            TELEGRAM_BOT_TOKEN: "test-bot-token",
+            BOT_NEEDS_FLOW: "1",
+            BOT_HELP_FLOW: "1",
+          },
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: "db",
+          environment: "node",
+          include: ["tests/db/**/*.test.ts"],
+          // Conexión directa como superusuario al Postgres local de Supabase.
+          // Puerto 54322 y credenciales por defecto del stack local.
+          env: {
+            DATABASE_URL: "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+          },
+        },
+      },
+    ],
   },
 });
