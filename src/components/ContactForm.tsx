@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { z } from "zod";
 import { Mail, Send, CheckCircle2, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const schema = z.object({
@@ -30,17 +29,29 @@ export function ContactForm() {
     }
     setErrors({});
     setLoading(true);
-    const { error } = await supabase.from("contact_messages").insert({
-      name: parsed.data.name,
-      email: parsed.data.email,
-      subject: parsed.data.subject || null,
-      message: parsed.data.message,
-    });
-    setLoading(false);
-    if (error) {
-      toast.error("No se pudo enviar. Intenta de nuevo en unos segundos.");
+    try {
+      const res = await fetch("/api/public/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: parsed.data.name,
+          email: parsed.data.email,
+          subject: parsed.data.subject || null,
+          message: parsed.data.message,
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setLoading(false);
+        toast.error(body?.error || "No se pudo enviar. Intenta de nuevo en unos segundos.");
+        return;
+      }
+    } catch {
+      setLoading(false);
+      toast.error("Error de red. Intenta de nuevo.");
       return;
     }
+    setLoading(false);
     setSent(true);
     setForm({ name: "", email: "", subject: "", message: "" });
     toast.success("¡Mensaje enviado! Te responderemos pronto.");

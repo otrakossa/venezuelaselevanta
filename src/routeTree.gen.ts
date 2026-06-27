@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
 import { Route as QueEsRouteImport } from './routes/que-es'
@@ -23,18 +24,29 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as AdminInteropRouteImport } from './routes/admin.interop'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicGeocodeRouteImport } from './routes/api/public/geocode'
+import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicTelegramWebhookRouteImport } from './routes/api/public/telegram/webhook'
 import { Route as ApiPublicPushManageRouteImport } from './routes/api/public/push/manage'
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -105,6 +117,11 @@ const ReportesIdRoute = ReportesIdRouteImport.update({
   path: '/reportes/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiReportsDotgeojsonRoute = ApiReportsDotgeojsonRouteImport.update({
   id: '/api/reports.geojson',
   path: '/api/reports.geojson',
@@ -118,6 +135,11 @@ const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
 const AdminInteropRoute = AdminInteropRouteImport.update({
   id: '/admin/interop',
   path: '/admin/interop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
@@ -135,6 +157,29 @@ const ApiPublicGeocodeRoute = ApiPublicGeocodeRouteImport.update({
   path: '/api/public/geocode',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicContactRoute = ApiPublicContactRouteImport.update({
+  id: '/api/public/contact',
+  path: '/api/public/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
     id: '/api/public/telegram/webhook',
@@ -176,19 +221,26 @@ export interface FileRoutesByFullPath {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -203,19 +255,26 @@ export interface FileRoutesByTo {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin': typeof AdminIndexRoute
+  '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -231,19 +290,26 @@ export interface FileRoutesById {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
   '/api/public/push/manage': typeof ApiPublicPushManageRoute
   '/api/public/telegram/webhook': typeof ApiPublicTelegramWebhookRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -260,19 +326,26 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
+    | '/api/public/contact'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
+    | '/lovable/email/suppression'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
+    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -287,19 +360,26 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin'
+    | '/api/public/contact'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
+    | '/lovable/email/suppression'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
+    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   id:
     | '__root__'
     | '/'
@@ -314,19 +394,26 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
+    | '/api/public/contact'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
+    | '/lovable/email/suppression'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
     | '/api/public/push/manage'
     | '/api/public/telegram/webhook'
+    | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -342,23 +429,37 @@ export interface RootRouteChildren {
   QueEsRoute: typeof QueEsRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   AdminInteropRoute: typeof AdminInteropRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ReportesIdRoute: typeof ReportesIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  ApiPublicContactRoute: typeof ApiPublicContactRoute
   ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
   ApiPublicPushManageRoute: typeof ApiPublicPushManageRoute
   ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -457,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/reports.geojson': {
       id: '/api/reports.geojson'
       path: '/api/reports.geojson'
@@ -478,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInteropRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/reports': {
       id: '/api/public/reports'
       path: '/api/public/reports'
@@ -497,6 +612,34 @@ declare module '@tanstack/react-router' {
       path: '/api/public/geocode'
       fullPath: '/api/public/geocode'
       preLoaderRoute: typeof ApiPublicGeocodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/contact': {
+      id: '/api/public/contact'
+      path: '/api/public/contact'
+      fullPath: '/api/public/contact'
+      preLoaderRoute: typeof ApiPublicContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/telegram/webhook': {
@@ -550,19 +693,26 @@ const rootRouteChildren: RootRouteChildren = {
   QueEsRoute: QueEsRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   AdminInteropRoute: AdminInteropRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ReportesIdRoute: ReportesIdRoute,
   AdminIndexRoute: AdminIndexRoute,
+  ApiPublicContactRoute: ApiPublicContactRoute,
   ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
   ApiPublicPushManageRoute: ApiPublicPushManageRoute,
   ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
