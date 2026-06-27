@@ -135,7 +135,7 @@ function MissingPage() {
         {/* KPI strip */}
         <div className="relative mt-5 grid grid-cols-3 gap-2 sm:gap-3">
           <Kpi tone="rose"    value={counts.missing}  label="Sin encontrar" />
-          <Kpi tone="emerald" value={counts.found}    label="Reunidos" />
+          <Kpi tone="emerald" value={counts.found}    label="Encontrados" />
           <Kpi tone="slate"   value={counts.all}      label="Total registrados" />
         </div>
       </section>
