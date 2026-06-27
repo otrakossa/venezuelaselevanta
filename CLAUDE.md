@@ -1,5 +1,25 @@
 # Venezuela Se Levanta — Guía para Claude Code
 
+## ⚠️ BASE DE DATOS DE PRODUCCIÓN — LEER PRIMERO
+
+Producción usa el proyecto Supabase **NUEVO**:
+
+- URL:        `https://advebubtfjgxwpjxprok.supabase.co`
+- Project ID: `advebubtfjgxwpjxprok`
+
+El proyecto **VIEJO** (`evcgvbycvgueoelvfbna`) sigue existiendo pero está congelado — su data NO refleja producción.
+
+### Reglas obligatorias para el agente
+
+1. Para consultar/modificar datos reales usar SIEMPRE `psql "$NEW_SUPABASE_DB_URL"` o REST con `$NEW_SUPABASE_SERVICE_KEY` contra `$NEW_SUPABASE_URL`.
+2. Las herramientas integradas `supabase--read_query`, `supabase--insert`, `supabase--migration`, `supabase--slow_queries` y las variables `PG*` del sandbox apuntan al proyecto VIEJO — NO usarlas para análisis ni migraciones que afecten producción.
+3. Para cambios de schema en producción: generar el SQL y ejecutarlo con `psql "$NEW_SUPABASE_DB_URL" -f migracion.sql`, no con el tool de migración.
+4. El cliente del frontend (`src/integrations/supabase/client.ts`) ya está hardcodeado al proyecto nuevo; el VPS lee sus credenciales del `.env` propio del servidor.
+
+---
+
+
+
 Sistema ciudadano de crisis post-terremoto en Venezuela. Reportes geoespaciales,
 registro de desaparecidos, matching con pacientes y centros médicos.
 
