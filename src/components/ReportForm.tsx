@@ -490,12 +490,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
         </div>
       )}
 
-      {/* Sticky footer (mobile + desktop) */}
-      <div
-        className="fixed inset-x-0 z-[950] bg-card/95 backdrop-blur border-t border-border px-3 py-3"
-        style={{ bottom: "calc(4rem + env(safe-area-inset-bottom))" }}
-      >
-        <div className="max-w-2xl mx-auto flex gap-3">
+      {/* Footer actions (inline, no float) */}
+      <div className="mt-8 pt-4 border-t border-border">
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={goBack}
@@ -525,12 +522,10 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
           )}
         </div>
       </div>
-
-      {/* Hidden desktop spacer for sticky footer when no bottom nav */}
-      <div className="hidden lg:block h-20" />
     </div>
   );
 }
+
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
