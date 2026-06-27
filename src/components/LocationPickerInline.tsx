@@ -45,7 +45,7 @@ export function LocationPickerInline({
   height?: number;
 }) {
   const [busy, setBusy] = useState(false);
-  const hasPin = isValidCoords(lat) && isValidCoords(lng);
+  const hasPin = isValidCoords(lat, lng);
   const initialCenter = useRef<[number, number]>(
     hasPin ? [lat as number, lng as number] : [9.5, -66.5],
   );
