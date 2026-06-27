@@ -468,7 +468,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
   };
 
   const submit = async () => {
-    if (!f.name.trim()) return toast.error("Nombre requerido");
+    if (!f.name.trim()) { toast.error("Nombre requerido"); return; }
     setBusy(true);
     const { error } = await supabase.from("missing_persons").insert({
       name: f.name.trim(),
@@ -485,10 +485,11 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       contact_email: f.contact_email.trim() || null,
     });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(coords ? "Publicada y geolocalizada en el mapa" : "Reporte enviado");
     onDone();
   };
+
 
   const stepPersona = (
     <div className="grid sm:grid-cols-2 gap-3">
