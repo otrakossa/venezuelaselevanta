@@ -333,14 +333,39 @@ function AtendidosPage() {
           </button>
         </div>
 
-        {(center || q || filter !== "active") && (
+        {(statesList.length > 0 || sectorsList.length > 0) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-input bg-card font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">Todos los estados</option>
+              {statesList.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select
+              value={sectorFilter}
+              onChange={(e) => setSectorFilter(e.target.value)}
+              disabled={sectorsList.length === 0}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-input bg-card font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            >
+              <option value="">{stateFilter ? "Todos los sectores" : "Selecciona un estado"}</option>
+              {sectorsList.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        )}
+
+        {(center || q || filter !== "active" || stateFilter || sectorFilter) && (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span>
-              Mostrando <span className="font-bold text-foreground">{list.length}</span> resultado{list.length === 1 ? "" : "s"}
-              {center && <> en <span className="font-semibold text-foreground">{center}</span></>}
+              Mostrando <span className="font-bold text-foreground">{list.length}</span> atendido{list.length === 1 ? "" : "s"}
+              {(stateFilter || sectorFilter) && (
+                <> en <span className="font-semibold text-foreground">{[sectorFilter, stateFilter].filter(Boolean).join(", ")}</span></>
+              )}
+              {center && <> · <span className="font-semibold text-foreground">{center}</span></>}
             </span>
             <button
-              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); }}
+              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); setStateFilter(""); setSectorFilter(""); }}
               className="text-primary font-semibold hover:underline"
             >
               Limpiar
@@ -348,6 +373,7 @@ function AtendidosPage() {
           </div>
         )}
       </div>
+
 
       {(() => {
         const total = list.length;
