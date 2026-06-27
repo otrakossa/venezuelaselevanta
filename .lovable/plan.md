@@ -1,44 +1,77 @@
-# Selector de categorías con iconos en Necesidades y Ayuda
 
-Replicar el patrón visual de tarjetas con icono Lucide que ya usa `ReportForm` (paso 1, "Categoría") en los formularios de **Necesidades** (`src/routes/necesidades.tsx`) y **Ofrecimiento de ayuda** (`src/routes/ofertas.tsx`), que hoy usan un `<select>` con emoji + etiqueta.
+# Ideas para mejorar el Centro de Control
 
-## Alcance
+Hoy el dashboard cubre bien los **reportes** (KPIs, serie 14 días, categorías, DIVIPOL, urgencia, sismos, atendidos por zona). Lo que falta es visibilidad sobre **operación, ayuda, salud y calidad de datos**. Propongo agruparlo en bloques; podés elegir cuáles construir primero.
 
-Solo cambia el control de selección de categoría dentro del wizard de cada formulario. No toca:
-- Filtros superiores de la lista (chips emoji), tarjetas del feed, ni el matching.
-- Esquema de BD ni los valores de `category`.
-- El selector de categoría del formulario de Reportes (ya tiene este patrón).
+---
 
-## Cambios por archivo
+## 1. Operación y tiempos de respuesta (lo más útil para coordinar)
 
-### `src/routes/necesidades.tsx`
-1. Extender `CATEGORY_META` para incluir `icon: LucideIcon` y `color: string` (hex de la paleta) por categoría:
-   - medicine → `Pill` / #DC2626
-   - food → `Apple` / #16A34A
-   - water → `Droplet` / #2563EB
-   - volunteers → `HandHelping` / #EA580C
-   - equipment → `Wrench` / #7C3AED
-   - blood → `Droplets` / #B91C1C
-   - money → `Banknote` / #CA8A04
-   - hygiene → `SprayCan` (o `Sparkles`) / #0EA5E9
-   - diapers → `Baby` / #DB2777
-   - other → `Package` / #6B7280
-2. Importar esos iconos desde `lucide-react`.
-3. En el wizard (alrededor de la línea 494-503), reemplazar el `<select>` por un `grid grid-cols-2 sm:grid-cols-3 gap-2.5` de `<button type="button">` idéntico al de `ReportForm` (mismo estilo `min-h-[96px]`, borde activo `--sunrise`, icono coloreado con `c.color` cuando está activo, texto `text-[11px] font-bold`).
-4. Mantener los emojis donde ya se muestran en filtros/tarjetas del feed (no se tocan).
+- **Embudo de respuesta**: Activos → En atención → Resueltos, con porcentaje de conversión y tiempo mediano en cada paso.
+- **Tiempo mediano de atención** y **de resolución** (KPI con sparkline 7 días).
+- **Reportes "estancados"**: activos hace >24 h sin movimiento. Lista clicable para atender ya.
+- **Mapa de calor por hora del día × día de la semana** (heatmap 7×24) para detectar picos.
+- **SLA por urgencia**: % de críticos resueltos < 6 h, altos < 24 h, etc.
 
-### `src/routes/ofertas.tsx`
-Mismo cambio que en Necesidades:
-1. Extender `CATEGORY_META` con `icon` y `color` para las mismas categorías (comparten el tipo `Category`).
-2. Reemplazar el `<select>` del wizard (líneas 697-704) por el mismo grid de tarjetas.
-3. Filtros y tarjetas del feed no se modifican.
+## 2. Cruce ayuda ↔ necesidad (hoy no existe en el dashboard)
 
-## Notas técnicas
+- **Balance Necesidades vs Ofrecimientos** por categoría (agua, comida, medicinas, pañales, kit higiene…): barras espejadas que muestran gap.
+- **Top zonas con más necesidad y sin oferta** (sectores rojos en el mapa).
+- **Tasa de match**: ofrecimientos vinculados a una necesidad / total.
+- **KPIs**: necesidades abiertas, ofrecimientos disponibles, matches realizados.
 
-- Reutilizamos exactamente las clases del `ReportForm` para mantener consistencia visual (paleta Amanecer sobre el Ávila).
-- Los iconos Lucide ya están en el bundle, no requieren nuevas dependencias.
-- Validación del wizard sigue funcionando porque `f.category` sigue siendo el mismo string.
+## 3. Salud y desaparecidos
 
-## Resultado esperado
+- **Embudo desaparecidos**: registrados → con foto → con ubicación → encontrados, con tasa de localización.
+- **Matches missing↔patient** confirmados por admin (cuenta + últimos 7 días).
+- **Ocupación por centro de salud**: top hospitales con más atendidos, % de altas, fallecidos.
+- **Pirámide etaria** de atendidos y desaparecidos (rangos 0-12 / 13-25 / 26-60 / 60+).
 
-Los tres formularios (Reportes, Necesidades, Ayuda) comparten el mismo selector visual de categorías con tarjetas e iconos, tal como muestra la imagen de referencia.
+## 4. Mapa y geografía
+
+- **Mini-heatmap de Venezuela** en el panel (Leaflet ya cargado), pintando intensidad por estado.
+- **Cobertura DIVIPOL**: % de reportes con state/municipality/parish completos (calidad de dato).
+- **Reportes sin coordenadas válidas** (alerta si supera 10 %).
+
+## 5. Comunidad y verificación
+
+- **Calidad / credibilidad**: reportes verificados (≥3 confirm) vs disputados (≥2 dispute), evolución 14 días.
+- **Participación ciudadana**: comentarios nuevos, votos emitidos, suscriptores push activos.
+- **Canal de origen**: Web vs Telegram vs Offline-queue (donut). Útil para mostrar impacto del bot.
+
+## 6. Sismos (ampliar lo que ya está)
+
+- **Correlación sismos ↔ reportes**: en la serie 14 días, overlay de sismos M≥4 como puntos sobre el área chart.
+- **Magnitud máxima 7 días** y **promedio de profundidad**.
+
+## 7. Filtros globales y exportación
+
+- **Filtros del dashboard**: rango de fechas (24 h / 7 d / 30 d / todo), estado DIVIPOL, categoría. Se aplican a todos los paneles.
+- **Comparativa de periodo**: "vs. semana pasada" en KPIs principales (ya está para 24 h, extender).
+- **Botón "Imprimir / PDF"** para reportes situacionales.
+- **Auto-refresh visible** (timestamp "actualizado hace Xs") y botón manual.
+
+## 8. UX del propio dashboard
+
+- **Acceso rápido**: chips arriba con "Críticos activos · Estancados · Necesidades sin cubrir" que llevan a vistas filtradas.
+- **Modo TV / pantalla grande** (ruta `/estadisticas/tv` con tipografía gigante para sala de coordinación).
+- **Alertas inline**: banda roja si críticos sin atender > umbral, o si entran >N reportes en una hora.
+
+---
+
+## Mi recomendación: arrancar por estos 4 (alto impacto, bajo esfuerzo)
+
+1. **Embudo de respuesta + reportes estancados** — directo de `reports`, sin schema nuevo.
+2. **Necesidades vs Ofrecimientos por categoría** — datos ya existen, solo agregar fetch.
+3. **Heatmap hora × día** — visualización compacta, muy útil para entender patrones.
+4. **Filtros globales (rango temporal + estado DIVIPOL)** — multiplica el valor de todos los paneles existentes.
+
+## Detalles técnicos
+
+- Patrón: añadir `useEffect` con `fetch` a `${SUPA_URL}/rest/v1/<tabla>?select=...` (igual que `patientZones`) para `needs`, `offers`, `report_comments` agregados.
+- Para campos `attended_at` / `resolved_at`: revisar si existen en `reports`; si no, usar el primer/último `report_comments` como proxy o agregar columnas en una migración aparte.
+- Heatmap: tabla CSS 7×24 con `bg-[color:var(--sunrise)]/{opacity}`, sin librería extra.
+- Filtros globales: `useState` en `StatsPage` + un `useMemo` por panel que respete el filtro.
+- Mini-mapa coroplético: requeriría GeoJSON de estados Venezuela; lo dejo fuera del primer batch.
+
+¿Avanzo con los 4 recomendados, o preferís un subconjunto / agregar otros?
