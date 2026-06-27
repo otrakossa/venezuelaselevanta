@@ -97,7 +97,7 @@ export function Footer() {
               ⚠ Aviso de responsabilidad
             </p>
             <p className="opacity-95 leading-relaxed text-[13px]">
-              Venezuela Se Levanta es una Plataforma ciudadana de coordinación. No nos hacemos responsables por la veracidad de los reportes de terceros. Verifica la información antes de difundirla.
+              Esta plataforma es un espacio abierto y colaborativo, nutrido por el esfuerzo de todas las personas que deciden sumarse. Cada participante es responsable de la información que aporta y comparte. Te invitamos a verificar los datos antes de difundirlos y a ser parte activa de esta red.
             </p>
           </div>
         </div>
