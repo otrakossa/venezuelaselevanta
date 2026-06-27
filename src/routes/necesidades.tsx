@@ -728,30 +728,46 @@ function NeedForm({ onDone }: { onDone: () => void }) {
   );
 
   const stepContacto = (
-    <div className="grid sm:grid-cols-2 gap-3">
-      <input
-        className={field}
-        placeholder="Nombre del contacto (opcional)"
-        value={f.contact_name}
-        onChange={(e) => setF({ ...f, contact_name: e.target.value })}
-        maxLength={100}
-      />
-      <input
-        className={field}
-        placeholder="Teléfono del contacto (opcional)"
-        value={f.contact_phone}
-        onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
-        maxLength={40}
-      />
-      <input
-        className={`${field} sm:col-span-2`}
-        placeholder="Info de pago / transferencia (Zelle, cuenta bancaria, etc.)"
-        value={f.contact_info}
-        onChange={(e) => setF({ ...f, contact_info: e.target.value })}
-        maxLength={200}
-      />
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Estos datos son obligatorios para canalizar la entrega de ayuda.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input
+          className={field}
+          placeholder="Tu nombre completo *"
+          value={f.contact_name}
+          onChange={(e) => setF({ ...f, contact_name: e.target.value })}
+          maxLength={100}
+          required
+        />
+        <input
+          className={field}
+          placeholder="Cédula *"
+          value={f.reporter_cedula}
+          onChange={(e) => setF({ ...f, reporter_cedula: e.target.value })}
+          maxLength={30}
+          required
+        />
+        <input
+          className={field}
+          placeholder="Teléfono *"
+          value={f.contact_phone}
+          onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
+          maxLength={40}
+          required
+        />
+        <input
+          className={`${field} sm:col-span-2`}
+          placeholder="Info adicional / pago (opcional)"
+          value={f.contact_info}
+          onChange={(e) => setF({ ...f, contact_info: e.target.value })}
+          maxLength={200}
+        />
+      </div>
     </div>
   );
+
 
   return (
     <Wizard
