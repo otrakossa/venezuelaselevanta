@@ -342,7 +342,7 @@ function NecesidadesPage() {
   );
 }
 
-function Kpi({ value, label, tone }: { value: number; label: string; tone: "red" | "orange" | "yellow" | "green" }) {
+function Kpi({ value, label, tone, emoji }: { value: number; label: string; tone: "red" | "orange" | "yellow" | "green"; emoji?: string }) {
   const tones = {
     red:    "from-red-500/15 to-red-500/5 text-red-600",
     orange: "from-orange-500/15 to-orange-500/5 text-orange-600",
@@ -350,9 +350,12 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "red"
     green:  "from-green-500/15 to-green-500/5 text-green-600",
   } as const;
   return (
-    <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-2 py-2`}>
-      <div className="text-xl sm:text-2xl font-black leading-none">{value}</div>
-      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium leading-tight">{label}</div>
+    <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-2 py-2 min-w-0`}>
+      <div className="text-lg sm:text-2xl font-black leading-none">{value}</div>
+      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium leading-tight flex items-center gap-1 truncate">
+        {emoji && <span className="text-[10px]">{emoji}</span>}
+        <span className="truncate">{label}</span>
+      </div>
     </div>
   );
 }
