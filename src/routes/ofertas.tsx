@@ -890,7 +890,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
       onCancel={onDone}
       steps={[
         { key: "que", label: "¿Qué ofreces?", content: stepQue, isValid: () => f.title.trim().length > 0, invalidMessage: "El título es requerido" },
-        { key: "disponibilidad", label: "Disponibilidad y zona", content: stepDisponibilidad },
+        { key: "disponibilidad", label: "Ubicación de entrega", content: stepDisponibilidad, isValid: () => !!f.state && f.city.trim().length > 0 && f.city !== "__other__" && f.address.trim().length > 0, invalidMessage: "Estado, ciudad y dirección son requeridos" },
         { key: "contacto", label: "Tu contacto", content: stepContacto, isValid: () => f.contact_name.trim().length > 0, invalidMessage: "Tu nombre es requerido" },
       ]}
     />
