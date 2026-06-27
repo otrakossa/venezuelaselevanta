@@ -20,19 +20,12 @@ export function Header() {
   const { reports } = useReports();
   const { isAuthenticated } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const [dark, setDark] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("vsos-dark") === "1";
-    setDark(stored);
-    document.documentElement.classList.toggle("dark", stored);
+    document.documentElement.classList.remove("dark");
+    localStorage.removeItem("vsos-dark");
   }, []);
-  const toggleDark = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("vsos-dark", next ? "1" : "0");
-  };
+
 
   const activeCount = reports.filter((r) => r.status === "active").length;
 
