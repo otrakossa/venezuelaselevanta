@@ -102,6 +102,7 @@ export function LocationPickerInline({
           center={initialCenter.current}
           zoom={hasPin ? 14 : 6}
           scrollWheelZoom={false}
+          attributionControl={false}
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
