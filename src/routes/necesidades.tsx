@@ -37,6 +37,7 @@ interface Need {
   lat: number | null;
   lng: number | null;
   category: NeedCategory;
+  categories: NeedCategory[];
   title: string;
   description: string | null;
   quantity: string | null;
@@ -84,7 +85,8 @@ function timeAgo(iso: string): string {
 async function fetchNeeds(statusFilter: "active" | "fulfilled", category: NeedCategory | "all"): Promise<Need[]> {
   const statusQ =
     statusFilter === "active" ? "status=in.(open,partial)" : "status=eq.fulfilled";
-  const catQ = category !== "all" ? `&category=eq.${category}` : "";
+  // `cs` = contains: matches rows whose `categories` array includes the selected one.
+  const catQ = category !== "all" ? `&categories=cs.{${category}}` : "";
   const res = await fetch(
     `${SUPA_URL}/rest/v1/needs?${statusQ}${catQ}&order=created_at.desc&limit=200`,
     {
@@ -95,7 +97,17 @@ async function fetchNeeds(statusFilter: "active" | "fulfilled", category: NeedCa
     },
   );
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const rows = (await res.json()) as Need[];
+  // Backfill `categories` in memory in case some old row was missed.
+  return rows.map((r) => ({
+    ...r,
+    categories:
+      Array.isArray(r.categories) && r.categories.length > 0
+        ? r.categories
+        : r.category
+        ? [r.category]
+        : [],
+  }));
 }
 
 function NecesidadesPage() {
