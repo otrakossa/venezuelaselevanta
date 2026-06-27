@@ -55,6 +55,9 @@ interface Offer {
   contact_phone: string | null;
   contact_info: string | null;
   location_desc: string | null;
+  state: string | null;
+  city: string | null;
+  address: string | null;
   status: OfferStatus | "open"; // tolerate legacy 'open'
   created_at: string;
 }
