@@ -49,7 +49,7 @@ export function MatchQueue() {
       setScanned(i);
       const { data: suggs } = await sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches", { p_missing_id: m.id });
       for (const s of (suggs ?? []) as Array<Record<string, unknown>>) {
-        const key = `${m.id}:${s.patient_id}`;
+        const key = `${m.id}:${s.patient_id as string}`;
         if (dismissed.has(key)) continue;
         if (Number(s.score) < minScore) continue;
         out.push({
@@ -58,10 +58,10 @@ export function MatchQueue() {
           missing_age: m.age,
           missing_location: m.last_seen_location,
           missing_source: m.source_label ?? null,
-          patient_id: s.patient_id,
-          patient_name: s.patient_name,
-          patient_age: s.patient_age,
-          patient_center: s.center_name,
+          patient_id: s.patient_id as string,
+          patient_name: s.patient_name as string,
+          patient_age: (s.patient_age as number | null) ?? null,
+          patient_center: (s.center_name as string | null) ?? null,
           score: Number(s.score),
         });
       }
