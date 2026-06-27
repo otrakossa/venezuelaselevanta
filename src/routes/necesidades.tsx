@@ -493,19 +493,41 @@ function NeedForm({ onDone }: { onDone: () => void }) {
 
   const stepQue = (
     <div className="grid sm:grid-cols-2 gap-3">
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => {
+            const meta = CATEGORY_META[c];
+            const active = f.category === c;
+            const Icon = meta.icon;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setF({ ...f, category: c })}
+                aria-pressed={active}
+                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
+                  active
+                    ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                    : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                    active ? "text-white" : "bg-muted text-muted-foreground"
+                  }`}
+                  style={active ? { background: meta.color } : undefined}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <select
-        className={field}
-        value={f.category}
-        onChange={(e) => setF({ ...f, category: e.target.value as NeedCategory })}
-      >
-        {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => (
-          <option key={c} value={c}>
-            {CATEGORY_META[c].emoji} {CATEGORY_META[c].label}
-          </option>
-        ))}
-      </select>
-      <select
-        className={field}
+        className={`${field} sm:col-span-2`}
         value={f.urgency}
         onChange={(e) => setF({ ...f, urgency: e.target.value as NeedUrgency })}
       >
