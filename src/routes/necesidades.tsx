@@ -515,6 +515,10 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     if (f.categories.length === 0) { toast.error("Selecciona al menos una categoría"); return; }
     if (!f.title.trim())           { toast.error("El título es requerido"); return; }
     if (!f.center_name.trim())     { toast.error("El nombre del centro es requerido"); return; }
+    if (!f.contact_name.trim())    { toast.error("Tu nombre es obligatorio"); return; }
+    if (!f.reporter_cedula.trim()) { toast.error("Tu cédula es obligatoria"); return; }
+    if (!f.contact_phone.trim())   { toast.error("Tu teléfono es obligatorio"); return; }
+
 
     setBusy(true);
     try {
