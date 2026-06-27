@@ -92,10 +92,7 @@ export function Footer() {
 
       <div className="border-t border-white/10 bg-black/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-          <div
-            className="rounded-lg px-4 py-3 text-sm"
-            style={{ background: "rgba(255,107,53,0.08)" }}
-          >
+          <div className="rounded-lg px-4 py-3 text-sm">
             <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs mb-1">
               ⚠ Aviso de responsabilidad
             </p>
