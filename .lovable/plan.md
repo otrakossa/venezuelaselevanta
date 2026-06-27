@@ -1,80 +1,44 @@
-## Objetivo
+# Selector de categorías con iconos en Necesidades y Ayuda
 
-Llevar la experiencia "wizard" del reporte de incidentes a los otros 4 formularios de alta del sistema: `MissingForm` (desaparecidos), `PatientForm` (atendidos), `NeedForm` (necesidades) y `OfferForm` (ofertas). Cada formulario usará la cantidad de pasos que mejor le calce, reutilizando un único componente `<Wizard>` con la misma estética del wizard de reportes (barra de progreso naranja, "Paso N de M", botones Atrás/Siguiente/Enviar, validación por paso).
+Replicar el patrón visual de tarjetas con icono Lucide que ya usa `ReportForm` (paso 1, "Categoría") en los formularios de **Necesidades** (`src/routes/necesidades.tsx`) y **Ofrecimiento de ayuda** (`src/routes/ofertas.tsx`), que hoy usan un `<select>` con emoji + etiqueta.
 
-## 1. Componente reutilizable
+## Alcance
 
-Crear `src/components/wizard/Wizard.tsx` con:
+Solo cambia el control de selección de categoría dentro del wizard de cada formulario. No toca:
+- Filtros superiores de la lista (chips emoji), tarjetas del feed, ni el matching.
+- Esquema de BD ni los valores de `category`.
+- El selector de categoría del formulario de Reportes (ya tiene este patrón).
 
-- Props:
-  - `title: string`
-  - `steps: { key: string; label: string; isValid: () => boolean; content: ReactNode }[]`
-  - `submitLabel?: string` (por defecto "Enviar")
-  - `onSubmit: () => Promise<void> | void`
-  - `submitting?: boolean`
-  - `onCancel?: () => void`
-- Estado interno: `currentStep` (0..N-1).
-- UI: header con título + chip "Paso N de M", barra de progreso segmentada (mismo estilo `--sunrise` que `ReportForm`), etiqueta del paso, contenedor del contenido del paso activo, y footer con botones:
-  - Paso 1 → solo "Siguiente" (+ opcional "Cancelar").
-  - Pasos intermedios → "Atrás" + "Siguiente".
-  - Último paso → "Atrás" + botón principal "Enviar" (con loader).
-- Validación: `goNext` llama `steps[current].isValid()`; si falla, muestra `toast.error` con mensaje del paso (prop opcional `invalidMessage` por paso).
-- Accesibilidad: `role="progressbar"` con `aria-valuenow/min/max`, `aria-current` en step activo, botones con `min-h-[48px]`.
-- Sin lógica de datos; cada formulario sigue dueño de su estado y submit.
+## Cambios por archivo
 
-Opcional pequeño: `src/components/wizard/useWizardSteps.ts` si simplifica memoización, pero no es obligatorio.
+### `src/routes/necesidades.tsx`
+1. Extender `CATEGORY_META` para incluir `icon: LucideIcon` y `color: string` (hex de la paleta) por categoría:
+   - medicine → `Pill` / #DC2626
+   - food → `Apple` / #16A34A
+   - water → `Droplet` / #2563EB
+   - volunteers → `HandHelping` / #EA580C
+   - equipment → `Wrench` / #7C3AED
+   - blood → `Droplets` / #B91C1C
+   - money → `Banknote` / #CA8A04
+   - hygiene → `SprayCan` (o `Sparkles`) / #0EA5E9
+   - diapers → `Baby` / #DB2777
+   - other → `Package` / #6B7280
+2. Importar esos iconos desde `lucide-react`.
+3. En el wizard (alrededor de la línea 494-503), reemplazar el `<select>` por un `grid grid-cols-2 sm:grid-cols-3 gap-2.5` de `<button type="button">` idéntico al de `ReportForm` (mismo estilo `min-h-[96px]`, borde activo `--sunrise`, icono coloreado con `c.color` cuando está activo, texto `text-[11px] font-bold`).
+4. Mantener los emojis donde ya se muestran en filtros/tarjetas del feed (no se tocan).
 
-## 2. Migración por formulario
+### `src/routes/ofertas.tsx`
+Mismo cambio que en Necesidades:
+1. Extender `CATEGORY_META` con `icon` y `color` para las mismas categorías (comparten el tipo `Category`).
+2. Reemplazar el `<select>` del wizard (líneas 697-704) por el mismo grid de tarjetas.
+3. Filtros y tarjetas del feed no se modifican.
 
-Mantener exactamente la misma lógica de submit, validaciones y campos actuales; solo se reorganiza la presentación en pasos.
+## Notas técnicas
 
-### a. `MissingForm` (en `src/routes/desaparecidos.tsx`) — **3 pasos**
+- Reutilizamos exactamente las clases del `ReportForm` para mantener consistencia visual (paleta Amanecer sobre el Ávila).
+- Los iconos Lucide ya están en el bundle, no requieren nuevas dependencias.
+- Validación del wizard sigue funcionando porque `f.category` sigue siendo el mismo string.
 
-1. **Persona**: nombre, edad, foto, descripción/señas particulares.
-2. **Última ubicación**: dirección + `LocationSelect` (Estado/Municipio/Parroquia) + mapa / geolocate + coords (reutilizar `MiniMap`/`MapView` como ya hace el form).
-3. **Contacto**: nombre, teléfono, email del reportante + confirmación.
+## Resultado esperado
 
-### b. `PatientForm` (en `src/routes/pacientes.tsx`) — **2 pasos**
-
-1. **Datos del atendido**: nombre, edad, sexo, estado del atendido (status), notas.
-2. **Centro y ubicación**: `HealthCenterPicker` (autocompleta estado/sector) + override manual de Estado/Sector si aplica + contacto opcional.
-
-### c. `NeedForm` (en `src/routes/necesidades.tsx`) — **3 pasos**
-
-1. **Qué se necesita**: categoría/tipo, título, descripción, cantidad, urgencia.
-2. **Dónde**: `HealthCenterPicker` o ubicación libre + Estado/Municipio/Parroquia.
-3. **Contacto**: nombre + teléfono/email + confirmación.
-
-### d. `OfferForm` (en `src/routes/ofertas.tsx`) — **3 pasos**
-
-1. **Qué ofreces**: categoría/tipo, título, descripción, cantidad/capacidad.
-2. **Disponibilidad y zona**: ubicación (estado/municipio o radio), fecha/horario si existe.
-3. **Contacto**: nombre + teléfono/email + confirmación.
-
-En cada caso:
-- Reemplazar el `<form onSubmit={submit}>` actual por `<Wizard ... onSubmit={submit} />`.
-- Mover los campos al `content` del paso correspondiente sin cambiar nombres ni tipos de estado.
-- Mantener el toggle `showForm` y el `onDone` igual.
-
-## 3. Estética y consistencia
-
-- Mismas clases de input que `ReportForm` (`field` helper) para que los 5 formularios se vean idénticos.
-- Mismos colores: progreso `--sunrise`, foco `--sky`, texto `--midnight`.
-- Mobile-first: pasos verticales con secciones espaciadas (`space-y-6/7`), botones a ancho completo en footer en móvil y alineados a la derecha en desktop.
-
-## 4. Fuera de alcance
-
-- No tocar esquemas de DB, hooks (`useMissing`, `usePatients`, etc.), ni RLS.
-- No cambiar el wizard de reportes existente (solo se referencia su look).
-- Sin nuevos campos: solo redistribución visual.
-
-## Archivos a tocar
-
-- **Nuevos**: `src/components/wizard/Wizard.tsx` (y posiblemente `useWizardSteps.ts`).
-- **Editados**: `src/routes/desaparecidos.tsx`, `src/routes/pacientes.tsx`, `src/routes/necesidades.tsx`, `src/routes/ofertas.tsx`.
-
-## Entregables
-
-1. Componente `<Wizard>` reutilizable y documentado por props.
-2. Los 4 formularios (`MissingForm`, `PatientForm`, `NeedForm`, `OfferForm`) migrados a wizard con la cantidad de pasos indicada.
-3. Misma funcionalidad y validaciones que hoy, con UX consistente con el wizard de `ReportForm`.
+Los tres formularios (Reportes, Necesidades, Ayuda) comparten el mismo selector visual de categorías con tarjetas e iconos, tal como muestra la imagen de referencia.

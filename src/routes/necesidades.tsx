@@ -7,6 +7,8 @@ import { Wizard } from "@/components/wizard/Wizard";
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, PackageOpen,
+  Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
+  type LucideIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/necesidades")({
@@ -48,17 +50,17 @@ interface Need {
   updated_at: string;
 }
 
-const CATEGORY_META: Record<NeedCategory, { emoji: string; label: string }> = {
-  medicine:   { emoji: "💊", label: "Medicinas" },
-  food:       { emoji: "🍎", label: "Alimentos" },
-  water:      { emoji: "💧", label: "Agua" },
-  volunteers: { emoji: "🤝", label: "Voluntarios" },
-  equipment:  { emoji: "🔧", label: "Equipos" },
-  blood:      { emoji: "🩸", label: "Sangre" },
-  money:      { emoji: "💰", label: "Dinero" },
-  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual" },
-  diapers:    { emoji: "👶", label: "Pañales" },
-  other:      { emoji: "📦", label: "Otro" },
+const CATEGORY_META: Record<NeedCategory, { emoji: string; label: string; icon: LucideIcon; color: string }> = {
+  medicine:   { emoji: "💊", label: "Medicinas",             icon: Pill,        color: "#DC2626" },
+  food:       { emoji: "🍎", label: "Alimentos",             icon: Apple,       color: "#16A34A" },
+  water:      { emoji: "💧", label: "Agua",                  icon: Droplet,     color: "#2563EB" },
+  volunteers: { emoji: "🤝", label: "Voluntarios",           icon: HandHelping, color: "#EA580C" },
+  equipment:  { emoji: "🔧", label: "Equipos",               icon: Wrench,      color: "#7C3AED" },
+  blood:      { emoji: "🩸", label: "Sangre",                icon: Droplets,    color: "#B91C1C" },
+  money:      { emoji: "💰", label: "Dinero",                icon: Banknote,    color: "#CA8A04" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual", icon: SprayCan,    color: "#0EA5E9" },
+  diapers:    { emoji: "👶", label: "Pañales",               icon: Baby,        color: "#DB2777" },
+  other:      { emoji: "📦", label: "Otro",                  icon: Package,     color: "#6B7280" },
 };
 
 const URGENCY_STYLES: Record<NeedUrgency, { pill: string; dot: string; label: string; emoji: string }> = {
@@ -491,19 +493,41 @@ function NeedForm({ onDone }: { onDone: () => void }) {
 
   const stepQue = (
     <div className="grid sm:grid-cols-2 gap-3">
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => {
+            const meta = CATEGORY_META[c];
+            const active = f.category === c;
+            const Icon = meta.icon;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setF({ ...f, category: c })}
+                aria-pressed={active}
+                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
+                  active
+                    ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                    : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                    active ? "text-white" : "bg-muted text-muted-foreground"
+                  }`}
+                  style={active ? { background: meta.color } : undefined}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <select
-        className={field}
-        value={f.category}
-        onChange={(e) => setF({ ...f, category: e.target.value as NeedCategory })}
-      >
-        {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => (
-          <option key={c} value={c}>
-            {CATEGORY_META[c].emoji} {CATEGORY_META[c].label}
-          </option>
-        ))}
-      </select>
-      <select
-        className={field}
+        className={`${field} sm:col-span-2`}
         value={f.urgency}
         onChange={(e) => setF({ ...f, urgency: e.target.value as NeedUrgency })}
       >

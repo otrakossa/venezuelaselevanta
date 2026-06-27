@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import {
   Search, X, PackageOpen, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, Link2, Check, Unlink2,
+  Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
+  type LucideIcon,
 } from "lucide-react";
 import { Wizard } from "@/components/wizard/Wizard";
 
@@ -56,17 +58,17 @@ interface Offer {
   created_at: string;
 }
 
-const CATEGORY_META: Record<Category, { emoji: string; label: string }> = {
-  medicine:   { emoji: "💊", label: "Medicinas" },
-  food:       { emoji: "🍎", label: "Alimentos" },
-  water:      { emoji: "💧", label: "Agua" },
-  volunteers: { emoji: "🤝", label: "Voluntarios" },
-  equipment:  { emoji: "🔧", label: "Equipos" },
-  blood:      { emoji: "🩸", label: "Sangre" },
-  money:      { emoji: "💰", label: "Dinero" },
-  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual" },
-  diapers:    { emoji: "👶", label: "Pañales" },
-  other:      { emoji: "📦", label: "Otro" },
+const CATEGORY_META: Record<Category, { emoji: string; label: string; icon: LucideIcon; color: string }> = {
+  medicine:   { emoji: "💊", label: "Medicinas",             icon: Pill,        color: "#DC2626" },
+  food:       { emoji: "🍎", label: "Alimentos",             icon: Apple,       color: "#16A34A" },
+  water:      { emoji: "💧", label: "Agua",                  icon: Droplet,     color: "#2563EB" },
+  volunteers: { emoji: "🤝", label: "Voluntarios",           icon: HandHelping, color: "#EA580C" },
+  equipment:  { emoji: "🔧", label: "Equipos",               icon: Wrench,      color: "#7C3AED" },
+  blood:      { emoji: "🩸", label: "Sangre",                icon: Droplets,    color: "#B91C1C" },
+  money:      { emoji: "💰", label: "Dinero",                icon: Banknote,    color: "#CA8A04" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual", icon: SprayCan,    color: "#0EA5E9" },
+  diapers:    { emoji: "👶", label: "Pañales",               icon: Baby,        color: "#DB2777" },
+  other:      { emoji: "📦", label: "Otro",                  icon: Package,     color: "#6B7280" },
 };
 
 function timeAgo(iso: string): string {
@@ -692,16 +694,41 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
           <div className="text-muted-foreground">🏥 {prefilledNeed.center_name}</div>
         </div>
       )}
-      <select
-        className={field}
-        value={f.category}
-        onChange={(e) => setF({ ...f, category: e.target.value as Category })}
-        disabled={!!prefilledNeed}
-      >
-        {(Object.keys(CATEGORY_META) as Category[]).map((c) => (
-          <option key={c} value={c}>{CATEGORY_META[c].emoji} {CATEGORY_META[c].label}</option>
-        ))}
-      </select>
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          {(Object.keys(CATEGORY_META) as Category[]).map((c) => {
+            const meta = CATEGORY_META[c];
+            const active = f.category === c;
+            const Icon = meta.icon;
+            const disabled = !!prefilledNeed && f.category !== c;
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => !prefilledNeed && setF({ ...f, category: c })}
+                aria-pressed={active}
+                disabled={disabled}
+                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                  active
+                    ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                    : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                    active ? "text-white" : "bg-muted text-muted-foreground"
+                  }`}
+                  style={active ? { background: meta.color } : undefined}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       <input
         className={field}
         placeholder="Cantidad o detalle (ej: 100 mascarillas, 2 voluntarios…)"
