@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useReports, useMissing } from "@/hooks/useReports";
 import { useUSGSQuakes, quakeColor } from "@/hooks/useUSGSQuakes";
 import { CATEGORIES, CATEGORY_MAP, STATUS_LABELS } from "@/lib/categories";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell,
   PieChart, Pie, AreaChart, Area, Legend,
@@ -10,8 +10,15 @@ import {
 import {
   AlertCircle, Users, MapPin, Download, Activity,
   ShieldCheck, CheckCircle2, Clock, Flame, Waves, TrendingUp,
+  HeartPulse, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+type PatientZone = { state: string | null; sector: string | null };
+
 
 export const Route = createFileRoute("/estadisticas")({
   ssr: false,
