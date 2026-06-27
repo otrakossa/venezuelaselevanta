@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { SystemHealth } from "@/lib/system-health.types";
 
-const PROD_SUPABASE_URL = "https://advebubtfjgxwpjxprok.supabase.co";
+const PROD_SUPABASE_URL =
+  process.env.SUPABASE_URL || "https://advebubtfjgxwpjxprok.supabase.co";
 const PROD_SUPABASE_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmVidWJ0ZmpneHdwanhwcm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDcyMTMsImV4cCI6MjA5ODAyMzIxM30.e4w9nrHsaNRP-enNPS-beZ0Kns7KxvRtVXxRDLECS5U";
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdmVidWJ0ZmpneHdwanhwcm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDcyMTMsImV4cCI6MjA5ODAyMzIxM30.e4w9nrHsaNRP-enNPS-beZ0Kns7KxvRtVXxRDLECS5U";
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
