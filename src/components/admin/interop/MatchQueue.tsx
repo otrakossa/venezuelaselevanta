@@ -40,15 +40,15 @@ export function MatchQueue() {
 
     // dismissed pairs to filter
     const { data: dismissals } = await sbx.from("match_dismissals").select("missing_id,patient_id");
-    const dismissed = new Set((dismissals ?? []).map((d) => `${d.missing_id}:${d.patient_id}`));
+    const dismissed = new Set(((dismissals ?? []) as Array<{ missing_id: string; patient_id: string }>).map((d) => `${d.missing_id}:${d.patient_id}`));
 
     const out: Pair[] = [];
     let i = 0;
     for (const m of missing ?? []) {
       i++;
       setScanned(i);
-      const { data: suggs } = await sbx.rpc("suggest_patient_matches", { p_missing_id: m.id });
-      for (const s of suggs ?? []) {
+      const { data: suggs } = await sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches", { p_missing_id: m.id });
+      for (const s of (suggs ?? []) as Array<Record<string, unknown>>) {
         const key = `${m.id}:${s.patient_id}`;
         if (dismissed.has(key)) continue;
         if (Number(s.score) < minScore) continue;
