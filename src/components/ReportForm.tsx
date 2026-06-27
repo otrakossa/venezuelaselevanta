@@ -224,7 +224,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const field = "w-full px-4 py-3 rounded-xl bg-muted/50 border border-transparent focus:bg-background focus:border-[color:var(--sky)] outline-none transition-all text-[color:var(--midnight)] placeholder:text-muted-foreground/50 text-sm";
 
   return (
-    <div className="max-w-2xl mx-auto pb-32 lg:pb-8">
+    <div className="max-w-2xl mx-auto">
       {/* Stepper Header */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
