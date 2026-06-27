@@ -460,7 +460,7 @@ function AboutPage() {
 
         {/* Otras iniciativas — listado compacto al final */}
         <section className="pt-4 border-t border-border/60">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground mb-3">
             <Network className="h-3.5 w-3.5" />
             Otras iniciativas ciudadanas
           </div>
@@ -470,7 +470,7 @@ function AboutPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-3">
             {INICIATIVAS.map((cat) => (
               <div key={cat.title} className="text-xs">
-                <div className="font-medium text-foreground/80 mb-1">{cat.title}</div>
+                <div className="font-bold text-foreground mb-1">{cat.title}</div>
                 <ul className="space-y-0.5">
                   {cat.links.map((url) => (
                     <li key={url}>
