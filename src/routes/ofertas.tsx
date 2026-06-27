@@ -770,7 +770,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
 
   return (
     <Wizard
-      title="Publicar oferta de ayuda"
+      title="Publicar ofrecimiento de ayuda"
       submitLabel={prefilledNeed ? "Publicar y vincular" : "Publicar oferta"}
       submitting={busy}
       onSubmit={submit}
