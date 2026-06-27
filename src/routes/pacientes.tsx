@@ -49,6 +49,8 @@ interface Patient {
   id_number: string | null;
   phone: string | null;
   address: string | null;
+  state: string | null;
+  sector: string | null;
   matched_missing_id: string | null;
 }
 
