@@ -7,6 +7,8 @@ import {
   Search, X, PackageOpen, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, Link2, Check, Unlink2,
 } from "lucide-react";
+import { Wizard } from "@/components/wizard/Wizard";
+
 
 const searchSchema = z.object({
   need: fallback(z.string().uuid(), undefined as unknown as string).optional(),
