@@ -42,6 +42,7 @@ import { Route as ApiPublicPushManageRouteImport } from './routes/api/public/pus
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
+import { Route as ApiPublicAdminHealthRouteImport } from './routes/api/public/admin/health'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
@@ -213,6 +214,11 @@ const ApiPublicHooksIngestUsgsRoute =
     path: '/api/public/hooks/ingest-usgs',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAdminHealthRoute = ApiPublicAdminHealthRouteImport.update({
+  id: '/api/public/admin/health',
+  path: '/api/public/admin/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -240,6 +246,7 @@ export interface FileRoutesByFullPath {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/admin/health': typeof ApiPublicAdminHealthRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -275,6 +282,7 @@ export interface FileRoutesByTo {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/admin/health': typeof ApiPublicAdminHealthRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -311,6 +319,7 @@ export interface FileRoutesById {
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
+  '/api/public/admin/health': typeof ApiPublicAdminHealthRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/reports'
     | '/lovable/email/suppression'
+    | '/api/public/admin/health'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/reports'
     | '/lovable/email/suppression'
+    | '/api/public/admin/health'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/api/public/health'
     | '/api/public/reports'
     | '/lovable/email/suppression'
+    | '/api/public/admin/health'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -454,6 +466,7 @@ export interface RootRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicAdminHealthRoute: typeof ApiPublicAdminHealthRoute
   ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
@@ -697,6 +710,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksIngestUsgsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/admin/health': {
+      id: '/api/public/admin/health'
+      path: '/api/public/admin/health'
+      fullPath: '/api/public/admin/health'
+      preLoaderRoute: typeof ApiPublicAdminHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -726,6 +746,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicAdminHealthRoute: ApiPublicAdminHealthRoute,
   ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
