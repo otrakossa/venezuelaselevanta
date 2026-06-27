@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { LocationPickerInline } from "@/components/LocationPickerInline";
 import { Wizard } from "@/components/wizard/Wizard";
+import { reverseGeocode } from "@/lib/geocode";
 
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
