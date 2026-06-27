@@ -58,13 +58,6 @@ export function Header() {
               </span>
               <span className="text-[11px] font-semibold">{activeCount}</span>
             </div>
-            <button
-              onClick={toggleDark}
-              className="p-2 rounded-md hover:bg-white/10 transition-colors"
-              aria-label="Modo oscuro"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
             {isAuthenticated ? (
               <button
                 onClick={() => supabase.auth.signOut()}
