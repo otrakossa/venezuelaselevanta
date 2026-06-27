@@ -20,8 +20,8 @@ import { Route as DonarRouteImport } from './routes/donar'
 import { Route as DesaparecidosRouteImport } from './routes/desaparecidos'
 import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
@@ -90,14 +90,14 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReportesIdRoute = ReportesIdRouteImport.update({
@@ -116,9 +116,9 @@ const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminInteropRoute = AdminInteropRouteImport.update({
-  id: '/interop',
-  path: '/interop',
-  getParentRoute: () => AdminRoute,
+  id: '/admin/interop',
+  path: '/admin/interop',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
   id: '/api/public/reports',
@@ -165,7 +165,6 @@ const ApiPublicHooksIngestUsgsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -181,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
@@ -192,7 +192,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -208,6 +207,7 @@ export interface FileRoutesByTo {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/admin': typeof AdminIndexRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
@@ -220,7 +220,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -236,6 +235,7 @@ export interface FileRoutesById {
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
+  '/admin/': typeof AdminIndexRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
@@ -249,7 +249,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -265,6 +264,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/admin/'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
@@ -276,7 +276,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -292,6 +291,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/admin'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
@@ -303,7 +303,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/admin'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -319,6 +318,7 @@ export interface FileRouteTypes {
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
+    | '/admin/'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
@@ -331,7 +331,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CreditosRoute: typeof CreditosRoute
   DesaparecidosRoute: typeof DesaparecidosRoute
@@ -343,9 +342,11 @@ export interface RootRouteChildren {
   QueEsRoute: typeof QueEsRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AdminInteropRoute: typeof AdminInteropRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   ReportesIdRoute: typeof ReportesIdRoute
+  AdminIndexRoute: typeof AdminIndexRoute
   ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
@@ -435,18 +436,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reportes/$id': {
@@ -472,10 +473,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/interop': {
       id: '/admin/interop'
-      path: '/interop'
+      path: '/admin/interop'
       fullPath: '/admin/interop'
       preLoaderRoute: typeof AdminInteropRouteImport
-      parentRoute: typeof AdminRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/reports': {
       id: '/api/public/reports'
@@ -536,19 +537,8 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AdminRouteChildren {
-  AdminInteropRoute: typeof AdminInteropRoute
-}
-
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminInteropRoute: AdminInteropRoute,
-}
-
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CreditosRoute: CreditosRoute,
   DesaparecidosRoute: DesaparecidosRoute,
@@ -560,9 +550,11 @@ const rootRouteChildren: RootRouteChildren = {
   QueEsRoute: QueEsRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AdminInteropRoute: AdminInteropRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   ReportesIdRoute: ReportesIdRoute,
+  AdminIndexRoute: AdminIndexRoute,
   ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
