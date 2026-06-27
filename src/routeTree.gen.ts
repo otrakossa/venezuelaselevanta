@@ -25,6 +25,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
+import { Route as AdminInteropRouteImport } from './routes/admin.interop'
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicGeocodeRouteImport } from './routes/api/public/geocode'
@@ -114,6 +115,11 @@ const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
   path: '/api/reports.csv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminInteropRoute = AdminInteropRouteImport.update({
+  id: '/interop',
+  path: '/interop',
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
   id: '/api/public/reports',
   path: '/api/public/reports',
@@ -159,7 +165,7 @@ const ApiPublicHooksIngestUsgsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
@@ -185,7 +192,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
@@ -212,7 +220,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/reportes/$id': typeof ReportesIdRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/reportes/$id'
@@ -319,7 +331,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   CreditosRoute: typeof CreditosRoute
   DesaparecidosRoute: typeof DesaparecidosRoute
@@ -458,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsDotcsvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/interop': {
+      id: '/admin/interop'
+      path: '/interop'
+      fullPath: '/admin/interop'
+      preLoaderRoute: typeof AdminInteropRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/api/public/reports': {
       id: '/api/public/reports'
       path: '/api/public/reports'
@@ -517,9 +536,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminRouteChildren {
+  AdminInteropRoute: typeof AdminInteropRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminInteropRoute: AdminInteropRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   CreditosRoute: CreditosRoute,
   DesaparecidosRoute: DesaparecidosRoute,
