@@ -27,6 +27,7 @@ import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
+import { Route as AdminObservabilidadRouteImport } from './routes/admin.observabilidad'
 import { Route as AdminInteropRouteImport } from './routes/admin.interop'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
@@ -132,6 +133,11 @@ const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
   path: '/api/reports.csv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminObservabilidadRoute = AdminObservabilidadRouteImport.update({
+  id: '/admin/observabilidad',
+  path: '/admin/observabilidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminInteropRoute = AdminInteropRouteImport.update({
   id: '/admin/interop',
   path: '/admin/interop',
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
+  '/admin/observabilidad': typeof AdminObservabilidadRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
+  '/admin/observabilidad': typeof AdminObservabilidadRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
+  '/admin/observabilidad': typeof AdminObservabilidadRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/interop'
+    | '/admin/observabilidad'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/interop'
+    | '/admin/observabilidad'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/unsubscribe'
     | '/admin/interop'
+    | '/admin/observabilidad'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
@@ -431,6 +443,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AdminInteropRoute: typeof AdminInteropRoute
+  AdminObservabilidadRoute: typeof AdminObservabilidadRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
@@ -579,6 +592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiReportsDotcsvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/observabilidad': {
+      id: '/admin/observabilidad'
+      path: '/admin/observabilidad'
+      fullPath: '/admin/observabilidad'
+      preLoaderRoute: typeof AdminObservabilidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/interop': {
       id: '/admin/interop'
       path: '/admin/interop'
@@ -695,6 +715,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AdminInteropRoute: AdminInteropRoute,
+  AdminObservabilidadRoute: AdminObservabilidadRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
