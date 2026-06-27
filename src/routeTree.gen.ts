@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
 import { Route as QueEsRouteImport } from './routes/que-es'
@@ -31,6 +32,7 @@ import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/em
 import { Route as ApiPublicReportsRouteImport } from './routes/api/public/reports'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicGeocodeRouteImport } from './routes/api/public/geocode'
+import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
 import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
@@ -40,6 +42,11 @@ import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
 
+const UnsubscribeRoute = UnsubscribeRouteImport.update({
+  id: '/unsubscribe',
+  path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -150,6 +157,11 @@ const ApiPublicGeocodeRoute = ApiPublicGeocodeRouteImport.update({
   path: '/api/public/geocode',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicContactRoute = ApiPublicContactRouteImport.update({
+  id: '/api/public/contact',
+  path: '/api/public/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
     id: '/lovable/email/transactional/send',
@@ -209,12 +221,14 @@ export interface FileRoutesByFullPath {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
@@ -241,12 +255,14 @@ export interface FileRoutesByTo {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin': typeof AdminIndexRoute
+  '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
@@ -274,12 +290,14 @@ export interface FileRoutesById {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/geocode': typeof ApiPublicGeocodeRoute
   '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/reports': typeof ApiPublicReportsRoute
@@ -308,12 +326,14 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
+    | '/api/public/contact'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
@@ -340,12 +360,14 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin'
+    | '/api/public/contact'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
@@ -372,12 +394,14 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/unsubscribe'
     | '/admin/interop'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
+    | '/api/public/contact'
     | '/api/public/geocode'
     | '/api/public/health'
     | '/api/public/reports'
@@ -405,12 +429,14 @@ export interface RootRouteChildren {
   QueEsRoute: typeof QueEsRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  UnsubscribeRoute: typeof UnsubscribeRoute
   AdminInteropRoute: typeof AdminInteropRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ReportesIdRoute: typeof ReportesIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  ApiPublicContactRoute: typeof ApiPublicContactRoute
   ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
@@ -427,6 +453,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/unsubscribe': {
+      id: '/unsubscribe'
+      path: '/unsubscribe'
+      fullPath: '/unsubscribe'
+      preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -581,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicGeocodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/contact': {
+      id: '/api/public/contact'
+      path: '/api/public/contact'
+      fullPath: '/api/public/contact'
+      preLoaderRoute: typeof ApiPublicContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
       path: '/lovable/email/transactional/send'
@@ -653,12 +693,14 @@ const rootRouteChildren: RootRouteChildren = {
   QueEsRoute: QueEsRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  UnsubscribeRoute: UnsubscribeRoute,
   AdminInteropRoute: AdminInteropRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ReportesIdRoute: ReportesIdRoute,
   AdminIndexRoute: AdminIndexRoute,
+  ApiPublicContactRoute: ApiPublicContactRoute,
   ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,

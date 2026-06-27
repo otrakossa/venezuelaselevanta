@@ -122,7 +122,7 @@ export const Route = createFileRoute('/api/public/contact')({
 })
 
 async function sendContactNotification(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   data: { name: string; email: string; subject?: string | null; message: string },
 ) {
   const template = TEMPLATES['contact-notification']
