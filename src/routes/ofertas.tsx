@@ -215,7 +215,7 @@ function OfertasPage() {
             className="shrink-0 inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/30 hover:opacity-95 active:scale-[0.98] transition"
           >
             {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {showForm ? "Cerrar" : "Publicar oferta"}
+            {showForm ? "Cerrar" : "Publicar ayuda"}
           </button>
         </div>
 
@@ -319,7 +319,7 @@ function OfertasPage() {
                 onClick={() => setShowForm(true)}
                 className="text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold"
               >
-                Publicar oferta
+                Publicar ayuda
               </button>
             )}
           </div>
@@ -771,7 +771,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
   return (
     <Wizard
       title="Publicar ofrecimiento de ayuda"
-      submitLabel={prefilledNeed ? "Publicar y vincular" : "Publicar oferta"}
+      submitLabel={prefilledNeed ? "Publicar y vincular" : "Publicar ayuda"}
       submitting={busy}
       onSubmit={submit}
       onCancel={onDone}
