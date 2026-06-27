@@ -19,9 +19,9 @@ export const Route = createFileRoute("/ofertas")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "Ofertas de ayuda — Venezuela Se Levanta" },
+      { title: "Ofrecimiento de ayuda — Venezuela Se Levanta" },
       { name: "description", content: "Publica recursos, insumos o voluntariado disponibles y vincúlalos con las necesidades de la comunidad." },
-      { property: "og:title", content: "Ofertas de ayuda — Venezuela Se Levanta" },
+      { property: "og:title", content: "Ofrecimiento de ayuda — Venezuela Se Levanta" },
       { property: "og:description", content: "Quien quiera ayudar puede publicar lo que ofrece y conectarlo con quienes lo necesitan." },
     ],
   }),
