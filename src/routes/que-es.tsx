@@ -39,7 +39,7 @@ export const Route = createFileRoute("/que-es")({
       {
         name: "description",
         content:
-          "Venezuela Se Levanta es una plataforma ciudadana que pone la tecnología y los datos al servicio de la respuesta colectiva al terremoto.",
+          "Venezuela Se Levanta es una plataforma abierta y colaborativa para sistematizar la solidaridad.",
       },
       { property: "og:title", content: "Qué es Venezuela Se Levanta — Nuestra historia" },
       {
@@ -173,7 +173,7 @@ function AboutPage() {
             </h2>
           </div>
           <p className="text-base sm:text-lg leading-relaxed text-foreground/90">
-            Somos una plataforma ciudadana de respuesta colaborativa frente a la emergencia del
+            Somos una plataforma abierta y colaborativa para sistematizar la solidaridad frente a la emergencia del
             terremoto en Venezuela. Un lugar abierto, vivo y en tiempo real donde cualquier
             persona puede <strong>reportar lo que ve</strong>, <strong>buscar o registrar
             personas desaparecidas</strong>, ubicar a quienes están siendo{" "}
