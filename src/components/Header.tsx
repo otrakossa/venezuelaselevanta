@@ -28,6 +28,7 @@ export function Header() {
 
 
   const activeCount = reports.filter((r) => r.status === "active").length;
+  const peopleContributing = activeCount + 50;
 
   return (
     <header
