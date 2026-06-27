@@ -49,6 +49,8 @@ interface Patient {
   id_number: string | null;
   phone: string | null;
   address: string | null;
+  state: string | null;
+  sector: string | null;
   matched_missing_id: string | null;
 }
 
@@ -121,6 +123,8 @@ function AtendidosPage() {
   const [showForm, setShowForm] = useState(false);
   const [page, setPage] = useState(1);
   const [showAllChips, setShowAllChips] = useState(false);
+  const [stateFilter, setStateFilter] = useState<string>("");
+  const [sectorFilter, setSectorFilter] = useState<string>("");
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -138,7 +142,8 @@ function AtendidosPage() {
   };
 
   useEffect(() => { load(); }, []);
-  useEffect(() => { setPage(1); }, [q, filter, center]);
+  useEffect(() => { setPage(1); }, [q, filter, center, stateFilter, sectorFilter]);
+  useEffect(() => { setSectorFilter(""); }, [stateFilter]);
 
   const setCenter = (c?: string) =>
     navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
@@ -160,11 +165,30 @@ function AtendidosPage() {
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
   }, [patients]);
 
+  // distinct states & sectors (dependent)
+  const statesList = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of patients) if (p.state) s.add(p.state);
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [patients]);
+
+  const sectorsList = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of patients) {
+      if (!p.sector) continue;
+      if (stateFilter && p.state !== stateFilter) continue;
+      s.add(p.sector);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [patients, stateFilter]);
+
   const list = useMemo(() => {
     let src = patients;
     if (filter === "active")     src = src.filter((p) => p.status !== "discharged");
     if (filter === "discharged") src = src.filter((p) => p.status === "discharged");
     if (center)                  src = src.filter((p) => p.center_name === center);
+    if (stateFilter)             src = src.filter((p) => p.state === stateFilter);
+    if (sectorFilter)            src = src.filter((p) => p.sector === sectorFilter);
     if (q.trim().length >= 2) {
       const needle = q.trim().toLowerCase();
       const digits = needle.replace(/\D/g, "");
@@ -172,11 +196,12 @@ function AtendidosPage() {
         (p) =>
           p.name.toLowerCase().includes(needle) ||
           p.center_name.toLowerCase().includes(needle) ||
+          (p.sector ?? "").toLowerCase().includes(needle) ||
           (digits.length >= 4 && (p.id_number ?? "").includes(digits)),
       );
     }
     return src;
-  }, [patients, filter, q, center]);
+  }, [patients, filter, q, center, stateFilter, sectorFilter]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative overflow-x-hidden">
@@ -308,14 +333,39 @@ function AtendidosPage() {
           </button>
         </div>
 
-        {(center || q || filter !== "active") && (
+        {(statesList.length > 0 || sectorsList.length > 0) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-input bg-card font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">Todos los estados</option>
+              {statesList.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <select
+              value={sectorFilter}
+              onChange={(e) => setSectorFilter(e.target.value)}
+              disabled={sectorsList.length === 0}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-input bg-card font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            >
+              <option value="">{stateFilter ? "Todos los sectores" : "Selecciona un estado"}</option>
+              {sectorsList.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        )}
+
+        {(center || q || filter !== "active" || stateFilter || sectorFilter) && (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
             <span>
-              Mostrando <span className="font-bold text-foreground">{list.length}</span> resultado{list.length === 1 ? "" : "s"}
-              {center && <> en <span className="font-semibold text-foreground">{center}</span></>}
+              Mostrando <span className="font-bold text-foreground">{list.length}</span> atendido{list.length === 1 ? "" : "s"}
+              {(stateFilter || sectorFilter) && (
+                <> en <span className="font-semibold text-foreground">{[sectorFilter, stateFilter].filter(Boolean).join(", ")}</span></>
+              )}
+              {center && <> · <span className="font-semibold text-foreground">{center}</span></>}
             </span>
             <button
-              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); }}
+              onClick={() => { setQ(""); setFilter("active"); setCenter(undefined); setStateFilter(""); setSectorFilter(""); }}
               className="text-primary font-semibold hover:underline"
             >
               Limpiar
@@ -323,6 +373,7 @@ function AtendidosPage() {
           </div>
         )}
       </div>
+
 
       {(() => {
         const total = list.length;
@@ -452,6 +503,22 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
             )}
           </div>
         </div>
+
+        {(p.state || p.sector) && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {p.state && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-400">
+                <MapPin className="h-2.5 w-2.5" /> {p.state}
+              </span>
+            )}
+            {p.sector && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-400">
+                {p.sector}
+              </span>
+            )}
+          </div>
+        )}
+
 
         {(p.id_number || p.phone || p.address) && (
           <div className="grid gap-1 text-[11px] text-muted-foreground border-t border-border/40 pt-2">

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useReports, useMissing } from "@/hooks/useReports";
 import { useUSGSQuakes, quakeColor } from "@/hooks/useUSGSQuakes";
 import { CATEGORIES, CATEGORY_MAP, STATUS_LABELS } from "@/lib/categories";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, Cell,
   PieChart, Pie, AreaChart, Area, Legend,
@@ -10,8 +10,15 @@ import {
 import {
   AlertCircle, Users, MapPin, Download, Activity,
   ShieldCheck, CheckCircle2, Clock, Flame, Waves, TrendingUp,
+  HeartPulse, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+type PatientZone = { state: string | null; sector: string | null };
+
 
 export const Route = createFileRoute("/estadisticas")({
   ssr: false,
@@ -35,6 +42,23 @@ function StatsPage() {
   const { reports } = useReports();
   const { missing, counts: missingCounts } = useMissing();
   const { data: quakes = [] } = useUSGSQuakes(true);
+  const [patientZones, setPatientZones] = useState<PatientZone[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `${SUPA_URL}/rest/v1/patients?select=state,sector&limit=10000`,
+          { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` } },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as PatientZone[];
+        if (!cancelled) setPatientZones(data);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const stats = useMemo(() => {
     const total = reports.length;
@@ -146,6 +170,51 @@ function StatsPage() {
       byStatus, topZones, topStates, topMunicipalities, urgencyByCategory, resolveRate,
     };
   }, [reports, missingCounts, quakes]);
+
+  const patientStats = useMemo(() => {
+    const total = patientZones.length;
+    const sectorMap = new Map<string, { count: number; state: string | null }>();
+    const stateMap = new Map<string, number>();
+    let withSector = 0;
+    let withState = 0;
+    for (const p of patientZones) {
+      if (p.state) {
+        stateMap.set(p.state, (stateMap.get(p.state) ?? 0) + 1);
+        withState++;
+      }
+      if (p.sector) {
+        const key = `${p.sector}|||${p.state ?? ""}`;
+        const prev = sectorMap.get(key);
+        sectorMap.set(key, { count: (prev?.count ?? 0) + 1, state: p.state });
+        withSector++;
+      }
+    }
+    const topSectors = Array.from(sectorMap.entries())
+      .map(([k, v]) => ({ name: k.split("|||")[0], state: v.state, count: v.count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+    const byState = Array.from(stateMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    // grouped: state -> sectors
+    const grouped = new Map<string, { sector: string; count: number }[]>();
+    for (const [k, v] of sectorMap.entries()) {
+      const sector = k.split("|||")[0];
+      const stateKey = v.state ?? "Sin estado";
+      const arr = grouped.get(stateKey) ?? [];
+      arr.push({ sector, count: v.count });
+      grouped.set(stateKey, arr);
+    }
+    const groupedSorted = Array.from(grouped.entries())
+      .map(([state, sectors]) => ({
+        state,
+        total: sectors.reduce((a, b) => a + b.count, 0),
+        sectors: sectors.sort((a, b) => b.count - a.count),
+      }))
+      .sort((a, b) => b.total - a.total);
+    return { total, topSectors, byState, grouped: groupedSorted, withSector, withState };
+  }, [patientZones]);
+
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 space-y-6">
@@ -369,7 +438,11 @@ function StatsPage() {
         ))}
       </div>
 
+      {/* Atendidos por zona */}
+      <PatientZonesSection stats={patientStats} />
+
       {/* Urgencia × categoría + Sismos */}
+
       <div className="grid lg:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-2xl p-4">
           <h3 className="font-display text-base mb-3">Urgencia por categoría</h3>
@@ -476,7 +549,125 @@ function StatsPage() {
   );
 }
 
+function PatientZonesSection({ stats }: {
+  stats: {
+    total: number;
+    topSectors: { name: string; state: string | null; count: number }[];
+    byState: { name: string; count: number }[];
+    grouped: { state: string; total: number; sectors: { sector: string; count: number }[] }[];
+    withSector: number;
+    withState: number;
+  };
+}) {
+  const [open, setOpen] = useState(false);
+  if (stats.total === 0) {
+    return (
+      <div className="bg-card border border-border rounded-2xl p-4">
+        <h3 className="font-display text-base mb-2 flex items-center gap-2">
+          <HeartPulse className="h-4 w-4 text-primary" /> Atendidos por zona
+        </h3>
+        <p className="text-xs text-muted-foreground py-6 text-center">
+          Aún no hay atendidos registrados con datos de zona.
+        </p>
+      </div>
+    );
+  }
+  const max = stats.topSectors[0]?.count || 1;
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+      <div className="flex items-end justify-between flex-wrap gap-2">
+        <div>
+          <h3 className="font-display text-base flex items-center gap-2">
+            <HeartPulse className="h-4 w-4 text-primary" /> Atendidos por zona
+          </h3>
+          <p className="text-[11px] text-muted-foreground">
+            {stats.total.toLocaleString("es-VE")} atendidos · {stats.grouped.length} estado{stats.grouped.length === 1 ? "" : "s"} · {stats.topSectors.length} sector{stats.topSectors.length === 1 ? "" : "es"} con presencia
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Kpi value={stats.byState.length} label="Estados" />
+          <Kpi value={stats.topSectors.length} label="Sectores" />
+        </div>
+      </div>
+
+      {stats.topSectors.length > 0 && (
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+            Top 15 sectores
+          </div>
+          <div className="space-y-1.5">
+            {stats.topSectors.map((z, i) => {
+              const pct = (z.count / max) * 100;
+              return (
+                <div key={`${z.name}-${z.state ?? ""}-${i}`}>
+                  <div className="flex items-center justify-between text-xs mb-0.5">
+                    <span className="truncate flex items-center gap-1.5 min-w-0">
+                      <span className="w-4 h-4 rounded-full bg-[var(--midnight)] text-[10px] text-[var(--cream)] grid place-items-center shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="truncate font-medium">{z.name}</span>
+                      {z.state && <span className="text-muted-foreground text-[10px] truncate">· {z.state}</span>}
+                    </span>
+                    <span className="font-semibold tabular-nums shrink-0">{z.count}</span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        background: "linear-gradient(90deg, var(--sky), var(--sunrise))",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full text-xs font-semibold text-primary flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-border hover:bg-muted/50 transition"
+      >
+        {open ? <>Ocultar desglose <ChevronUp className="h-3.5 w-3.5" /></> : <>Ver desglose por Estado → Sector <ChevronDown className="h-3.5 w-3.5" /></>}
+      </button>
+
+      {open && (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {stats.grouped.map((g) => (
+            <div key={g.state} className="border border-border rounded-xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-sm truncate">{g.state}</span>
+                <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">{g.total}</span>
+              </div>
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                {g.sectors.map((s) => (
+                  <div key={s.sector} className="flex items-center justify-between text-[11px]">
+                    <span className="truncate">{s.sector}</span>
+                    <span className="font-semibold tabular-nums shrink-0 text-muted-foreground">{s.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Kpi({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="bg-muted/40 border border-border/60 rounded-lg px-2.5 py-1.5 text-center min-w-[60px]">
+      <div className="text-base font-bold tabular-nums leading-none">{value}</div>
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">{label}</div>
+    </div>
+  );
+}
+
 function StatCard({
+
   icon: Icon, color, label, value, hint, sparkline, accent,
 }: {
   icon: any; color: string; label: string; value: number;
