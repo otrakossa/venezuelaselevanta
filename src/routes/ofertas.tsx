@@ -776,18 +776,81 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     </div>
   );
 
+  const municipios = f.state ? (MUNICIPIOS[f.state] ?? []) : [];
+
   const stepDisponibilidad = (
     <div className="space-y-3">
-      <input
-        className={field}
-        placeholder="¿Dónde estás o desde dónde puedes entregar? (opcional)"
-        value={f.location_desc}
-        onChange={(e) => setF({ ...f, location_desc: e.target.value })}
-        maxLength={200}
-      />
-      <p className="text-[11px] text-muted-foreground">
-        Indica una ciudad, parroquia o zona aproximada para facilitar la coordinación logística.
-      </p>
+      <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/20 px-3 py-2 text-[11px] text-emerald-800 dark:text-emerald-300">
+        📍 La ubicación es <b>clave</b> para canalizar rápidamente la entrega de la ayuda. Indica dónde estás o desde dónde puedes entregar.
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Estado *</label>
+          <select
+            className={field}
+            value={f.state}
+            onChange={(e) => setF({ ...f, state: e.target.value, city: "" })}
+            required
+          >
+            <option value="">— Selecciona el estado —</option>
+            {ESTADOS.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Ciudad / Municipio *</label>
+          {municipios.length > 0 ? (
+            <select
+              className={field}
+              value={f.city}
+              onChange={(e) => setF({ ...f, city: e.target.value })}
+              required
+            >
+              <option value="">— Selecciona —</option>
+              {municipios.map((m) => <option key={m} value={m}>{m}</option>)}
+              <option value="__other__">Otra ciudad…</option>
+            </select>
+          ) : (
+            <input
+              className={field}
+              placeholder="Selecciona primero un estado"
+              value={f.city}
+              onChange={(e) => setF({ ...f, city: e.target.value })}
+              disabled={!f.state}
+              maxLength={120}
+            />
+          )}
+          {f.city === "__other__" && (
+            <input
+              className={`${field} mt-2`}
+              placeholder="Escribe la ciudad / municipio"
+              onChange={(e) => setF({ ...f, city: e.target.value })}
+              maxLength={120}
+              autoFocus
+            />
+          )}
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Dirección de entrega *</label>
+          <input
+            className={field}
+            placeholder="Parroquia, sector, calle, punto de referencia…"
+            value={f.address}
+            onChange={(e) => setF({ ...f, address: e.target.value })}
+            required
+            maxLength={250}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-[11px] font-bold text-muted-foreground mb-1 uppercase tracking-wider">Notas logísticas (opcional)</label>
+          <input
+            className={field}
+            placeholder="Horario disponible, si puedes trasladarlo, etc."
+            value={f.location_desc}
+            onChange={(e) => setF({ ...f, location_desc: e.target.value })}
+            maxLength={200}
+          />
+        </div>
+      </div>
     </div>
   );
 
