@@ -64,6 +64,12 @@ const URGENCY_STYLES: Record<NeedUrgency, { pill: string; dot: string; label: st
   low:      { pill: "bg-green-500/15 text-green-700 dark:text-green-400",    dot: "bg-green-500",  label: "Baja",     emoji: "🟢" },
 };
 
+// Fallbacks defensivos: una categoría/urgencia fuera del enum (p.ej. de un ingest o el bot)
+// no debe tumbar toda la página.
+const CATEGORY_FALLBACK = { emoji: "📦", label: "Otro" } as const;
+const catMeta = (c: string) => CATEGORY_META[c as NeedCategory] ?? CATEGORY_FALLBACK;
+const urgMeta = (u: string) => URGENCY_STYLES[u as NeedUrgency] ?? URGENCY_STYLES.medium;
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins  = Math.floor(diff / 60_000);
@@ -328,8 +334,8 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "red"
 }
 
 function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
-  const cat = CATEGORY_META[n.category];
-  const urg = URGENCY_STYLES[n.urgency];
+  const cat = catMeta(n.category);
+  const urg = urgMeta(n.urgency);
   const [expanded, setExpanded] = useState(false);
 
   return (

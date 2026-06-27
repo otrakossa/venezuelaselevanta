@@ -65,6 +65,10 @@ const CATEGORY_META: Record<Category, { emoji: string; label: string }> = {
   other:      { emoji: "📦", label: "Otro" },
 };
 
+// Fallback defensivo: una categoría fuera del enum no debe tumbar toda la página.
+const CATEGORY_FALLBACK = { emoji: "📦", label: "Otro" } as const;
+const catMeta = (c: string) => CATEGORY_META[c as Category] ?? CATEGORY_FALLBACK;
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
@@ -351,7 +355,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "emer
 }
 
 function OfferCard({ offer: o, onMatch, onChanged }: { offer: Offer; onMatch: () => void; onChanged: () => void }) {
-  const cat = CATEGORY_META[o.category];
+  const cat = catMeta(o.category);
   const [expanded, setExpanded] = useState(false);
   const [linkedNeed, setLinkedNeed] = useState<NeedLite | null>(null);
   const [busy, setBusy] = useState(false);
@@ -496,7 +500,7 @@ function StatusBadge({ status }: { status: "available" | "matched" | "delivered"
     matched:   { cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400",       label: "Vinculada" },
     delivered: { cls: "bg-slate-500/15 text-slate-700 dark:text-slate-400",       label: "Entregada" },
   };
-  const s = map[status];
+  const s = map[status] ?? { cls: "bg-slate-500/15 text-slate-700 dark:text-slate-400", label: String(status) };
   return <span className={`shrink-0 text-[10px] font-bold px-2 py-1 rounded-full ${s.cls}`}>{s.label}</span>;
 }
 
@@ -552,7 +556,7 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
         <div className="flex items-center justify-between px-5 py-4 border-b border-border/60">
           <div className="min-w-0">
             <div className="font-bold text-sm">Vincular oferta</div>
-            <div className="text-xs text-muted-foreground line-clamp-1">{CATEGORY_META[offer.category].emoji} {offer.title}</div>
+            <div className="text-xs text-muted-foreground line-clamp-1">{catMeta(offer.category).emoji} {offer.title}</div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-md text-muted-foreground hover:bg-muted transition">
             <X className="h-4 w-4" />
@@ -601,7 +605,7 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
                     disabled={linking !== null}
                     className="w-full text-left p-3 rounded-xl border border-border hover:border-emerald-500/60 hover:bg-emerald-500/5 transition disabled:opacity-50 flex items-center gap-3"
                   >
-                    <span className="text-xl">{CATEGORY_META[n.category].emoji}</span>
+                    <span className="text-xl">{catMeta(n.category).emoji}</span>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-sm line-clamp-1">{n.title}</div>
                       <div className="text-[11px] text-muted-foreground line-clamp-1">🏥 {n.center_name}</div>
