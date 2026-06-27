@@ -473,7 +473,33 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     contact_info:  "",
   });
   const [busy, setBusy] = useState(false);
+  const [geocodingAddr, setGeocodingAddr] = useState(false);
+  // Tracks whether the address field was last set by the user (true) or by autofill (false).
+  const addressManuallyEdited = useRef(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+  // Auto-fill address from lat/lng when the pin moves, unless the user edited it manually.
+  useEffect(() => {
+    if (f.center_lat == null || f.center_lng == null) return;
+    if (addressManuallyEdited.current && f.center_address.trim().length > 0) return;
+    const ctrl = new AbortController();
+    setGeocodingAddr(true);
+    reverseGeocode(f.center_lat, f.center_lng, ctrl.signal)
+      .then((addr) => {
+        if (addr && !ctrl.signal.aborted) {
+          setF((prev) => {
+            // Skip if user typed something in the meantime and it's not empty
+            if (addressManuallyEdited.current && prev.center_address.trim().length > 0) return prev;
+            return { ...prev, center_address: addr };
+          });
+        }
+      })
+      .finally(() => {
+        if (!ctrl.signal.aborted) setGeocodingAddr(false);
+      });
+    return () => ctrl.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.center_lat, f.center_lng]);
 
   const toggleCat = (c: NeedCategory) => {
     setF((prev) => ({
