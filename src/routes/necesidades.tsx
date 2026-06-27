@@ -167,30 +167,39 @@ function NecesidadesPage() {
 
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
-        <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-600 mb-2">
-              <HandHeart className="h-3.5 w-3.5" /> Ayuda solidaria
+        <div className="relative flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-600 whitespace-nowrap">
+                <HandHeart className="h-3.5 w-3.5" /> Ayuda solidaria
+              </div>
+              <button
+                onClick={() => setShowForm((s) => !s)}
+                className="sm:hidden shrink-0 inline-flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 rounded-xl text-xs font-bold shadow-lg shadow-primary/20 active:scale-[0.98] transition"
+              >
+                {showForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                {showForm ? "Cerrar" : "Publicar"}
+              </button>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Necesidades de la comunidad</h1>
-            <p className="text-sm text-muted-foreground mt-1 max-w-prose">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">Necesidades de la comunidad</h1>
+            <p className="text-sm text-muted-foreground mt-1.5 max-w-prose">
               Publica lo que necesitas o encuentra cómo ayudar a quienes más lo necesitan.
             </p>
           </div>
           <button
             onClick={() => setShowForm((s) => !s)}
-            className="shrink-0 inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-95 active:scale-[0.98] transition"
+            className="hidden sm:inline-flex shrink-0 items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-95 active:scale-[0.98] transition"
           >
             {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
             {showForm ? "Cerrar" : "Publicar necesidad"}
           </button>
         </div>
 
-        <div className="relative mt-5 grid grid-cols-4 gap-2 sm:gap-3">
-          <Kpi tone="red"    value={counts.critical} label="🔴 Crítica" />
-          <Kpi tone="orange" value={counts.high}     label="🟠 Alta" />
-          <Kpi tone="yellow" value={counts.medium}   label="🟡 Media" />
-          <Kpi tone="green"  value={counts.low}      label="🟢 Baja" />
+        <div className="relative mt-4 grid grid-cols-4 gap-1.5 sm:gap-3">
+          <Kpi tone="red"    value={counts.critical} label="Crítica" emoji="🔴" />
+          <Kpi tone="orange" value={counts.high}     label="Alta"    emoji="🟠" />
+          <Kpi tone="yellow" value={counts.medium}   label="Media"   emoji="🟡" />
+          <Kpi tone="green"  value={counts.low}      label="Baja"    emoji="🟢" />
         </div>
       </section>
 
@@ -333,7 +342,7 @@ function NecesidadesPage() {
   );
 }
 
-function Kpi({ value, label, tone }: { value: number; label: string; tone: "red" | "orange" | "yellow" | "green" }) {
+function Kpi({ value, label, tone, emoji }: { value: number; label: string; tone: "red" | "orange" | "yellow" | "green"; emoji?: string }) {
   const tones = {
     red:    "from-red-500/15 to-red-500/5 text-red-600",
     orange: "from-orange-500/15 to-orange-500/5 text-orange-600",
@@ -341,9 +350,12 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "red"
     green:  "from-green-500/15 to-green-500/5 text-green-600",
   } as const;
   return (
-    <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-2 py-2`}>
-      <div className="text-xl sm:text-2xl font-black leading-none">{value}</div>
-      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium leading-tight">{label}</div>
+    <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-2 py-2 min-w-0`}>
+      <div className="text-lg sm:text-2xl font-black leading-none">{value}</div>
+      <div className="text-[10px] sm:text-xs text-muted-foreground mt-1 font-medium leading-tight flex items-center gap-1 truncate">
+        {emoji && <span className="text-[10px]">{emoji}</span>}
+        <span className="truncate">{label}</span>
+      </div>
     </div>
   );
 }
