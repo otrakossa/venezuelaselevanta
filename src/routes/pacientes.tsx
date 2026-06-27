@@ -123,6 +123,8 @@ function AtendidosPage() {
   const [showForm, setShowForm] = useState(false);
   const [page, setPage] = useState(1);
   const [showAllChips, setShowAllChips] = useState(false);
+  const [stateFilter, setStateFilter] = useState<string>("");
+  const [sectorFilter, setSectorFilter] = useState<string>("");
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -140,7 +142,8 @@ function AtendidosPage() {
   };
 
   useEffect(() => { load(); }, []);
-  useEffect(() => { setPage(1); }, [q, filter, center]);
+  useEffect(() => { setPage(1); }, [q, filter, center, stateFilter, sectorFilter]);
+  useEffect(() => { setSectorFilter(""); }, [stateFilter]);
 
   const setCenter = (c?: string) =>
     navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
