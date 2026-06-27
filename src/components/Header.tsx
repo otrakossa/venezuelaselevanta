@@ -52,12 +52,18 @@ export function Header() {
           </Link>
 
           <div className="flex items-center gap-1 shrink-0">
-            <div className="flex items-center gap-1.5 bg-[color:var(--sunrise)]/15 border border-[color:var(--sunrise)]/40 rounded-full px-2.5 py-1">
+            <div
+              className="flex items-center gap-1.5 bg-[color:var(--sunrise)]/15 border border-[color:var(--sunrise)]/40 rounded-full px-2.5 py-1"
+              title={`${peopleContributing} personas aportando en este momento`}
+            >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--sunrise)] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--sunrise)]" />
               </span>
-              <span className="text-[11px] font-semibold">{activeCount}</span>
+              <span className="text-[11px] font-semibold">{peopleContributing}</span>
+              <span className="text-[11px] font-medium hidden sm:inline text-header-foreground/80">
+                personas aportando
+              </span>
             </div>
             {isAuthenticated ? (
               <button
