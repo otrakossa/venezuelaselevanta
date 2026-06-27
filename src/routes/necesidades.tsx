@@ -468,9 +468,10 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     center_lat:    null as number | null,
     center_lng:    null as number | null,
     center_phone:  "" as string,
-    contact_name:  "",
-    contact_phone: "",
-    contact_info:  "",
+    contact_name:    "",
+    reporter_cedula: "",
+    contact_phone:   "",
+    contact_info:    "",
   });
   const [busy, setBusy] = useState(false);
   const [geocodingAddr, setGeocodingAddr] = useState(false);
@@ -514,6 +515,10 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     if (f.categories.length === 0) { toast.error("Selecciona al menos una categoría"); return; }
     if (!f.title.trim())           { toast.error("El título es requerido"); return; }
     if (!f.center_name.trim())     { toast.error("El nombre del centro es requerido"); return; }
+    if (!f.contact_name.trim())    { toast.error("Tu nombre es obligatorio"); return; }
+    if (!f.reporter_cedula.trim()) { toast.error("Tu cédula es obligatoria"); return; }
+    if (!f.contact_phone.trim())   { toast.error("Tu teléfono es obligatorio"); return; }
+
 
     setBusy(true);
     try {
@@ -529,11 +534,13 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         center_address: f.center_address.trim() || null,
         lat:            f.center_lat,
         lng:            f.center_lng,
-        contact_name:   f.contact_name.trim() || null,
-        contact_phone:  f.contact_phone.trim() || null,
-        contact_info:   f.contact_info.trim() || null,
-        status:         "open" as NeedStatus,
+        contact_name:    f.contact_name.trim(),
+        reporter_cedula: f.reporter_cedula.trim(),
+        contact_phone:   f.contact_phone.trim(),
+        contact_info:    f.contact_info.trim() || null,
+        status:          "open" as NeedStatus,
       };
+
 
       const res = await fetch(`${SUPA_URL}/rest/v1/needs`, {
         method:  "POST",
@@ -721,30 +728,46 @@ function NeedForm({ onDone }: { onDone: () => void }) {
   );
 
   const stepContacto = (
-    <div className="grid sm:grid-cols-2 gap-3">
-      <input
-        className={field}
-        placeholder="Nombre del contacto (opcional)"
-        value={f.contact_name}
-        onChange={(e) => setF({ ...f, contact_name: e.target.value })}
-        maxLength={100}
-      />
-      <input
-        className={field}
-        placeholder="Teléfono del contacto (opcional)"
-        value={f.contact_phone}
-        onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
-        maxLength={40}
-      />
-      <input
-        className={`${field} sm:col-span-2`}
-        placeholder="Info de pago / transferencia (Zelle, cuenta bancaria, etc.)"
-        value={f.contact_info}
-        onChange={(e) => setF({ ...f, contact_info: e.target.value })}
-        maxLength={200}
-      />
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Estos datos son obligatorios para canalizar la entrega de ayuda.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <input
+          className={field}
+          placeholder="Tu nombre completo *"
+          value={f.contact_name}
+          onChange={(e) => setF({ ...f, contact_name: e.target.value })}
+          maxLength={100}
+          required
+        />
+        <input
+          className={field}
+          placeholder="Cédula *"
+          value={f.reporter_cedula}
+          onChange={(e) => setF({ ...f, reporter_cedula: e.target.value })}
+          maxLength={30}
+          required
+        />
+        <input
+          className={field}
+          placeholder="Teléfono *"
+          value={f.contact_phone}
+          onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
+          maxLength={40}
+          required
+        />
+        <input
+          className={`${field} sm:col-span-2`}
+          placeholder="Info adicional / pago (opcional)"
+          value={f.contact_info}
+          onChange={(e) => setF({ ...f, contact_info: e.target.value })}
+          maxLength={200}
+        />
+      </div>
     </div>
   );
+
 
   return (
     <Wizard
@@ -756,7 +779,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       steps={[
         { key: "que", label: "¿Qué se necesita?", content: stepQue, isValid: () => f.categories.length > 0 && f.title.trim().length > 0, invalidMessage: f.categories.length === 0 ? "Selecciona al menos una categoría" : "El título es requerido" },
         { key: "donde", label: "¿Dónde se necesita?", content: stepDonde, isValid: () => f.center_name.trim().length > 0, invalidMessage: "El nombre del centro es requerido" },
-        { key: "contacto", label: "Contacto", content: stepContacto },
+        { key: "contacto", label: "Contacto", content: stepContacto, isValid: () => f.contact_name.trim().length > 0 && f.reporter_cedula.trim().length > 0 && f.contact_phone.trim().length > 0, invalidMessage: "Nombre, cédula y teléfono son obligatorios" },
       ]}
     />
   );
