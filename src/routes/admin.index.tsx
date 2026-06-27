@@ -7,6 +7,7 @@ import { CATEGORY_MAP, CATEGORIES, URGENCY_LABELS, STATUS_LABELS } from "@/lib/c
 import { toast } from "sonner";
 import { ShieldCheck, Trash2, CheckCircle2, EyeOff, Eye, Search, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 export const Route = createFileRoute("/admin/")({
   ssr: false,
@@ -146,18 +147,12 @@ function AdminPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6">
-      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">Panel de moderación</h1>
-          <p className="text-[11px] text-muted-foreground">Verifica, oculta o elimina reportes. {filtered.length} de {reports.length} visibles.</p>
-        </div>
-        <Link
-          to="/admin/interop"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[color:var(--sunrise)] text-white text-xs font-bold hover:opacity-90"
-        >
-          🔗 Interoperabilidad
-        </Link>
+      <AdminNav />
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold">Panel de moderación</h1>
+        <p className="text-[11px] text-muted-foreground">Verifica, oculta o elimina reportes. {filtered.length} de {reports.length} visibles.</p>
       </div>
+
 
       {/* Tabs */}
       <div className="flex gap-1 mb-3 border-b border-border">

@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
-import { ShieldCheck, BarChart3, Database, Link2, Copy, ArrowLeft } from "lucide-react";
+import { ShieldCheck, BarChart3, Database, Link2, Copy } from "lucide-react";
+import { AdminNav } from "@/components/admin/AdminNav";
 import { SourcesPanel } from "@/components/admin/interop/SourcesPanel";
 import { RecordsExplorer } from "@/components/admin/interop/RecordsExplorer";
 import { MatchQueue } from "@/components/admin/interop/MatchQueue";
@@ -52,17 +53,14 @@ function InteropPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-6">
-      <div className="flex items-center justify-between gap-2 mb-4 flex-wrap">
-        <div>
-          <Link to="/admin" className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mb-1">
-            <ArrowLeft className="h-3 w-3" /> Volver a moderación
-          </Link>
-          <h1 className="text-2xl font-bold">Interoperabilidad de fuentes</h1>
-          <p className="text-[11px] text-muted-foreground">
-            Panorama, registros, matches y duplicados entre plataformas integradas.
-          </p>
-        </div>
+      <AdminNav />
+      <div className="mb-4">
+        <h1 className="text-2xl font-bold">Interoperabilidad de fuentes</h1>
+        <p className="text-[11px] text-muted-foreground">
+          Panorama, registros, matches y duplicados entre plataformas integradas.
+        </p>
       </div>
+
 
       <div className="flex gap-1 mb-4 border-b border-border overflow-x-auto">
         {TABS.map((t) => {
