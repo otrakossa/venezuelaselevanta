@@ -7,6 +7,8 @@ import { Wizard } from "@/components/wizard/Wizard";
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, PackageOpen,
+  Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
+  type LucideIcon,
 } from "lucide-react";
 
 export const Route = createFileRoute("/necesidades")({
