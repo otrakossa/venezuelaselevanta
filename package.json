@@ -13,7 +13,8 @@
     "test": "vitest run --project core",
     "test:watch": "vitest --project core",
     "test:db": "vitest run --project db",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:smoke": "bun tests/smoke/telegram-smoke.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -93,10 +94,12 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
+    "input": "^1.0.1",
     "msw": "^2.14.6",
     "nitro": "3.0.260603-beta",
     "postgres": "^3.4.9",
     "prettier": "^3.7.3",
+    "telegram": "^2.26.22",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16",
