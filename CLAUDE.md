@@ -43,7 +43,10 @@ El archivo `.env` vive en `/var/www/venezuelaselevanta/.env` y **no va a git**.
 | `SUPABASE_PUBLISHABLE_KEY` | JWT anon key (pública, segura en frontend) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (solo backend, para uploads) |
 | `TELEGRAM_BOT_TOKEN` | Token del bot `@VenezuelaSeLevantabot` |
+| `TELEGRAM_ADMIN_IDS` | (opcional) chat IDs admin para `/broadcast`, separados por coma |
 | `GEMINI_API_KEY` | Google AI Studio — Gemini 2.0 Flash |
+| `BOT_NEEDS_FLOW` | (opcional) habilita el flujo `/necesidad` del bot (`1`/`true`/`on`/`yes`). Oculto por defecto |
+| `BOT_HELP_FLOW` | (opcional) habilita el flujo `/ayudar` del bot (`1`/`true`/`on`/`yes`). Oculto por defecto |
 
 Las claves `VITE_*` son duplicados con prefijo para el cliente Vite.
 
@@ -54,16 +57,27 @@ reports            — incidentes en el mapa (categoría, urgencia, lat/lng, fot
 missing_persons    — personas desaparecidas
 patients           — pacientes en centros médicos
 health_centers     — centros médicos activos
-needs              — necesidades (agua, comida, medicamentos)
-offers             — ofertas de ayuda
+sites              — puntos geográficos (hospital|acopio|rescate|salud|otro) + DIVIPOL
+site_responsibles  — responsables de un punto (1 sitio → N responsables)
+needs              — necesidades (agua, comida…) con DIVIPOL + site_id + lat/lng
+offers             — ofertas de ayuda con DIVIPOL + site_id + lat/lng (matching)
 categories         — categorías de reporte (slug, color, icon)
 report_votes       — votos de verificación ciudadana
 report_comments    — comentarios en reportes
 push_subscriptions — suscriptores de notificaciones push
 contact_messages   — mensajes de contacto del formulario web
-user_roles         — roles de administrador
-telegram_sessions  — (tabla legacy, no usada; sesiones viven en memoria)
+user_roles         — roles de administrador (moderación)
+channel_sessions   — sesiones del bot por canal, clave `${channel}:${externalUserId}`
+bot_sessions       — (legacy Telegram; leída como fallback, reemplazada por channel_sessions)
+telegram_sessions  — (tabla legacy, no usada)
 ```
+
+**Columnas DIVIPOL** (convención compartida): `state` / `municipality` / `parish`
+(en `reports`, `missing_persons`, `needs`, `offers`, `sites`). No hay CHECK constraints
+sobre los vocabularios de `needs`/`offers` (se validan en la app, con fallbacks `catMeta`/`urgMeta`).
+
+**RPCs de matching:** `suggest_patient_matches` (desaparecidos↔pacientes, por nombre/pg_trgm)
+y `suggest_needs_for_offer` (needs↔offers por **cercanía**: tier DIVIPOL + distancia haversine, SQL puro).
 
 ### Patrón de acceso a Supabase (sin createClient)
 
@@ -84,17 +98,27 @@ const res = await fetch(`${SUPA_URL}/rest/v1/reports`, {
 
 ## Bot de Telegram
 
-**Archivo:** `src/routes/api/public/telegram/webhook.ts`
-
 **Webhook URL:** `https://venezuelaselevanta.info/api/public/telegram/webhook`
 
 **Autenticación del webhook:** SHA-256 del BOT_TOKEN, cabecera `x-telegram-bot-api-secret-token`
 
+### Arquitectura agnóstica de canal
+
+Separado en tres capas. **Añadir un canal (WhatsApp, chatbot web) = nuevo `ChannelAdapter` + ruta delgada, sin tocar el núcleo:**
+
+- **Transporte** — `src/channels/`: contrato `ChannelAdapter` (`types.ts`) + adaptador Telegram
+  (`telegram/adapter.ts`): `verify`, `parseIncoming` → `IncomingMessage`, `send` (traduce el markup
+  abstracto a teclados nativos), `storeMedia`, `registerUser`, `/broadcast`.
+- **Núcleo agnóstico** — `src/bot/core/`: `engine.ts` (dispatcher) + `flows/{report,missing,search,status,chat,need,help,common}.ts`
+  + `nlp.ts` (Gemini) + `geocode.ts` + `data.ts` (fetch Supabase) + `keyboards.ts` + `session.ts`. **No conoce Telegram.**
+- **Ruta** — `src/routes/api/public/telegram/webhook.ts`: wrapper delgado (verify → parse → engine → send) + health check `GET`.
+
 ### Sesiones
 
-In-memory `Map<number, Session>` con TTL de 2 horas. No persisten entre reinicios de PM2.
+`SessionStore` (`src/bot/core/session.ts`): en memoria (TTL 2 h) con **clave compuesta `${channel}:${externalUserId}`**,
+persistida en `channel_sessions`. Lee `bot_sessions` (legacy) como fallback de solo lectura.
 
-### Arquitectura híbrida (Gemini + máquina de estados)
+### NLP híbrido (Gemini + máquina de estados)
 
 - **Sin sesión activa:** Gemini detecta intención del mensaje libre → ruta al flujo correcto
 - **En flujo `awaiting_category` o `awaiting_title`:** Gemini extrae múltiples campos del mensaje → salta pasos ya cubiertos
@@ -107,7 +131,12 @@ In-memory `Map<number, Session>` con TTL de 2 horas. No persisten entre reinicio
 | `/reportar` | `awaiting_category → awaiting_title → awaiting_description → awaiting_urgency → awaiting_media → awaiting_location → awaiting_text_location → awaiting_confirm` | `reports` |
 | `/registrar_desaparecido` | `mp_name → mp_age → mp_location → mp_text_location → mp_description → mp_photo → mp_contact → mp_confirm` | `missing_persons` |
 | `/buscar [nombre]` | — (búsqueda directa) | `missing_persons` |
+| `/encontrado [nombre]` | callbacks `found:` → `foundok:` | `missing_persons` |
 | `/estado` | — | `reports`, `missing_persons` |
+| `/necesidad` *(gated `BOT_NEEDS_FLOW`)* | `need_site → need_category → need_description → need_quantity → need_location → need_responsible → need_confirm` | `needs` (+ `sites`, `site_responsibles`) |
+| `/ayudar` *(gated `BOT_HELP_FLOW`)* | `help_category → help_location → help_pick` (vía RPC `suggest_needs_for_offer`) | `offers` (+ `needs` open→partial) |
+
+Los flujos nuevos (`/necesidad`, `/ayudar`) quedan **ocultos** salvo que su flag de entorno esté activo.
 
 ### Categorías de reporte
 `missing`, `medical`, `rescue`, `shelter`, `infrastructure`, `evacuation`, `blocked_road`, `hospital`
@@ -153,8 +182,11 @@ bun run build && pm2 restart venezuela-levanta --update-env
 # Ver logs en tiempo real
 pm2 logs venezuela-levanta
 
-# Commit + push (backend)
-git add src/routes/api/public/telegram/webhook.ts
+# Commit + push (backend / bot)
+git add src/bot src/channels src/routes/api/public/telegram/webhook.ts
 git commit -m "feat(telegram): descripción"
 git push origin main
+
+# Aplicar migraciones de esquema a Supabase (antes de desplegar código que las use)
+supabase db push
 ```
