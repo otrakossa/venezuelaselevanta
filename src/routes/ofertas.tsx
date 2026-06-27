@@ -424,8 +424,16 @@ function OfferCard({ offer: o, onMatch, onChanged }: { offer: Offer; onMatch: ()
           </div>
         )}
 
-        {o.location_desc && (
-          <div className="text-xs text-muted-foreground">📍 {o.location_desc}</div>
+        {(o.state || o.city || o.address || o.location_desc) && (
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            {(o.city || o.state) && (
+              <div className="font-semibold text-foreground/80">
+                📍 {[o.city, o.state].filter(Boolean).join(", ")}
+              </div>
+            )}
+            {o.address && <div className="line-clamp-2">🏠 {o.address}</div>}
+            {o.location_desc && <div className="line-clamp-2 italic">{o.location_desc}</div>}
+          </div>
         )}
 
         {(o.contact_name || o.contact_phone || o.contact_info) && (
