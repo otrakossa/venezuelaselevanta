@@ -42,9 +42,7 @@ export function Wizard({
     }
     const el = containerRef.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const top = window.scrollY + rect.top - 80;
-    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [current]);
 
   const goNext = () => {
