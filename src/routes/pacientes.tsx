@@ -31,7 +31,7 @@ export const Route = createFileRoute("/pacientes")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type PatientStatus = "stable" | "critical" | "recovering" | "discharged";
+type PatientStatus = "stable" | "critical" | "recovering" | "discharged" | "admitted";
 type Filter = "all" | "active" | "discharged";
 
 interface Patient {
