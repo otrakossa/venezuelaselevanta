@@ -439,6 +439,9 @@ function StatsPage() {
         ))}
       </div>
 
+      {/* Operación, heatmap y balance ayuda */}
+      <DashboardExtras reports={reports} />
+
       {/* Atendidos por zona */}
       <PatientZonesSection stats={patientStats} />
 
