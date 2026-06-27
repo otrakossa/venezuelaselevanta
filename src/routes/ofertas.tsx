@@ -310,7 +310,7 @@ function OfertasPage() {
         ) : list.length === 0 ? (
           <div className="col-span-full py-16 text-center">
             <div className="text-4xl mb-3">🤝</div>
-            <p className="font-bold text-base mb-1">No hay ofertas {tab === "available" ? "disponibles" : tab === "matched" ? "vinculadas" : "entregadas"}</p>
+            <p className="font-bold text-base mb-1">No hay ayudas {tab === "available" ? "disponibles" : tab === "matched" ? "vinculadas" : "entregadas"}</p>
             <p className="text-sm text-muted-foreground mb-4">
               {q || category !== "all" ? "Prueba ajustar los filtros." : "Sé la primera persona en ofrecer ayuda."}
             </p>
