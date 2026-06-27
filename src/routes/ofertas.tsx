@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Wizard } from "@/components/wizard/Wizard";
+import { ESTADOS, MUNICIPIOS } from "@/lib/venezuela-divipol";
 
 
 const searchSchema = z.object({
