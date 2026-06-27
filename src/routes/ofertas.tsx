@@ -319,7 +319,7 @@ function OfertasPage() {
                 onClick={() => setShowForm(true)}
                 className="text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold"
               >
-                Publicar oferta
+                Publicar ayuda
               </button>
             )}
           </div>
