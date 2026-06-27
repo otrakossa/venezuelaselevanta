@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import {
   Search, X, PackageOpen, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, Link2, Check, Unlink2,
+  Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
+  type LucideIcon,
 } from "lucide-react";
 import { Wizard } from "@/components/wizard/Wizard";
 
