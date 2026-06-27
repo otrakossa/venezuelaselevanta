@@ -23,7 +23,7 @@ export const Route = createFileRoute("/necesidades")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type NeedCategory = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "other";
+type NeedCategory = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type NeedUrgency  = "critical" | "high" | "medium" | "low";
 type NeedStatus   = "open" | "partial" | "fulfilled";
 
@@ -56,6 +56,8 @@ const CATEGORY_META: Record<NeedCategory, { emoji: string; label: string }> = {
   equipment:  { emoji: "🔧", label: "Equipos" },
   blood:      { emoji: "🩸", label: "Sangre" },
   money:      { emoji: "💰", label: "Dinero" },
+  hygiene:    { emoji: "🧼", label: "Kit higiene/menstrual" },
+  diapers:    { emoji: "👶", label: "Pañales" },
   other:      { emoji: "📦", label: "Otro" },
 };
 
