@@ -263,8 +263,12 @@ export type Database = {
           id: string
           lat: number | null
           lng: number | null
+          municipality: string | null
+          parish: string | null
           quantity: string | null
           reporter_name: string | null
+          site_id: string | null
+          state: string | null
           status: string
           title: string
           updated_at: string
@@ -282,8 +286,12 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          municipality?: string | null
+          parish?: string | null
           quantity?: string | null
           reporter_name?: string | null
+          site_id?: string | null
+          state?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -301,14 +309,26 @@ export type Database = {
           id?: string
           lat?: number | null
           lng?: number | null
+          municipality?: string | null
+          parish?: string | null
           quantity?: string | null
           reporter_name?: string | null
+          site_id?: string | null
+          state?: string | null
           status?: string
           title?: string
           updated_at?: string
           urgency?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "needs_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       offers: {
         Row: {
@@ -319,9 +339,15 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          lat: number | null
+          lng: number | null
           location_desc: string | null
+          municipality: string | null
           need_id: string | null
+          parish: string | null
           quantity: string | null
+          site_id: string | null
+          state: string | null
           status: string
           title: string
         }
@@ -333,9 +359,15 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           location_desc?: string | null
+          municipality?: string | null
           need_id?: string | null
+          parish?: string | null
           quantity?: string | null
+          site_id?: string | null
+          state?: string | null
           status?: string
           title: string
         }
@@ -347,9 +379,15 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           location_desc?: string | null
+          municipality?: string | null
           need_id?: string | null
+          parish?: string | null
           quantity?: string | null
+          site_id?: string | null
+          state?: string | null
           status?: string
           title?: string
         }
@@ -359,6 +397,13 @@ export type Database = {
             columns: ["need_id"]
             isOneToOne: false
             referencedRelation: "needs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
             referencedColumns: ["id"]
           },
         ]
@@ -661,6 +706,89 @@ export type Database = {
             referencedColumns: ["slug"]
           },
         ]
+      }
+      site_responsibles: {
+        Row: {
+          contact_info: string | null
+          created_at: string
+          id: string
+          name: string | null
+          phone: string | null
+          role_label: string | null
+          site_id: string
+        }
+        Insert: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          role_label?: string | null
+          site_id: string
+        }
+        Update: {
+          contact_info?: string | null
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          role_label?: string | null
+          site_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_responsibles_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sites: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          municipality: string | null
+          name: string
+          parish: string | null
+          state: string | null
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          municipality?: string | null
+          name: string
+          parish?: string | null
+          state?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          municipality?: string | null
+          name?: string
+          parish?: string | null
+          state?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       telegram_sessions: {
         Row: {
