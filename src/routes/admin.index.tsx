@@ -7,6 +7,7 @@ import { CATEGORY_MAP, CATEGORIES, URGENCY_LABELS, STATUS_LABELS } from "@/lib/c
 import { toast } from "sonner";
 import { ShieldCheck, Trash2, CheckCircle2, EyeOff, Eye, Search, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { AdminNav } from "@/components/admin/AdminNav";
 
 export const Route = createFileRoute("/admin/")({
   ssr: false,
