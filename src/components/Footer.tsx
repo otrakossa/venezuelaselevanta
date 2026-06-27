@@ -11,7 +11,7 @@ export function Footer() {
         <div className="space-y-3">
           <Logo variant="light" size={32} />
           <p className="text-sm opacity-80">
-            Plataforma ciudadana de respuesta al terremoto.
+            Plataforma abierta y colaborativa para sistematizar la solidaridad
           </p>
           <a
             href="https://creativecommons.org/licenses/by/4.0/"
