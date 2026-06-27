@@ -165,11 +165,30 @@ function AtendidosPage() {
     return Array.from(m.entries()).sort((a, b) => b[1] - a[1]);
   }, [patients]);
 
+  // distinct states & sectors (dependent)
+  const statesList = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of patients) if (p.state) s.add(p.state);
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [patients]);
+
+  const sectorsList = useMemo(() => {
+    const s = new Set<string>();
+    for (const p of patients) {
+      if (!p.sector) continue;
+      if (stateFilter && p.state !== stateFilter) continue;
+      s.add(p.sector);
+    }
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [patients, stateFilter]);
+
   const list = useMemo(() => {
     let src = patients;
     if (filter === "active")     src = src.filter((p) => p.status !== "discharged");
     if (filter === "discharged") src = src.filter((p) => p.status === "discharged");
     if (center)                  src = src.filter((p) => p.center_name === center);
+    if (stateFilter)             src = src.filter((p) => p.state === stateFilter);
+    if (sectorFilter)            src = src.filter((p) => p.sector === sectorFilter);
     if (q.trim().length >= 2) {
       const needle = q.trim().toLowerCase();
       const digits = needle.replace(/\D/g, "");
@@ -177,11 +196,12 @@ function AtendidosPage() {
         (p) =>
           p.name.toLowerCase().includes(needle) ||
           p.center_name.toLowerCase().includes(needle) ||
+          (p.sector ?? "").toLowerCase().includes(needle) ||
           (digits.length >= 4 && (p.id_number ?? "").includes(digits)),
       );
     }
     return src;
-  }, [patients, filter, q, center]);
+  }, [patients, filter, q, center, stateFilter, sectorFilter]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative overflow-x-hidden">
