@@ -24,6 +24,19 @@ jobs:
       # fiable. Node ya viene en los runners de ubuntu.
       - run: bun run test
 
+  e2e:
+    name: Web E2E (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run build
+      - run: bun run test:e2e
+
   db:
     name: RPC matching (Supabase local)
     runs-on: ubuntu-latest

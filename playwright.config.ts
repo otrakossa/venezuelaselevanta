@@ -26,7 +26,15 @@ export default defineConfig({
     // Sirve el build de prod. Requiere `bun run build` previo (lo encadena el CI).
     command: `node .output/server/index.mjs`,
     url: baseURL,
-    env: { PORT: String(PORT) },
+    // Env FALSO para que el server arranque sin tocar prod. Da igual: el
+    // navegador intercepta toda la red (ver e2e/support/network.ts), así que
+    // las rutas API ni siquiera se invocan.
+    env: {
+      PORT: String(PORT),
+      SUPABASE_URL: "http://127.0.0.1:54321",
+      SUPABASE_PUBLISHABLE_KEY: "test-anon-key",
+      SUPABASE_SERVICE_ROLE_KEY: "test-service-key",
+    },
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },
