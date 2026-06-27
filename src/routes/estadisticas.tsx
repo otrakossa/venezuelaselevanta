@@ -549,7 +549,125 @@ function StatsPage() {
   );
 }
 
+function PatientZonesSection({ stats }: {
+  stats: {
+    total: number;
+    topSectors: { name: string; state: string | null; count: number }[];
+    byState: { name: string; count: number }[];
+    grouped: { state: string; total: number; sectors: { sector: string; count: number }[] }[];
+    withSector: number;
+    withState: number;
+  };
+}) {
+  const [open, setOpen] = useState(false);
+  if (stats.total === 0) {
+    return (
+      <div className="bg-card border border-border rounded-2xl p-4">
+        <h3 className="font-display text-base mb-2 flex items-center gap-2">
+          <HeartPulse className="h-4 w-4 text-primary" /> Atendidos por zona
+        </h3>
+        <p className="text-xs text-muted-foreground py-6 text-center">
+          Aún no hay atendidos registrados con datos de zona.
+        </p>
+      </div>
+    );
+  }
+  const max = stats.topSectors[0]?.count || 1;
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 space-y-4">
+      <div className="flex items-end justify-between flex-wrap gap-2">
+        <div>
+          <h3 className="font-display text-base flex items-center gap-2">
+            <HeartPulse className="h-4 w-4 text-primary" /> Atendidos por zona
+          </h3>
+          <p className="text-[11px] text-muted-foreground">
+            {stats.total.toLocaleString("es-VE")} atendidos · {stats.grouped.length} estado{stats.grouped.length === 1 ? "" : "s"} · {stats.topSectors.length} sector{stats.topSectors.length === 1 ? "" : "es"} con presencia
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Kpi value={stats.byState.length} label="Estados" />
+          <Kpi value={stats.topSectors.length} label="Sectores" />
+        </div>
+      </div>
+
+      {stats.topSectors.length > 0 && (
+        <div>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">
+            Top 15 sectores
+          </div>
+          <div className="space-y-1.5">
+            {stats.topSectors.map((z, i) => {
+              const pct = (z.count / max) * 100;
+              return (
+                <div key={`${z.name}-${z.state ?? ""}-${i}`}>
+                  <div className="flex items-center justify-between text-xs mb-0.5">
+                    <span className="truncate flex items-center gap-1.5 min-w-0">
+                      <span className="w-4 h-4 rounded-full bg-[var(--midnight)] text-[10px] text-[var(--cream)] grid place-items-center shrink-0">
+                        {i + 1}
+                      </span>
+                      <span className="truncate font-medium">{z.name}</span>
+                      {z.state && <span className="text-muted-foreground text-[10px] truncate">· {z.state}</span>}
+                    </span>
+                    <span className="font-semibold tabular-nums shrink-0">{z.count}</span>
+                  </div>
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        background: "linear-gradient(90deg, var(--sky), var(--sunrise))",
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full text-xs font-semibold text-primary flex items-center justify-center gap-1 py-1.5 rounded-lg border border-dashed border-border hover:bg-muted/50 transition"
+      >
+        {open ? <>Ocultar desglose <ChevronUp className="h-3.5 w-3.5" /></> : <>Ver desglose por Estado → Sector <ChevronDown className="h-3.5 w-3.5" /></>}
+      </button>
+
+      {open && (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {stats.grouped.map((g) => (
+            <div key={g.state} className="border border-border rounded-xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-sm truncate">{g.state}</span>
+                <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">{g.total}</span>
+              </div>
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                {g.sectors.map((s) => (
+                  <div key={s.sector} className="flex items-center justify-between text-[11px]">
+                    <span className="truncate">{s.sector}</span>
+                    <span className="font-semibold tabular-nums shrink-0 text-muted-foreground">{s.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Kpi({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="bg-muted/40 border border-border/60 rounded-lg px-2.5 py-1.5 text-center min-w-[60px]">
+      <div className="text-base font-bold tabular-nums leading-none">{value}</div>
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">{label}</div>
+    </div>
+  );
+}
+
 function StatCard({
+
   icon: Icon, color, label, value, hint, sparkline, accent,
 }: {
   icon: any; color: string; label: string; value: number;
