@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { supabase } from "@/integrations/supabase/client";
 import { AdminNav } from "@/components/admin/AdminNav";
-import { getSystemHealth, type SystemHealth } from "@/lib/system-health.functions";
+import type { SystemHealth } from "@/lib/system-health.types";
 import {
   Activity, AlertTriangle, CheckCircle2, Cpu, HardDrive, Database,
   MemoryStick, RefreshCw, ShieldCheck, Clock, Copy,
@@ -80,7 +80,6 @@ grant execute on function public.admin_db_stats() to authenticated;`;
 function ObservabilityPage() {
   const { isAuthenticated, userId } = useAuth();
   const { isAdmin, loading: roleLoading } = useAdminRole(userId);
-  const fetchHealth = useServerFn(getSystemHealth);
 
   const [data, setData] = useState<SystemHealth | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -94,7 +93,23 @@ function ObservabilityPage() {
     setLoading(true);
     setErr(null);
     try {
-      const h = await fetchHealth();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (sessionError || !token) throw new Error("Sesión no disponible. Vuelve a iniciar sesión.");
+
+      const response = await fetch("/api/public/admin/health", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(
+          payload && typeof payload === "object" && "error" in payload
+            ? String(payload.error)
+            : `HTTP ${response.status}`,
+        );
+      }
+
+      const h = payload as SystemHealth;
       setData(h);
       setHistory((prev) => {
         const next = [
