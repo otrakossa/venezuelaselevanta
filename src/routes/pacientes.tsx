@@ -61,6 +61,7 @@ const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: s
   critical:   { pill: "bg-red-500/15 text-red-700 dark:text-red-400",             dot: "bg-red-500",       label: "Crítico" },
   recovering: { pill: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500",   label: "Recuperándose" },
   discharged: { pill: "bg-neutral-500/15 text-neutral-600 dark:text-neutral-400", dot: "bg-neutral-500",   label: "Alta médica" },
+  admitted:   { pill: "bg-sky-500/15 text-sky-700 dark:text-sky-400",             dot: "bg-sky-500",       label: "Ingresado" },
 };
 
 const SEX_LABELS: Record<string, string> = {
