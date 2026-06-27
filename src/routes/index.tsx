@@ -49,9 +49,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Venezuela Se Levanta — venezuelaselevanta.info" },
-      { name: "description", content: "Plataforma ciudadana de respuesta al terremoto de Venezuela. Reporta y consulta incidentes en tiempo real." },
+      { name: "description", content: "Plataforma abierta y colaborativa para sistematizar la solidaridad. Mapa de crisis en tiempo real." },
       { property: "og:title", content: "Venezuela Se Levanta — venezuelaselevanta.info" },
-      { property: "og:description", content: "Venezuela Se Levanta: mapa colaborativo de respuesta al terremoto. venezuelaselevanta.info" },
+      { property: "og:description", content: "Venezuela Se Levanta: plataforma abierta y colaborativa para sistematizar la solidaridad." },
     ],
   }),
   component: HomePage,
