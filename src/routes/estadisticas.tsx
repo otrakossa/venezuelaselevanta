@@ -171,6 +171,51 @@ function StatsPage() {
     };
   }, [reports, missingCounts, quakes]);
 
+  const patientStats = useMemo(() => {
+    const total = patientZones.length;
+    const sectorMap = new Map<string, { count: number; state: string | null }>();
+    const stateMap = new Map<string, number>();
+    let withSector = 0;
+    let withState = 0;
+    for (const p of patientZones) {
+      if (p.state) {
+        stateMap.set(p.state, (stateMap.get(p.state) ?? 0) + 1);
+        withState++;
+      }
+      if (p.sector) {
+        const key = `${p.sector}|||${p.state ?? ""}`;
+        const prev = sectorMap.get(key);
+        sectorMap.set(key, { count: (prev?.count ?? 0) + 1, state: p.state });
+        withSector++;
+      }
+    }
+    const topSectors = Array.from(sectorMap.entries())
+      .map(([k, v]) => ({ name: k.split("|||")[0], state: v.state, count: v.count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+    const byState = Array.from(stateMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    // grouped: state -> sectors
+    const grouped = new Map<string, { sector: string; count: number }[]>();
+    for (const [k, v] of sectorMap.entries()) {
+      const sector = k.split("|||")[0];
+      const stateKey = v.state ?? "Sin estado";
+      const arr = grouped.get(stateKey) ?? [];
+      arr.push({ sector, count: v.count });
+      grouped.set(stateKey, arr);
+    }
+    const groupedSorted = Array.from(grouped.entries())
+      .map(([state, sectors]) => ({
+        state,
+        total: sectors.reduce((a, b) => a + b.count, 0),
+        sectors: sectors.sort((a, b) => b.count - a.count),
+      }))
+      .sort((a, b) => b.total - a.total);
+    return { total, topSectors, byState, grouped: groupedSorted, withSector, withState };
+  }, [patientZones]);
+
+
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 space-y-6">
       {/* Header */}
