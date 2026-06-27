@@ -779,7 +779,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       steps={[
         { key: "que", label: "¿Qué se necesita?", content: stepQue, isValid: () => f.categories.length > 0 && f.title.trim().length > 0, invalidMessage: f.categories.length === 0 ? "Selecciona al menos una categoría" : "El título es requerido" },
         { key: "donde", label: "¿Dónde se necesita?", content: stepDonde, isValid: () => f.center_name.trim().length > 0, invalidMessage: "El nombre del centro es requerido" },
-        { key: "contacto", label: "Contacto", content: stepContacto },
+        { key: "contacto", label: "Contacto", content: stepContacto, isValid: () => f.contact_name.trim().length > 0 && f.reporter_cedula.trim().length > 0 && f.contact_phone.trim().length > 0, invalidMessage: "Nombre, cédula y teléfono son obligatorios" },
       ]}
     />
   );
