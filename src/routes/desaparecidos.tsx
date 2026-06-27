@@ -15,6 +15,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { LocationSelect } from "@/components/LocationSelect";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { Wizard } from "@/components/wizard/Wizard";
+
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
