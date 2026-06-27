@@ -91,16 +91,9 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10 bg-black/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 grid gap-4 md:gap-6 md:grid-cols-3 md:items-center">
-          {/* Izquierda: copyright */}
-          <div className="text-xs opacity-75 text-center md:text-left md:col-span-1">
-            © 2026 Venezuela Se Levanta · CC BY 4.0
-            <div className="opacity-60 mt-0.5">Datos abiertos para la humanidad</div>
-          </div>
-
-          {/* Derecha: disclaimer destacado (más ancho en desktop) */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
           <div
-            className="rounded-lg border border-[color:var(--sunrise)]/40 px-4 py-3 text-sm md:col-span-2"
+            className="rounded-lg border border-[color:var(--sunrise)]/40 px-4 py-3 text-sm"
             style={{ background: "rgba(255,107,53,0.08)" }}
           >
             <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs mb-1">
