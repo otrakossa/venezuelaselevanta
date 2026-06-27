@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ShieldCheck, Trash2, CheckCircle2, EyeOff, Eye, Search, Clock } from "lucide-react";
 import { format } from "date-fns";
 
-export const Route = createFileRoute("/admin")({
+export const Route = createFileRoute("/admin/")({
   ssr: false,
   head: () => ({ meta: [{ title: "Admin — Venezuela Se Levanta" }] }),
   component: AdminPage,
