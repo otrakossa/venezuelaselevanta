@@ -31,7 +31,7 @@ export const Route = createFileRoute("/ofertas")({
 const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
-type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "other";
+type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type OfferStatus = "available" | "matched" | "delivered" | "cancelled";
 type NeedLite = {
   id: string;
