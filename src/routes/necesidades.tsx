@@ -443,10 +443,9 @@ function NeedForm({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!f.title.trim())       return toast.error("El título es requerido");
-    if (!f.center_name.trim()) return toast.error("El nombre del centro es requerido");
+  const submit = async () => {
+    if (!f.title.trim())       { toast.error("El título es requerido"); return; }
+    if (!f.center_name.trim()) { toast.error("El nombre del centro es requerido"); return; }
 
     setBusy(true);
     try {
@@ -488,16 +487,8 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     }
   };
 
-  return (
-    <form
-      onSubmit={submit}
-      className="bg-card border border-border rounded-2xl p-4 sm:p-5 mb-4 grid sm:grid-cols-2 gap-3 shadow-sm"
-    >
-      <div className="sm:col-span-2 flex items-center gap-2 mb-1">
-        <HandHeart className="h-4 w-4 text-primary" />
-        <h2 className="font-bold text-sm">Publicar necesidad</h2>
-      </div>
-
+  const stepQue = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <select
         className={field}
         value={f.category}
@@ -509,7 +500,6 @@ function NeedForm({ onDone }: { onDone: () => void }) {
           </option>
         ))}
       </select>
-
       <select
         className={field}
         value={f.urgency}
@@ -520,7 +510,6 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         <option value="medium">🟡 Urgencia media</option>
         <option value="low">🟢 Urgencia baja</option>
       </select>
-
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Título de la necesidad *"
@@ -529,7 +518,6 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         required
         maxLength={150}
       />
-
       <textarea
         className={`${field} sm:col-span-2 resize-none`}
         placeholder="Descripción detallada (opcional)"
@@ -538,7 +526,6 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, description: e.target.value })}
         maxLength={800}
       />
-
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Cantidad o detalle (ej: 50 bolsas de suero, 3 voluntarios...)"
@@ -546,8 +533,12 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, quantity: e.target.value })}
         maxLength={100}
       />
+    </div>
+  );
 
-      <div className="sm:col-span-2 space-y-1.5">
+  const stepDonde = (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
         <HealthCenterPicker
           value={f.center_name}
           onChange={(name, c) =>
@@ -572,13 +563,17 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         )}
       </div>
       <input
-        className={`${field} sm:col-span-2`}
+        className={field}
         placeholder="Dirección (opcional)"
         value={f.center_address}
         onChange={(e) => setF({ ...f, center_address: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
+  const stepContacto = (
+    <div className="grid sm:grid-cols-2 gap-3">
       <input
         className={field}
         placeholder="Nombre del contacto (opcional)"
@@ -600,23 +595,22 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, contact_info: e.target.value })}
         maxLength={200}
       />
+    </div>
+  );
 
-      <div className="sm:col-span-2 flex gap-2 justify-end pt-1">
-        <button
-          type="button"
-          onClick={onDone}
-          className="px-4 py-2 text-sm rounded-lg border border-border hover:bg-muted"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={busy}
-          className="px-4 py-2 text-sm rounded-lg bg-primary text-primary-foreground font-bold disabled:opacity-50 shadow-md shadow-primary/20"
-        >
-          {busy ? "Publicando…" : "Publicar necesidad"}
-        </button>
-      </div>
-    </form>
+  return (
+    <Wizard
+      title="Publicar necesidad"
+      submitLabel="Publicar necesidad"
+      submitting={busy}
+      onSubmit={submit}
+      onCancel={onDone}
+      steps={[
+        { key: "que", label: "¿Qué se necesita?", content: stepQue, isValid: () => f.title.trim().length > 0, invalidMessage: "El título es requerido" },
+        { key: "donde", label: "¿Dónde se necesita?", content: stepDonde, isValid: () => f.center_name.trim().length > 0, invalidMessage: "El nombre del centro es requerido" },
+        { key: "contacto", label: "Contacto", content: stepContacto },
+      ]}
+    />
   );
 }
+
