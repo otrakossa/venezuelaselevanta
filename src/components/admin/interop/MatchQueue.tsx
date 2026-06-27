@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { sbx } from "@/integrations/sbx/client";
+import { sbx } from "./_client";
 import { Loader2, RefreshCw, Check, X, Link2 } from "lucide-react";
 import { toast } from "sonner";
 

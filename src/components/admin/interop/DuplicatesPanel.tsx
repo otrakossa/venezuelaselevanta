@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { sbx } from "@/integrations/sbx/client";
+import { sbx } from "./_client";
 import { Loader2, RefreshCw, Combine, ShieldX, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
