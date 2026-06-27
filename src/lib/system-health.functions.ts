@@ -84,7 +84,36 @@ async function getDbStats(): Promise<SystemHealth["database"]> {
 
 export const getSystemHealth = createServerFn({ method: "GET" })
   .handler(async (): Promise<SystemHealth> => {
-    await requireAdmin();
+    // Inline admin gate. Validates bearer token against the production
+    // Supabase project so it works in Lovable preview too (where
+    // process.env.SUPABASE_URL points to the old Lovable Cloud project).
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const request = getRequest();
+    const authHeader = request?.headers?.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      throw new Error("Unauthorized");
+    }
+    const token = authHeader.slice(7);
+    const userRes = await fetch(`${PROD_SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: PROD_SUPABASE_ANON_KEY, Authorization: `Bearer ${token}` },
+    });
+    if (!userRes.ok) throw new Error("Unauthorized");
+    const user = (await userRes.json()) as { id?: string };
+    if (!user.id) throw new Error("Unauthorized");
+    const roleRes = await fetch(`${PROD_SUPABASE_URL}/rest/v1/rpc/has_role`, {
+      method: "POST",
+      headers: {
+        apikey: PROD_SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ _user_id: user.id, _role: "admin" }),
+    });
+    if (!roleRes.ok) throw new Error("Forbidden");
+    const isAdmin = (await roleRes.json()) as boolean;
+    if (!isAdmin) throw new Error("Forbidden");
+
+
 
 
     const errors: string[] = [];
