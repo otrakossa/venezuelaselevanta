@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { HealthCenterPicker } from "@/components/HealthCenterPicker";
+import { SitePicker } from "@/components/SitePicker";
+import { LocationSelect } from "@/components/LocationSelect";
+import { type Site, SITE_TYPES, invalidateSitesCache } from "@/hooks/useSites";
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
   Info, ChevronDown, PackageOpen,
@@ -435,30 +437,97 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     description:   "",
     quantity:      "",
     urgency:       "high" as NeedUrgency,
-    center_name:   "",
     center_address: "",
     contact_name:  "",
     contact_phone: "",
     contact_info:  "",
   });
+  const [site, setSite]         = useState<Site | null>(null);
+  const [siteName, setSiteName] = useState("");
+  const [siteType, setSiteType] = useState("otro");
+  const [loc, setLoc]           = useState({ state: "", municipality: "", parish: "" });
+  const [resp, setResp]         = useState({ name: "", phone: "" });
   const [busy, setBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
+  const label = "text-xs font-semibold text-foreground mb-1 block";
+
+  const isNewSite = !site && !!siteName.trim();
+
+  const pickSite = (sel: { site: Site | null; name: string }) => {
+    setSite(sel.site);
+    setSiteName(sel.name);
+    if (sel.site) {
+      setLoc({
+        state:        sel.site.state ?? "",
+        municipality: sel.site.municipality ?? "",
+        parish:       sel.site.parish ?? "",
+      });
+    }
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!f.title.trim())       return toast.error("El título es requerido");
-    if (!f.center_name.trim()) return toast.error("El nombre del centro es requerido");
+    if (!f.title.trim())   return toast.error("El título es requerido");
+    if (!siteName.trim())  return toast.error("El punto / centro es requerido");
 
     setBusy(true);
     try {
+      const headers = {
+        apikey:         SUPA_ANON,
+        Authorization:  `Bearer ${SUPA_ANON}`,
+        "Content-Type": "application/json",
+      };
+      let siteId: string | null = site?.id ?? null;
+      let lat: number | null = site?.lat ?? null;
+      let lng: number | null = site?.lng ?? null;
+
+      // Crear el punto si es nuevo, y enlazar el responsable opcional.
+      if (!siteId) {
+        const sres = await fetch(`${SUPA_URL}/rest/v1/sites`, {
+          method:  "POST",
+          headers: { ...headers, Prefer: "return=representation" },
+          body: JSON.stringify({
+            type:         siteType,
+            name:         siteName.trim(),
+            state:        loc.state || null,
+            municipality: loc.municipality || null,
+            parish:       loc.parish || null,
+            status:       "active",
+          }),
+        });
+        if (!sres.ok) throw new Error(await sres.text());
+        const created = (await sres.json())?.[0] as { id?: string } | undefined;
+        siteId = created?.id ?? null;
+        lat = null;
+        lng = null;
+        invalidateSitesCache();
+        if (siteId && (resp.name.trim() || resp.phone.trim())) {
+          await fetch(`${SUPA_URL}/rest/v1/site_responsibles`, {
+            method:  "POST",
+            headers: { ...headers, Prefer: "return=minimal" },
+            body: JSON.stringify({
+              site_id: siteId,
+              name:    resp.name.trim() || null,
+              phone:   resp.phone.trim() || null,
+            }),
+          });
+        }
+      }
+
       const body: Record<string, unknown> = {
         category:       f.category,
         title:          f.title.trim(),
         description:    f.description.trim() || null,
         quantity:       f.quantity.trim() || null,
         urgency:        f.urgency,
-        center_name:    f.center_name.trim(),
+        center_name:    siteName.trim(),
         center_address: f.center_address.trim() || null,
+        lat,
+        lng,
+        site_id:        siteId,
+        state:          loc.state || null,
+        municipality:   loc.municipality || null,
+        parish:         loc.parish || null,
         contact_name:   f.contact_name.trim() || null,
         contact_phone:  f.contact_phone.trim() || null,
         contact_info:   f.contact_info.trim() || null,
@@ -467,12 +536,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
 
       const res = await fetch(`${SUPA_URL}/rest/v1/needs`, {
         method:  "POST",
-        headers: {
-          apikey:         SUPA_ANON,
-          Authorization:  `Bearer ${SUPA_ANON}`,
-          "Content-Type": "application/json",
-          Prefer:         "return=minimal",
-        },
+        headers: { ...headers, Prefer: "return=minimal" },
         body: JSON.stringify(body),
       });
 
@@ -547,13 +611,31 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       />
 
       <div className="sm:col-span-2">
-        <HealthCenterPicker
-          value={f.center_name}
-          onChange={(name) => setF({ ...f, center_name: name })}
-          placeholder="Centro / comunidad donde se necesita *"
-          required
+        <label className={label}>Punto / centro donde se necesita <span className="text-[color:var(--sunrise)]">*</span></label>
+        <SitePicker value={siteName} onSelect={pickSite} placeholder="Busca o crea un punto…" required />
+      </div>
+
+      {isNewSite && (
+        <div className="sm:col-span-2">
+          <label className={label}>Tipo de punto</label>
+          <select className={field} value={siteType} onChange={(e) => setSiteType(e.target.value)}>
+            {SITE_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="sm:col-span-2">
+        <label className={label}>Ubicación (DIVIPOL)</label>
+        <LocationSelect
+          state={loc.state}
+          municipality={loc.municipality}
+          parish={loc.parish}
+          onChange={setLoc}
         />
       </div>
+
       <input
         className={`${field} sm:col-span-2`}
         placeholder="Dirección (opcional)"
@@ -561,6 +643,28 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, center_address: e.target.value })}
         maxLength={200}
       />
+
+      {isNewSite && (
+        <>
+          <div className="sm:col-span-2 text-xs font-semibold text-muted-foreground">
+            Responsable del punto (opcional)
+          </div>
+          <input
+            className={field}
+            placeholder="Nombre del responsable"
+            value={resp.name}
+            onChange={(e) => setResp({ ...resp, name: e.target.value })}
+            maxLength={100}
+          />
+          <input
+            className={field}
+            placeholder="Teléfono del responsable"
+            value={resp.phone}
+            onChange={(e) => setResp({ ...resp, phone: e.target.value })}
+            maxLength={40}
+          />
+        </>
+      )}
 
       <input
         className={field}

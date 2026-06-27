@@ -46,6 +46,29 @@ export async function supabaseInsert(
   return res.ok ? null : await res.text();
 }
 
+// Insert que devuelve la fila creada (para obtener el id, p.ej. de un site nuevo).
+export async function supabaseInsertReturning(
+  table: string,
+  body: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+    method: "POST",
+    headers: {
+      apikey: SUPA_ANON,
+      Authorization: `Bearer ${SUPA_ANON}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    console.error("[insert-returning]", table, await res.text().catch(() => ""));
+    return null;
+  }
+  const rows = (await res.json()) as Record<string, unknown>[];
+  return rows[0] ?? null;
+}
+
 export async function supabasePatch(
   table: string,
   filter: string,

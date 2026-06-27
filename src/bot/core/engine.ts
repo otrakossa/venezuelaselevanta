@@ -32,6 +32,19 @@ import {
   handleMpTextLocation,
   startMissingPerson,
 } from "./flows/missing";
+import {
+  NEEDS_FLOW_ENABLED,
+  handleNeedCategoryText,
+  handleNeedConfirm,
+  handleNeedDescription,
+  handleNeedLocation,
+  handleNeedQuantity,
+  handleNeedResponsible,
+  handleNeedSite,
+  handleNeedTextLocation,
+  onNeedCategoryCallback,
+  startNeed,
+} from "./flows/need";
 
 const HELP_TEXT =
   "<b>Comandos disponibles:</b>\n\n" +
@@ -65,6 +78,8 @@ export async function handle(incoming: IncomingMessage, ctx: EngineCtx): Promise
       return onCategoryCallback(ctx, session, data.slice(4));
     if (data.startsWith("urg:") && session.state === "awaiting_urgency")
       return onUrgencyCallback(ctx, session, data.slice(4));
+    if (data.startsWith("ncat:") && session.state === "need_category")
+      return onNeedCategoryCallback(ctx, session, data.slice(5));
     return;
   }
 
@@ -79,6 +94,7 @@ export async function handle(incoming: IncomingMessage, ctx: EngineCtx): Promise
   if (text.startsWith("/buscar")) return handleBuscar(ctx, text.replace(/^\/buscar\s*/i, "").trim());
   if (text.startsWith("/encontrado"))
     return handleEncontrado(ctx, text.replace(/^\/encontrado\s*/i, "").trim());
+  if (text === "/necesidad" && NEEDS_FLOW_ENABLED) return startNeed(ctx);
   if (text === "/ayuda" || text === "/help") {
     await ctx.send(HELP_TEXT);
     return;
@@ -148,4 +164,19 @@ export async function handle(incoming: IncomingMessage, ctx: EngineCtx): Promise
   if (session.state === "mp_photo") return handleMpPhoto(ctx, session, incoming);
   if (session.state === "mp_contact") return handleMpContact(ctx, session, text);
   if (session.state === "mp_confirm") return handleMpConfirm(ctx, session, text);
+
+  // ── Flujo de necesidad (Fase 2, gated por BOT_NEEDS_FLOW) ──────────────
+  if (session.state === "need_site" && text && !text.startsWith("/"))
+    return handleNeedSite(ctx, session, text);
+  if (session.state === "need_category" && text && !text.startsWith("/"))
+    return handleNeedCategoryText(ctx);
+  if (session.state === "need_description" && text && !text.startsWith("/"))
+    return handleNeedDescription(ctx, session, text);
+  if (session.state === "need_quantity" && text && !text.startsWith("/"))
+    return handleNeedQuantity(ctx, session, text);
+  if (session.state === "need_location") return handleNeedLocation(ctx, session, incoming);
+  if (session.state === "need_text_location" && text && !text.startsWith("/"))
+    return handleNeedTextLocation(ctx, session, text);
+  if (session.state === "need_responsible") return handleNeedResponsible(ctx, session, text);
+  if (session.state === "need_confirm") return handleNeedConfirm(ctx, session, text);
 }

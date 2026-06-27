@@ -17,6 +17,20 @@ export const URGENCIES = [
   { v: "low", n: "🟢 Bajo" },
 ];
 
+// Categorías de NECESIDADES (distintas de las de reportes).
+export const NEED_CATEGORIES = [
+  { slug: "medicine", name: "💊 Medicinas" },
+  { slug: "food", name: "🍎 Alimentos" },
+  { slug: "water", name: "💧 Agua" },
+  { slug: "volunteers", name: "🤝 Voluntarios" },
+  { slug: "equipment", name: "🔧 Equipos" },
+  { slug: "blood", name: "🩸 Sangre" },
+  { slug: "money", name: "💰 Dinero" },
+  { slug: "other", name: "📦 Otro" },
+];
+export const needCatLabel = (slug: string): string =>
+  NEED_CATEGORIES.find((c) => c.slug === slug)?.name ?? "📦 Otro";
+
 export const VALID_CATS = new Set([
   "missing",
   "medical",
