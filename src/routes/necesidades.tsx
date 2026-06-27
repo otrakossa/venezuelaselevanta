@@ -534,11 +534,13 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         center_address: f.center_address.trim() || null,
         lat:            f.center_lat,
         lng:            f.center_lng,
-        contact_name:   f.contact_name.trim() || null,
-        contact_phone:  f.contact_phone.trim() || null,
-        contact_info:   f.contact_info.trim() || null,
-        status:         "open" as NeedStatus,
+        contact_name:    f.contact_name.trim(),
+        reporter_cedula: f.reporter_cedula.trim(),
+        contact_phone:   f.contact_phone.trim(),
+        contact_info:    f.contact_info.trim() || null,
+        status:          "open" as NeedStatus,
       };
+
 
       const res = await fetch(`${SUPA_URL}/rest/v1/needs`, {
         method:  "POST",
