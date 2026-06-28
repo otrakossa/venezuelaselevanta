@@ -577,7 +577,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       contact_name: f.contact_name.trim() || null,
       contact_phone: f.contact_phone.trim() || null,
       contact_email: f.contact_email.trim() || null,
-    });
+    } as never);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(coords ? "Publicada y geolocalizada en el mapa" : "Reporte enviado");
