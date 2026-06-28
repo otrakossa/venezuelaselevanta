@@ -74,7 +74,7 @@ export const organizations: Organization[] = [
   },
   {
     name: "Utopix",
-    description: "Aliado en comunicación y diseño",
+    description: "Comunicación visual contrahegemónica",
     url: "https://utopix.cc/",
     logo: utopixLogo.url,
   },
