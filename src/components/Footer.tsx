@@ -9,7 +9,7 @@ export function Footer() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid gap-8 md:grid-cols-3">
         <div className="space-y-3">
-          <Logo variant="light" size={32} />
+          <Logo variant="color" size={44} />
           <p className="text-sm opacity-80">
             Plataforma&nbsp;abierta y colaborativa para sistematizar la solidaridad
           </p>
