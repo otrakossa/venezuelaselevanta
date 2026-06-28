@@ -152,12 +152,14 @@ export function MissingDetailSheet({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = content.trim();
+    const name = author.trim();
+    if (!name) { toast.error("Escribe tu nombre"); return; }
     if (!text) return;
     if (text.length > 1000) { toast.error("Máximo 1000 caracteres"); return; }
     setSubmitting(true);
     const { error } = await (supabase as any).from("missing_person_comments").insert({
       missing_person_id: person.id,
-      author_name: author.trim() || null,
+      author_name: name,
       content: text,
     });
     setSubmitting(false);
@@ -231,6 +233,47 @@ export function MissingDetailSheet({
         {/* Body */}
         <div ref={scrollerRef} className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
+            {/* Hero photo (mirrors card) */}
+            <div className="relative h-56 sm:h-64 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ring-border">
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="h-24 w-24 rounded-full bg-card border-2 border-border grid place-items-center text-3xl font-black text-muted-foreground">
+                  {initials(person.name) || <User className="h-10 w-10" />}
+                </div>
+              </div>
+              {person.photo_url && (
+                <img
+                  src={person.photo_url}
+                  alt={person.name}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
+              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 text-white">
+                <h3 className="font-bold text-xl leading-tight drop-shadow line-clamp-2">{person.name}</h3>
+                <div className="flex items-center gap-2 text-xs opacity-95 mt-1">
+                  {person.age != null && <><span>{person.age} años</span><span className="opacity-50">•</span></>}
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarDays className="h-3 w-3" />
+                    {daysAgo === 0 ? "Reportado hoy" : `Hace ${daysAgo} día${daysAgo === 1 ? "" : "s"}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {person.matched_patient_id && (
+              <div className="flex items-start gap-2 text-sm rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-2.5">
+                <span className="shrink-0 text-base">✅</span>
+                <div className="min-w-0">
+                  <div className="font-bold text-emerald-700 leading-tight">Localizado</div>
+                  {person.matched_patient?.center_name && (
+                    <div className="text-xs text-emerald-700/80 mt-0.5">🏥 {person.matched_patient.center_name}</div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {person.last_seen_location && (
               <section>
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Última ubicación</h3>
@@ -245,6 +288,7 @@ export function MissingDetailSheet({
                 )}
               </section>
             )}
+
 
             {person.description && (
               <section>
@@ -337,7 +381,8 @@ export function MissingDetailSheet({
           <input
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            placeholder="Tu nombre (opcional)"
+            placeholder="Tu nombre *"
+            required
             maxLength={60}
             className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
@@ -352,7 +397,7 @@ export function MissingDetailSheet({
             />
             <button
               type="submit"
-              disabled={submitting || !content.trim()}
+              disabled={submitting || !content.trim() || !author.trim()}
               className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-bold px-3 py-2.5 rounded-lg disabled:opacity-50"
               aria-label="Publicar comentario"
             >
