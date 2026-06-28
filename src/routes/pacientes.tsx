@@ -28,8 +28,7 @@ export const Route = createFileRoute("/pacientes")({
   component: AtendidosPage,
 });
 
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 type PatientStatus = "stable" | "critical" | "recovering" | "discharged" | "admitted";
 type Filter = "all" | "active" | "discharged";

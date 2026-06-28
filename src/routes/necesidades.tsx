@@ -24,8 +24,7 @@ export const Route = createFileRoute("/necesidades")({
   component: NecesidadesPage,
 });
 
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 type NeedCategory = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type NeedUrgency  = "critical" | "high" | "medium" | "low";
