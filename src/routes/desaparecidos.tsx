@@ -565,6 +565,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
     setBusy(true);
     const { error } = await supabase.from("missing_persons").insert({
       name: f.name.trim(),
+      id_number: f.id_number.trim() || null,
       age: f.age ? Number(f.age) : null,
       description: f.description.trim() || null,
       last_seen_location: f.last_seen_location.trim() || null,
