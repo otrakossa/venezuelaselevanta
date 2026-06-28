@@ -6,7 +6,7 @@ import { MISSING_STATUS_LABELS } from "@/lib/categories";
 import type { MissingPerson, MissingStatus } from "@/lib/types";
 import { toast } from "sonner";
 import {
-  Search, UserPlus, UserCheck, MapPin, Phone, Mail, User,
+  Search, UserPlus, MapPin, Phone, Mail, User,
   CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, Map as MapIcon, RefreshCw, ChevronDown,
   MessageCircle, Hospital,
 } from "lucide-react";
@@ -332,6 +332,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
   };
 
   const [commentsCount, setCommentsCount] = useState<number | null>(null);
+  const [matchesCount, setMatchesCount] = useState<number | null>(null);
   useEffect(() => {
     let active = true;
     (async () => {
@@ -341,8 +342,13 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
         .eq("missing_person_id", person.id);
       if (active) setCommentsCount(count ?? 0);
     })();
+    (async () => {
+      if (person.matched_patient_id) { if (active) setMatchesCount(0); return; }
+      const { data } = await supabase.rpc("suggest_patient_matches" as any, { p_missing_id: person.id });
+      if (active) setMatchesCount(Array.isArray(data) ? data.length : 0);
+    })();
     return () => { active = false; };
-  }, [person.id]);
+  }, [person.id, person.matched_patient_id]);
 
 
   return (
@@ -460,11 +466,12 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onOpen(); }}
-            className="flex-1 inline-flex items-center justify-center px-2 py-2.5 rounded-xl text-sky-700 hover:bg-sky-500/10 transition"
-            title="Buscar coincidencias en atendidos"
-            aria-label="Buscar coincidencias"
+            className="flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-sky-700 hover:bg-sky-500/10 transition font-bold"
+            title={`Coincidencias en atendidos${matchesCount != null ? ` (${matchesCount})` : ""} — abrir ficha`}
+            aria-label="Coincidencias"
           >
             <Hospital className="h-5 w-5" strokeWidth={2.5} />
+            <span className="text-sm tabular-nums">{matchesCount ?? "—"}</span>
           </button>
         )}
 
@@ -500,16 +507,6 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
           <LinkIcon className="h-5 w-5" strokeWidth={2.5} />
         </button>
 
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onMarkFound(); }}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-emerald-700 hover:bg-emerald-500/15 transition font-bold"
-          title={`Marcar como encontrada${person.found_marks ? ` (${person.found_marks} confirmaciones)` : ""}`}
-          aria-label="Marcar como encontrada"
-        >
-          <UserCheck className="h-5 w-5" strokeWidth={2.5} />
-          <span className="text-sm tabular-nums">{person.found_marks ?? 0}</span>
-        </button>
 
       </div>
 
