@@ -8,7 +8,7 @@ import { reverseGeocode } from "@/lib/geocode";
 
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
-  Info, ChevronDown, PackageOpen,
+  Info, ChevronDown, PackageOpen, Share2,
   Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
   type LucideIcon,
 } from "lucide-react";
