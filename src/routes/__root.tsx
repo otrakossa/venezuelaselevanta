@@ -120,7 +120,7 @@ function RootComponent() {
       <div className="min-h-screen bg-background flex flex-col">
         <RouteProgress />
         <Header />
-        <LiveStatusBanner />
+        
         <DeadQueueBanner />
         <OfflineBanner />
         <main className="flex-1">
