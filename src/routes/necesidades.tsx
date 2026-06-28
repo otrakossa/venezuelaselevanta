@@ -161,6 +161,44 @@ function NecesidadesPage() {
     low:      needs.filter((n) => n.urgency === "low").length,
   }), [needs]);
 
+  // Deep-link: ?need=<id> opens a focused detail modal for that need.
+  const [focused, setFocused] = useState<Need | null>(null);
+  const [focusedLoading, setFocusedLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("need");
+    if (!id) { setFocused(null); return; }
+    const inList = needs.find((n) => n.id === id);
+    if (inList) { setFocused(inList); return; }
+    setFocusedLoading(true);
+    fetch(`${SUPA_URL}/rest/v1/needs?id=eq.${id}&limit=1`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` },
+    })
+      .then((r) => r.ok ? r.json() : Promise.reject(new Error("No encontrado")))
+      .then((rows: Need[]) => {
+        const row = rows[0];
+        if (!row) { toast.error("Esta necesidad ya no está disponible"); return; }
+        setFocused({
+          ...row,
+          categories: Array.isArray(row.categories) && row.categories.length > 0
+            ? row.categories
+            : row.category ? [row.category] : [],
+        });
+      })
+      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "No se pudo cargar"))
+      .finally(() => setFocusedLoading(false));
+  }, [needs]);
+
+  const closeFocused = () => {
+    setFocused(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("need");
+    window.history.replaceState({}, "", url.toString());
+  };
+
+
+
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
 
