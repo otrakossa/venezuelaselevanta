@@ -166,6 +166,19 @@ export function MissingDetailSheet({
     }
   };
 
+  const searchMatches = async () => {
+    if (!person) return;
+    setMatchLoading(true);
+    const { data, error } = await (supabase as any).rpc("suggest_patient_matches", {
+      p_missing_id: person.id,
+    });
+    setMatchLoading(false);
+    if (error) { toast.error("No se pudo buscar coincidencias"); return; }
+    setMatches((data ?? []) as PatientMatch[]);
+    if (!data || data.length === 0) toast.info("No se encontraron coincidencias");
+  };
+
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = content.trim();
