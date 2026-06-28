@@ -345,14 +345,16 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
   const directLink = `${origin}/desaparecidos?person=${person.id}`;
 
   const shareWA = () => {
-    const text =
-      `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n` +
-      `👤 ${person.name}${person.age ? ` (${person.age} años)` : ""}\n` +
-      (person.last_seen_location ? `📍 Última ubicación: ${person.last_seen_location}\n` : "") +
-      (person.description ? `📝 ${person.description}\n` : "") +
-      (person.contact_phone ? `📞 Contacto: ${person.contact_phone}\n` : "") +
-      `\nVer ficha completa: ${directLink}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    const lines = [
+      `🆘 PERSONA DESAPARECIDA — Venezuela Se Levanta`,
+      ``,
+      `👤 ${person.name}${person.age ? ` (${person.age} años)` : ""}`,
+    ];
+    if (person.last_seen_location) lines.push(`📍 Última ubicación: ${person.last_seen_location}`);
+    if (person.description) lines.push(`📝 ${person.description}`);
+    if (person.contact_phone) lines.push(`📞 Contacto: ${person.contact_phone}`);
+    lines.push(``, `Ver ficha completa: ${directLink}`);
+    window.open(`https://wa.me/?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
   };
 
   const copyLink = async () => {
