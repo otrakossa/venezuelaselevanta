@@ -57,6 +57,8 @@ export function MissingDetailSheet({
   const [author, setAuthor] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [matches, setMatches] = useState<PatientMatch[] | null>(null);
+  const [matchLoading, setMatchLoading] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   // ESC to close
