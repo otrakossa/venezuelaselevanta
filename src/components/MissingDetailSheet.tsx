@@ -175,7 +175,6 @@ export function MissingDetailSheet({
     setMatchLoading(false);
     if (error) { toast.error("No se pudo buscar coincidencias"); return; }
     setMatches((data ?? []) as PatientMatch[]);
-    if (!data || data.length === 0) toast.info("No se encontraron coincidencias");
   };
 
 
@@ -372,24 +371,16 @@ export function MissingDetailSheet({
 
             {/* Match search */}
             {!person.matched_patient_id && (
-              <section className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-3 space-y-2">
-                <div className="flex items-start gap-2">
-                  <Hospital className="h-4 w-4 text-sky-600 mt-0.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold leading-tight">¿Estará en un centro de salud?</h3>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Busca coincidencias por nombre y ubicación entre los pacientes atendidos en hospitales.
-                    </p>
-                  </div>
-                </div>
+              <section className="space-y-2">
                 <button
                   onClick={searchMatches}
                   disabled={matchLoading}
                   className="w-full inline-flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-3 py-2 rounded-lg disabled:opacity-60"
                 >
-                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
-                  Buscar en registros de atendidos
+                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hospital className="h-4 w-4" />}
+                  Buscar coincidencias en centros de salud
                 </button>
+
 
                 {matches !== null && (
                   matches.length === 0 ? (
