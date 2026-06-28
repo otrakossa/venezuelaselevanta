@@ -265,14 +265,6 @@ export function MissingDetailSheet({
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="absolute right-3 top-3 z-10 h-10 w-10 grid place-items-center rounded-full bg-background border-2 border-border shadow-lg hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-colors"
-            aria-label="Cerrar ficha"
-            title="Cerrar (Esc)"
-          >
-            <X className="h-5 w-5" strokeWidth={2.5} />
-          </button>
 
         </div>
 
