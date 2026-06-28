@@ -23,6 +23,9 @@ import { Wizard } from "@/components/wizard/Wizard";
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    person: typeof search.person === "string" ? search.person : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Personas desaparecidas — Venezuela Se Levanta" },
@@ -31,6 +34,7 @@ export const Route = createFileRoute("/desaparecidos")({
   }),
   component: MissingPage,
 });
+
 
 type Filter = "all" | "missing" | "found" | "deceased";
 
