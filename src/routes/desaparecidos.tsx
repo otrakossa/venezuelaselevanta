@@ -630,6 +630,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       contact_name: f.contact_name.trim() || null,
       contact_phone: f.contact_phone.trim() || null,
       contact_email: f.contact_email.trim() || null,
+      photo_url: photoUrl,
     } as never);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
