@@ -90,8 +90,10 @@ export function MissingDetailSheet({
   useEffect(() => {
     setMatches(null);
     setMatchLoading(false);
+    setMatchError(null);
     setFoundMarks((person as any)?.found_marks ?? null);
   }, [person?.id]);
+
 
   const markFound = async () => {
     if (!person || markBusy) return;
