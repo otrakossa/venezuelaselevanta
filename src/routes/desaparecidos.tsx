@@ -287,10 +287,11 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "rose
   );
 }
 
-function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson; onMarkFound: () => void; onChanged?: () => void }) {
+function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: MissingPerson; onMarkFound: () => void; onChanged?: () => void; onOpen: () => void }) {
   const navigate = useNavigate();
   const hasCoords = person.last_seen_lat != null && person.last_seen_lng != null;
-  const openOnMap = () => {
+  const openOnMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!hasCoords) {
       toast.error("Esta persona no tiene ubicación geolocalizada");
       return;
