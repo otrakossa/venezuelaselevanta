@@ -1,3 +1,5 @@
+import utopixLogo from "@/assets/logo-utopix.jpeg.asset.json";
+
 export type Person = {
   name: string;
   role: string;
@@ -74,7 +76,7 @@ export const organizations: Organization[] = [
     name: "Utopix",
     description: "Aliado en comunicación y diseño",
     url: "https://utopix.cc/",
-    logo: "/logo-utopix.jpeg",
+    logo: utopixLogo.url,
   },
 ];
 
