@@ -37,18 +37,10 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between gap-2 h-14">
-          <Link to="/" className="flex items-center gap-2 min-w-0">
+          <Link to="/" className="flex items-center min-w-0">
             <span className="animate-heartbeat shrink-0">
-              <Logo size={30} withWordmark={false} variant="light" />
+              <Logo size={36} withWordmark variant="color" />
             </span>
-            <div className="min-w-0 flex flex-col leading-tight">
-              <span className="font-display text-base sm:text-lg tracking-tight truncate">
-                Venezuela <span className="text-[color:var(--sunrise)]">Se Levanta</span>
-              </span>
-              <span className="text-[10px] text-header-foreground/60 leading-tight hidden sm:block">
-                venezuelaselevanta.info
-              </span>
-            </div>
           </Link>
 
           <div className="flex items-center gap-1 shrink-0">
