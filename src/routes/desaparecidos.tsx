@@ -141,7 +141,7 @@ function MissingPage() {
 
         {/* Aviso de no oficialidad */}
         <div className="relative mt-4 rounded-xl border border-amber-300/60 bg-amber-50 text-amber-900 px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed">
-          <strong className="font-bold">Aviso importante:</strong> Estos registros <strong>no son oficiales</strong>. Son aportes ciudadanos consolidados desde múltiples fuentes abiertas, por lo que pueden existir <strong>duplicados</strong> (una misma persona reportada varias veces), datos incompletos o desactualizados. Verifica siempre con autoridades competentes antes de tomar decisiones.
+          <strong className="font-bold">Aviso importante:</strong> Estos registros <strong>no son oficiales</strong>. Son aportes ciudadanos consolidados desde múltiples fuentes públicas, por lo que pueden existir <strong>duplicados</strong> (una misma persona reportada varias veces), datos incompletos o desactualizados. Verifica siempre con autoridades competentes.
         </div>
 
       </section>
