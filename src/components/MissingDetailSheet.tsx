@@ -95,7 +95,29 @@ export function MissingDetailSheet({
     setMatchLoading(false);
     setMatchError(null);
     setFoundMarks((person as any)?.found_marks ?? null);
+    setLocalPhoto(null);
   }, [person?.id]);
+
+  const uploadPhoto = async (file: File) => {
+    if (!person) return;
+    if (!file.type.startsWith("image/")) { toast.error("Solo imágenes"); return; }
+    if (file.size > 15 * 1024 * 1024) { toast.error("La imagen supera 15 MB"); return; }
+    setPhotoBusy(true);
+    try {
+      const url = await uploadOne(file);
+      const { error } = await (supabase as any).rpc("set_missing_person_photo", {
+        p_person_id: person.id,
+        p_photo_url: url,
+      });
+      if (error) throw error;
+      setLocalPhoto(url);
+      toast.success("Foto agregada — ¡gracias por ayudar!");
+    } catch (err) {
+      toast.error((err as Error).message || "No se pudo subir la foto");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
 
   const markFound = async () => {
