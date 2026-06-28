@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import {
   Search, UserPlus, MapPin, Phone, Mail, User,
   CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, Map as MapIcon, RefreshCw, ChevronDown,
-  MessageCircle, Hospital,
+  MessageCircle, Hospital, Camera,
 } from "lucide-react";
+import { uploadOne } from "@/lib/media-upload";
 
 import { geocodeAddress } from "@/lib/geocode";
 import { MissingGridSkeleton } from "@/components/skeletons";
