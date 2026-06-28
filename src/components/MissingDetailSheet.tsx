@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   X, MapPin, Phone, Mail, User, CalendarDays, Share2, Link as LinkIcon,
-  Map as MapIcon, MessageCircle, Send, Loader2, ShieldCheck, Hospital, Search,
+  Map as MapIcon, MessageCircle, Send, Loader2, ShieldCheck, Hospital, Search, UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
