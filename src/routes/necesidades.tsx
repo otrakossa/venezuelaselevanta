@@ -8,7 +8,7 @@ import { reverseGeocode } from "@/lib/geocode";
 
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
-  Info, ChevronDown, PackageOpen,
+  Info, ChevronDown, PackageOpen, Share2,
   Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
   type LucideIcon,
 } from "lucide-react";
@@ -458,19 +458,47 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
             {new Date(n.created_at).toLocaleString("es-VE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
           </time>
         </span>
-        {n.status !== "fulfilled" && (
+        <div className="flex items-center gap-1.5">
           <button
-            onClick={onOffer}
-            className="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold py-2 px-3 rounded-lg transition"
+            onClick={() => {
+              const url = `${window.location.origin}/necesidades?need=${n.id}`;
+              const cat = (CATEGORY_META[cats[0]] ?? CATEGORY_META.other).label;
+              const text =
+                `🆘 NECESIDAD ${urg.label.toUpperCase()} — ${cat}\n\n` +
+                `${n.title}\n` +
+                `📍 ${n.center_name}${n.center_address ? " · " + n.center_address : ""}\n` +
+                (n.description ? `\n${n.description}\n` : "") +
+                (n.quantity ? `\nCantidad: ${n.quantity}\n` : "") +
+                (n.contact_name ? `\nContacto: ${n.contact_name}` : "") +
+                (n.contact_phone ? ` · ${n.contact_phone}` : "") +
+                `\n\n¿Puedes ayudar? Ofrece tu apoyo aquí:\n${url}`;
+              if (navigator.share) {
+                navigator.share({ title: n.title, text, url }).catch(() => {
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                });
+              } else {
+                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+              }
+            }}
+            title="Difundir esta necesidad"
+            className="inline-flex items-center gap-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 text-xs font-bold py-2 px-3 rounded-lg transition"
           >
-            <PackageOpen className="h-3.5 w-3.5" /> Ofrecer ayuda
+            <Share2 className="h-3.5 w-3.5" /> Difundir
           </button>
-        )}
-        {n.status === "fulfilled" && (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-muted text-muted-foreground">
-            ✅ Cubierta
-          </span>
-        )}
+          {n.status !== "fulfilled" && (
+            <button
+              onClick={onOffer}
+              className="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold py-2 px-3 rounded-lg transition"
+            >
+              <PackageOpen className="h-3.5 w-3.5" /> Ofrecer ayuda
+            </button>
+          )}
+          {n.status === "fulfilled" && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-muted text-muted-foreground">
+              ✅ Cubierta
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );
