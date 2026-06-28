@@ -152,12 +152,14 @@ export function MissingDetailSheet({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = content.trim();
+    const name = author.trim();
+    if (!name) { toast.error("Escribe tu nombre"); return; }
     if (!text) return;
     if (text.length > 1000) { toast.error("Máximo 1000 caracteres"); return; }
     setSubmitting(true);
     const { error } = await (supabase as any).from("missing_person_comments").insert({
       missing_person_id: person.id,
-      author_name: author.trim() || null,
+      author_name: name,
       content: text,
     });
     setSubmitting(false);
