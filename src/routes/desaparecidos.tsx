@@ -103,13 +103,17 @@ function MissingPage() {
 
 
   const markFound = async (id: string) => {
-    const { error } = await supabase
-      .from("missing_persons")
-      .update({ status: "found", found_date: new Date().toISOString() })
-      .eq("id", id);
-    if (error) toast.error(error.message);
-    else toast.success("Marcada como encontrada ❤️");
+    const { getDeviceId } = await import("@/lib/device-id");
+    const { data, error } = await supabase.rpc("mark_missing_person_found" as any, {
+      _person_id: id,
+      _device_id: getDeviceId(),
+    });
+    if (error) { toast.error(error.message); return; }
+    const row = Array.isArray(data) ? data[0] : data;
+    toast.success(`Marcada como encontrada ❤️ (${row?.found_marks ?? 1} confirmación${(row?.found_marks ?? 1) === 1 ? "" : "es"})`);
+    refetch();
   };
+
 
   return (
     <div ref={ptr.ref} className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
