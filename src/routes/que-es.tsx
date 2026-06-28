@@ -358,32 +358,10 @@ function AboutPage() {
             >
               <MessageSquare className="h-4 w-4" /> Escríbenos
             </a>
-            <a
-              href="#equipo"
-              className="inline-flex items-center gap-2 bg-white border border-border text-[color:var(--midnight)] font-semibold rounded-full px-5 py-2.5 text-sm hover:border-[color:var(--sunrise)]/50 transition-colors"
-            >
-              <Heart className="h-4 w-4 text-[color:var(--sunrise)]" /> Conoce al equipo
-            </a>
           </div>
         </section>
 
-        {/* Equipo y colaboradores */}
-        <section id="equipo" className="space-y-4 scroll-mt-20">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-[color:var(--sunrise)]" />
-            <h2 className="font-display text-2xl sm:text-3xl text-[color:var(--midnight)]">
-              Equipo y colaboradores
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Personas que mantienen, desarrollan y sostienen la plataforma día a día.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...team, ...collaborators].map((p) => (
-              <PersonCard key={p.name} person={p} />
-            ))}
-          </div>
-        </section>
+
 
         {/* Organizaciones */}
         <section className="space-y-4">
