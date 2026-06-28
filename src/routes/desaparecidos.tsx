@@ -333,12 +333,12 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
         {s.label}
       </div>
 
-      {/* Clickable area → focus on map */}
+      {/* Clickable area → open detail sheet */}
       <button
         type="button"
-        onClick={openOnMap}
+        onClick={onOpen}
         className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
-        title={hasCoords ? "Ver en el mapa" : "Sin ubicación geolocalizada"}
+        title="Ver ficha completa"
       >
         {/* Photo / avatar */}
         <div className={`relative h-40 bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ${s.ring}`}>
@@ -358,11 +358,9 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
             />
           )}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-          {hasCoords && (
-            <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-black/55 text-white backdrop-blur">
-              <MapIcon className="h-3 w-3" /> Ver en mapa
-            </div>
-          )}
+          <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-black/55 text-white backdrop-blur">
+            Ver ficha
+          </div>
           <div className="absolute bottom-2 left-3 right-3 text-white">
             <h3 className="font-bold text-lg leading-tight drop-shadow line-clamp-1">{person.name}</h3>
             <div className="flex items-center gap-2 text-[11px] opacity-90 mt-0.5">
