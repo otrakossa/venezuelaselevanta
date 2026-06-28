@@ -147,15 +147,19 @@ export function MissingDetailSheet({
   };
 
   const shareWA = () => {
-    const text =
-      `🆘 *PERSONA DESAPARECIDA* — Venezuela Se Levanta\n\n` +
-      `👤 ${person.name}${person.age ? ` (${person.age} años)` : ""}\n` +
-      (person.last_seen_location ? `📍 Última ubicación: ${person.last_seen_location}\n` : "") +
-      (person.description ? `📝 ${person.description}\n` : "") +
-      (person.contact_phone ? `📞 Contacto: ${person.contact_phone}\n` : "") +
-      `\nVer ficha: ${directLink}`;
+    const lines = [
+      "PERSONA DESAPARECIDA - Venezuela Se Levanta",
+      "",
+      `Nombre: ${person.name}${person.age ? ` (${person.age} anios)` : ""}`,
+    ];
+    if (person.last_seen_location) lines.push(`Ultima ubicacion: ${person.last_seen_location}`);
+    if (person.description) lines.push(`Descripcion: ${person.description}`);
+    if (person.contact_phone) lines.push(`Contacto: ${person.contact_phone}`);
+    lines.push("", `Ver ficha: ${directLink}`);
+    const text = lines.join("\n");
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
+
 
   const copyLink = async () => {
     try {
