@@ -68,7 +68,9 @@ export function MissingDetailSheet({
   const [submitting, setSubmitting] = useState(false);
   const [matches, setMatches] = useState<PatientMatch[] | null>(null);
   const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError] = useState<string | null>(null);
   const [foundMarks, setFoundMarks] = useState<number | null>(null);
+
   const [markBusy, setMarkBusy] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
