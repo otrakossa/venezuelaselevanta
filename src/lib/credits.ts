@@ -1,4 +1,5 @@
 import utopixLogo from "@/assets/logo-utopix.jpeg.asset.json";
+import awaLogo from "@/assets/logo-awa.jpeg.asset.json";
 
 export type Person = {
   name: string;
@@ -77,6 +78,12 @@ export const organizations: Organization[] = [
     description: "Comunicación visual contrahegemónica",
     url: "https://utopix.cc/",
     logo: utopixLogo.url,
+  },
+  {
+    name: "AWA",
+    description: "Moda afrocaribeña con raíces ancestrales",
+    url: "https://www.instagram.com/awa_raiz",
+    logo: awaLogo.url,
   },
 ];
 
