@@ -739,6 +739,17 @@ function HomePage() {
                         </div>
                       </div>
                     </button>
+                    <div className="flex items-center pr-3">
+                      <Link
+                        to="/desaparecidos"
+                        search={{ person: m.id } as any}
+                        onClick={() => setSheetOpen(false)}
+                        className="text-[11px] font-semibold px-2.5 py-1.5 rounded-md bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 transition whitespace-nowrap"
+                        title="Ver ficha completa"
+                      >
+                        Ver ficha
+                      </Link>
+                    </div>
                   </li>
                 );
               })}
