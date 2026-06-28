@@ -1,4 +1,4 @@
-// Guarded service worker registration. Refuses in dev, iframe, Lovable preview, and on ?sw=off.
+// Guarded service worker registration. Refuses in dev, iframe, preview hosts, and on ?sw=off.
 // This module is dynamically imported by the client entry — never at SSR time.
 //
 // Also handles two operational hazards:
@@ -137,8 +137,8 @@ export async function registerPWA(): Promise<void> {
 }
 
 if (typeof window !== "undefined") {
-  // Chunk guard runs in ALL contexts (preview included) — it's the only line of
-  // defense when a deploy yanks chunks out from under a long-lived tab.
+  // Chunk guard runs in ALL contexts (preview included) — it's the only line
+  // of defense when a deploy yanks chunks out from under a long-lived tab.
   installChunkErrorGuard();
   // Defer SW registration to load so it never competes with first paint.
   window.addEventListener("load", () => {
