@@ -175,7 +175,7 @@ export function MissingDetailSheet({
     setMatchLoading(false);
     if (error) { toast.error("No se pudo buscar coincidencias"); return; }
     setMatches((data ?? []) as PatientMatch[]);
-    if (!data || data.length === 0) toast.info("No se encontraron coincidencias");
+    };
   };
 
 
