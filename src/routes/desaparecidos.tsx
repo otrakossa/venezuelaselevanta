@@ -433,7 +433,16 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
       </div>
 
       {/* Actions */}
-      <div className="px-4 pb-4 flex items-center gap-2">
+      <div className="px-4 pb-4 flex items-center gap-2 flex-wrap">
+        {hasCoords && (
+          <button
+            onClick={openOnMap}
+            className="inline-flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold py-2 px-3 rounded-lg transition"
+            title="Ver en el mapa"
+          >
+            <MapIcon className="h-3.5 w-3.5" /> Ver en mapa
+          </button>
+        )}
         <button
           onClick={shareWA}
           className="flex-1 inline-flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold py-2 rounded-lg transition"
