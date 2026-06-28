@@ -245,6 +245,35 @@ export type Database = {
         }
         Relationships: []
       }
+      missing_person_found_votes: {
+        Row: {
+          created_at: string
+          device_id: string
+          id: string
+          missing_person_id: string
+        }
+        Insert: {
+          created_at?: string
+          device_id: string
+          id?: string
+          missing_person_id: string
+        }
+        Update: {
+          created_at?: string
+          device_id?: string
+          id?: string
+          missing_person_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missing_person_found_votes_missing_person_id_fkey"
+            columns: ["missing_person_id"]
+            isOneToOne: false
+            referencedRelation: "missing_persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       missing_persons: {
         Row: {
           age: number | null
@@ -254,6 +283,7 @@ export type Database = {
           created_at: string
           description: string | null
           found_date: string | null
+          found_marks: number
           id: string
           last_seen_lat: number | null
           last_seen_lng: number | null
@@ -281,6 +311,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           found_date?: string | null
+          found_marks?: number
           id?: string
           last_seen_lat?: number | null
           last_seen_lng?: number | null
@@ -308,6 +339,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           found_date?: string | null
+          found_marks?: number
           id?: string
           last_seen_lat?: number | null
           last_seen_lng?: number | null
@@ -861,6 +893,13 @@ export type Database = {
       link_missing_to_patient: {
         Args: { p_missing_id: string; p_patient_id: string }
         Returns: undefined
+      }
+      mark_missing_person_found: {
+        Args: { _device_id: string; _person_id: string }
+        Returns: {
+          found_marks: number
+          status: string
+        }[]
       }
       move_to_dlq: {
         Args: {
