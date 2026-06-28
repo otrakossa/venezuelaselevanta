@@ -300,8 +300,12 @@ function MissingPage() {
       <MissingDetailSheet
         person={selected}
         open={selected !== null}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          setSelected(null);
+          if (search.person) navigate({ search: { person: undefined }, replace: true });
+        }}
       />
+
     </div>
   );
 }
