@@ -65,16 +65,25 @@ function MissingPage() {
     const timer = setTimeout(async () => {
       setSearching(true);
       try {
-        const needle = q.trim();
+        // Escape PostgREST .or() reserved chars: , ( ) : and also % _ (ilike wildcards)
+        const needle = q.trim().replace(/[,()":%_\\]/g, " ").replace(/\s+/g, " ").trim();
+        if (!needle) { setSearchResults([]); return; }
+        const pattern = `%${needle}%`;
         const { MISSING_PUBLIC_COLUMNS } = await import("@/lib/missing-columns");
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("missing_persons")
           .select(MISSING_PUBLIC_COLUMNS)
-          .or(`name.ilike.%${needle}%,last_seen_location.ilike.%${needle}%,description.ilike.%${needle}%`)
+          .or(`name.ilike.${pattern},last_seen_location.ilike.${pattern},description.ilike.${pattern}`)
           .order("report_date", { ascending: false })
           .limit(200);
 
-        setSearchResults((data ?? []) as unknown as MissingPerson[]);
+        if (error) {
+          console.error("[desaparecidos] search error", error);
+          toast.error("No se pudo buscar. Intenta de nuevo.");
+          setSearchResults([]);
+        } else {
+          setSearchResults((data ?? []) as unknown as MissingPerson[]);
+        }
       } finally {
         setSearching(false);
       }
@@ -83,8 +92,9 @@ function MissingPage() {
   }, [q]);
 
   const list = useMemo(() => {
-    const source = searchResults ?? missing;
-    return source.filter((m) => filter === "all" || m.status === filter);
+    // While searching, ignore the status tab so results aren't hidden by it.
+    if (searchResults) return searchResults;
+    return missing.filter((m) => filter === "all" || m.status === filter);
   }, [searchResults, missing, filter]);
 
 
