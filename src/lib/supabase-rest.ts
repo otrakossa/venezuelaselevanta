@@ -1,17 +1,11 @@
 // Centralized Supabase REST credentials for raw fetch() callers.
-// Mirrors the hardcoded values in src/integrations/supabase/client.ts so that
-// routes/components calling the REST API directly don't break when Vite
-// env vars (VITE_SUPABASE_*) aren't injected into the build.
+// HARDCODED to the production project (advebubtfjgxwpjxprok) to match
+// src/integrations/supabase/client.ts. We intentionally IGNORE Vite env
+// vars because the Lovable preview environment injects the old project's
+// VITE_SUPABASE_* values, which would point the REST helpers at stale data
+// (e.g. ~510 patients instead of the real ~2.875 in production).
 
-const HARDCODED_URL = "https://advebubtfjgxwpjxprok.supabase.co";
-const HARDCODED_ANON =
+export const SUPA_URL = "https://advebubtfjgxwpjxprok.supabase.co";
+export const SUPA_ANON =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdmVidWJ0ZmpneHdwanhwcm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDcyMTMsImV4cCI6MjA5ODAyMzIxM30.e4w9nrHsaNRP-enNPS-beZ0Kns7KxvRtVXxRDLECS5U";
 
-const envUrl =
-  (typeof import.meta !== "undefined" && (import.meta.env?.VITE_SUPABASE_URL as string | undefined)) || "";
-const envKey =
-  (typeof import.meta !== "undefined" &&
-    (import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)) || "";
-
-export const SUPA_URL = envUrl || HARDCODED_URL;
-export const SUPA_ANON = envKey || HARDCODED_ANON;
