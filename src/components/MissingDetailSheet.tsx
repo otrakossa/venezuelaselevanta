@@ -82,6 +82,12 @@ export function MissingDetailSheet({
     };
   }, [open, onClose]);
 
+  // Reset transient state when changing person
+  useEffect(() => {
+    setMatches(null);
+    setMatchLoading(false);
+  }, [person?.id]);
+
   // Load comments + realtime
   useEffect(() => {
     if (!person || !open) return;
