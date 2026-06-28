@@ -69,6 +69,8 @@ export interface MissingPerson {
   status: MissingStatus;
   report_date: string;
   found_date: string | null;
+  found_marks?: number | null;
+
   matched_patient_id?: string | null;
   matched_patient?: { center_name: string | null; status?: string | null } | null;
   created_at: string;

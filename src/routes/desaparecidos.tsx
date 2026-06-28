@@ -103,13 +103,17 @@ function MissingPage() {
 
 
   const markFound = async (id: string) => {
-    const { error } = await supabase
-      .from("missing_persons")
-      .update({ status: "found", found_date: new Date().toISOString() })
-      .eq("id", id);
-    if (error) toast.error(error.message);
-    else toast.success("Marcada como encontrada ❤️");
+    const { getDeviceId } = await import("@/lib/device-id");
+    const { data, error } = await supabase.rpc("mark_missing_person_found" as any, {
+      _person_id: id,
+      _device_id: getDeviceId(),
+    });
+    if (error) { toast.error(error.message); return; }
+    const row = Array.isArray(data) ? data[0] : data;
+    toast.success(`Marcada como encontrada ❤️ (${row?.found_marks ?? 1} confirmación${(row?.found_marks ?? 1) === 1 ? "" : "es"})`);
+    refetch();
   };
+
 
   return (
     <div ref={ptr.ref} className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
@@ -439,37 +443,28 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
         </div>
       )}
 
-      <div className="px-4 pb-2">
-        <MatchSuggestions
-          kind="missing"
-          selfId={person.id}
-          matchedId={person.matched_patient_id}
-          onChanged={onChanged}
-        />
-      </div>
-
-      {/* Actions — icon row */}
-      <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-1 border-t border-border/40">
+      {/* Actions — icon row (bolder, larger) */}
+      <div className="px-3 pb-3 pt-2 flex items-center justify-between gap-1 border-t border-border/40">
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onOpen(); }}
-          className="inline-flex items-center gap-1 p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition font-bold"
           title={`Comentarios${commentsCount != null ? ` (${commentsCount})` : ""}`}
           aria-label="Comentarios"
         >
-          <MessageCircle className="h-4 w-4" />
-          <span className="text-xs font-bold tabular-nums">{commentsCount ?? "—"}</span>
+          <MessageCircle className="h-5 w-5" strokeWidth={2.5} />
+          <span className="text-sm tabular-nums">{commentsCount ?? "—"}</span>
         </button>
 
         {!person.matched_patient_id && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onOpen(); }}
-            className="inline-flex items-center gap-1 p-2 rounded-lg text-sky-700 hover:bg-sky-500/10 transition"
+            className="flex-1 inline-flex items-center justify-center px-2 py-2.5 rounded-xl text-sky-700 hover:bg-sky-500/10 transition"
             title="Buscar coincidencias en atendidos"
             aria-label="Buscar coincidencias"
           >
-            <Hospital className="h-4 w-4" />
+            <Hospital className="h-5 w-5" strokeWidth={2.5} />
           </button>
         )}
 
@@ -477,47 +472,47 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
           <button
             type="button"
             onClick={openOnMap}
-            className="p-2 rounded-lg text-primary hover:bg-primary/10 transition"
+            className="flex-1 inline-flex items-center justify-center px-2 py-2.5 rounded-xl text-primary hover:bg-primary/10 transition"
             title="Ver en el mapa"
             aria-label="Ver en mapa"
           >
-            <MapIcon className="h-4 w-4" />
+            <MapIcon className="h-5 w-5" strokeWidth={2.5} />
           </button>
         )}
 
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); shareWA(); }}
-          className="p-2 rounded-lg text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition"
+          className="flex-1 inline-flex items-center justify-center px-2 py-2.5 rounded-xl text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition"
           title="Difundir por WhatsApp"
           aria-label="Difundir"
         >
-          <Share2 className="h-4 w-4" />
+          <Share2 className="h-5 w-5" strokeWidth={2.5} />
         </button>
 
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); copyLink(); }}
-          className="p-2 rounded-lg text-muted-foreground hover:bg-muted transition"
+          className="flex-1 inline-flex items-center justify-center px-2 py-2.5 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition"
           title="Copiar enlace"
           aria-label="Copiar enlace"
         >
-          <LinkIcon className="h-4 w-4" />
+          <LinkIcon className="h-5 w-5" strokeWidth={2.5} />
         </button>
 
-        {person.status === "missing" && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onMarkFound(); }}
-            className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-500/10 transition"
-            title="Marcar como encontrada"
-            aria-label="Marcar como encontrada"
-          >
-            <UserCheck className="h-4 w-4" />
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onMarkFound(); }}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-xl text-emerald-700 hover:bg-emerald-500/15 transition font-bold"
+          title={`Marcar como encontrada${person.found_marks ? ` (${person.found_marks} confirmaciones)` : ""}`}
+          aria-label="Marcar como encontrada"
+        >
+          <UserCheck className="h-5 w-5" strokeWidth={2.5} />
+          <span className="text-sm tabular-nums">{person.found_marks ?? 0}</span>
+        </button>
 
       </div>
+
     </article>
   );
 }
