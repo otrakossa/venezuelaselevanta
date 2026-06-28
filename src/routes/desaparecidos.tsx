@@ -302,7 +302,8 @@ function MissingPage() {
         open={selected !== null}
         onClose={() => {
           setSelected(null);
-          if (search.person) navigate({ search: { person: undefined }, replace: true });
+          if (search.person) navigate({ search: ((prev: { person?: string }) => ({ ...prev, person: undefined })) as never, replace: true });
+
         }}
       />
 
