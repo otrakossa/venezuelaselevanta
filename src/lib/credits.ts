@@ -79,6 +79,12 @@ export const organizations: Organization[] = [
     url: "https://utopix.cc/",
     logo: utopixLogo.url,
   },
+  {
+    name: "AWA",
+    description: "Moda afrocaribeña con raíces ancestrales",
+    url: "https://www.instagram.com/awa_raiz",
+    logo: awaLogo.url,
+  },
 ];
 
 export const tech: TechCredit[] = [
