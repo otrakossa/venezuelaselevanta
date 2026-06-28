@@ -280,6 +280,7 @@ export function MissingDetailSheet({
               <h2 className="text-xl font-black leading-tight mt-1 line-clamp-2">{person.name}</h2>
               <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
                 {person.age != null && <span>{person.age} años</span>}
+                {person.id_number && <span className="font-mono">CI {person.id_number}</span>}
                 <span className="inline-flex items-center gap-1">
                   <CalendarDays className="h-3 w-3" />
                   {daysAgo === 0 ? "Reportado hoy" : `Hace ${daysAgo} día${daysAgo === 1 ? "" : "s"}`}
