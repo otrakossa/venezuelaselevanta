@@ -70,8 +70,27 @@ El archivo `.env` vive en `/var/www/venezuelaselevanta/.env` y **no va a git**.
 | `GEMINI_API_KEY` | Google AI Studio — Gemini 2.0 Flash |
 | `BOT_NEEDS_FLOW` | (opcional) habilita el flujo `/necesidad` del bot (`1`/`true`/`on`/`yes`). Oculto por defecto |
 | `BOT_HELP_FLOW` | (opcional) habilita el flujo `/ayudar` del bot (`1`/`true`/`on`/`yes`). Oculto por defecto |
+| `VITE_FEATURE_QUICK_REPORT` | (opcional, **build-time**) reporte rápido en `ReportForm`: auto-GPS al entrar al paso de ubicación + campos opcionales colapsados. Oculto por defecto |
+| `VITE_FEATURE_PEOPLE_LINK` | (opcional, **build-time**) pestañas + buscador cruzado entre `/desaparecidos` y `/pacientes` (`PeopleTabs`). Oculto por defecto |
+| `VITE_FEATURE_NAV_MORE` | (opcional, **build-time**) nav de escritorio compacta con menú "Más". Oculto por defecto |
 
-Las claves `VITE_*` son duplicados con prefijo para el cliente Vite.
+Las claves `VITE_SUPABASE_*` son duplicados con prefijo para el cliente Vite. Los **flags de
+frontend** `VITE_FEATURE_*` viven en `src/lib/flags.ts`; a diferencia de los flags del bot
+(runtime), se hornean en **build time** → activarlos exige **reconstruir** el bundle
+(`bun run build`), no basta `pm2 --update-env`. Convención ON: `1`/`true`/`on`/`yes`.
+
+### Frontend — vocabulario de UX y ubicación
+
+- **Lenguaje de acción** (refactor de UX): la UI dice **"Pedir ayuda"** (ruta `/necesidades`) y
+  **"Ofrecer ayuda"** (ruta `/ofertas`) — las **URLs no cambiaron**. `/atendidos` redirige a
+  `/pacientes` vía `beforeLoad`.
+- **Ubicación** (`LocationSelect` + `src/lib/venezuela-divipol.ts`): cascada Estado→Municipio por
+  dropdown, pero la **Parroquia es texto libre** porque el dataset solo trae estados + municipios
+  (no hay padrón de parroquias cargado). En `ReportForm` el **pin del mapa es obligatorio** (la app
+  es geoespacial; el reporte necesita `lat/lng`): las coords salen de tap en el mapa, GPS o EXIF de
+  la foto — todavía **no** se geocodifican desde el texto/DIVIPOL.
+- **Filtros**: `/necesidades` muestra solo búsqueda por defecto y colapsa los demás filtros tras un
+  botón "Filtrar"; el modal "Vincular" de `/ofertas` abre en "Todas" (coincidencias por cercanía).
 
 ## Supabase — tablas principales
 
@@ -98,6 +117,12 @@ telegram_sessions  — (tabla legacy, no usada)
 **Columnas DIVIPOL** (convención compartida): `state` / `municipality` / `parish`
 (en `reports`, `missing_persons`, `needs`, `offers`, `sites`). No hay CHECK constraints
 sobre los vocabularios de `needs`/`offers` (se validan en la app, con fallbacks `catMeta`/`urgMeta`).
+
+**Privacidad / PII (anon key directa):** RLS es la única barrera del frontend. `missing_persons`
+oculta el contacto del reportante a anónimos (`MISSING_PUBLIC_COLUMNS`). `patients`, en cambio,
+**expone a propósito** `id_number` / `phone` / `address` (los muestra `/pacientes` para reunir
+familias) — **decisión de diseño, no una fuga**: no restringir esas columnas ni su RLS sin
+confirmación explícita.
 
 **RPCs de matching:** `suggest_patient_matches` (desaparecidos↔pacientes, por nombre/pg_trgm)
 y `suggest_needs_for_offer` (needs↔offers por **cercanía**: tier DIVIPOL + distancia haversine, SQL puro).
