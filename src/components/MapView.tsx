@@ -306,14 +306,15 @@ export function MapView({
                           Reportada {format(new Date(m.report_date), "dd MMM HH:mm")}
                         </div>
                         <div className="flex gap-1.5 pt-1">
-                          <Link to="/desaparecidos" search={{ person: m.id } as any} className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 shadow-sm transition">
+                          <Link to="/desaparecidos" search={{ person: m.id } as any} style={{ color: "#ffffff" }} className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-rose-500 !text-white text-xs font-bold hover:bg-rose-600 hover:!text-white shadow-sm transition no-underline hover:no-underline">
                             Ver ficha →
                           </Link>
                           <a
                             href={`https://wa.me/?text=${encodeURIComponent(waText)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 shadow-sm transition"
+                            style={{ color: "#ffffff" }}
+                            className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-emerald-500 !text-white text-xs font-bold hover:bg-emerald-600 hover:!text-white shadow-sm transition no-underline hover:no-underline"
                             title="Difundir por WhatsApp"
                           >
                             Difundir
