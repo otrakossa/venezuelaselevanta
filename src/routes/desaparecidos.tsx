@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { LocationSelect } from "@/components/LocationSelect";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { MissingDetailSheet } from "@/components/MissingDetailSheet";
 import { Wizard } from "@/components/wizard/Wizard";
 
 
@@ -54,6 +55,7 @@ function MissingPage() {
   const [loaded, setLoaded] = useState(false);
   const [searchResults, setSearchResults] = useState<MissingPerson[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<MissingPerson | null>(null);
   // Mark loaded once we have any data, or after first render tick.
   useMemo(() => { if (missing.length > 0) setLoaded(true); }, [missing.length]);
   const ptr = usePullToRefresh<HTMLDivElement>({
@@ -210,7 +212,7 @@ function MissingPage() {
         ) : (
           <>
             {list.map((m) => (
-              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} onChanged={refetch} />
+              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} onChanged={refetch} onOpen={() => setSelected(m)} />
             ))}
             {list.length === 0 && (
               <div className="col-span-full">
@@ -261,6 +263,12 @@ function MissingPage() {
           </>
         )}
       </div>
+
+      <MissingDetailSheet
+        person={selected}
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
@@ -279,10 +287,11 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "rose
   );
 }
 
-function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson; onMarkFound: () => void; onChanged?: () => void }) {
+function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: MissingPerson; onMarkFound: () => void; onChanged?: () => void; onOpen: () => void }) {
   const navigate = useNavigate();
   const hasCoords = person.last_seen_lat != null && person.last_seen_lng != null;
-  const openOnMap = () => {
+  const openOnMap = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!hasCoords) {
       toast.error("Esta persona no tiene ubicación geolocalizada");
       return;
@@ -324,12 +333,12 @@ function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson
         {s.label}
       </div>
 
-      {/* Clickable area → focus on map */}
+      {/* Clickable area → open detail sheet */}
       <button
         type="button"
-        onClick={openOnMap}
+        onClick={onOpen}
         className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
-        title={hasCoords ? "Ver en el mapa" : "Sin ubicación geolocalizada"}
+        title="Ver ficha completa"
       >
         {/* Photo / avatar */}
         <div className={`relative h-40 bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ${s.ring}`}>
@@ -349,11 +358,9 @@ function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson
             />
           )}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
-          {hasCoords && (
-            <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-black/55 text-white backdrop-blur">
-              <MapIcon className="h-3 w-3" /> Ver en mapa
-            </div>
-          )}
+          <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-black/55 text-white backdrop-blur">
+            Ver ficha
+          </div>
           <div className="absolute bottom-2 left-3 right-3 text-white">
             <h3 className="font-bold text-lg leading-tight drop-shadow line-clamp-1">{person.name}</h3>
             <div className="flex items-center gap-2 text-[11px] opacity-90 mt-0.5">
@@ -426,7 +433,16 @@ function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson
       </div>
 
       {/* Actions */}
-      <div className="px-4 pb-4 flex items-center gap-2">
+      <div className="px-4 pb-4 flex items-center gap-2 flex-wrap">
+        {hasCoords && (
+          <button
+            onClick={openOnMap}
+            className="inline-flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold py-2 px-3 rounded-lg transition"
+            title="Ver en el mapa"
+          >
+            <MapIcon className="h-3.5 w-3.5" /> Ver en mapa
+          </button>
+        )}
         <button
           onClick={shareWA}
           className="flex-1 inline-flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold py-2 rounded-lg transition"
