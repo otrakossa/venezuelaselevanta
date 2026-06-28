@@ -589,6 +589,15 @@ function MissingForm({ onDone }: { onDone: () => void }) {
     <div className="grid sm:grid-cols-2 gap-3">
       <input className={field} placeholder="Nombre completo *" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required maxLength={100} />
       <input
+        className={field}
+        placeholder="Cédula (V-12345678)"
+        value={f.id_number}
+        onChange={(e) => setF({ ...f, id_number: e.target.value })}
+        maxLength={20}
+        inputMode="text"
+        autoComplete="off"
+      />
+      <input
         type="number"
         min="0"
         max="120"
