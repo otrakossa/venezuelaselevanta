@@ -52,6 +52,9 @@ bun run build
 pm2 restart venezuela-levanta --update-env
 ```
 
+> **Para escalar cambios dev → producción** (migraciones de schema, releases con flags,
+> el gate de `VITE_*` en el bundle): seguir el runbook [`DEPLOY.md`](DEPLOY.md).
+
 ## Variables de entorno (`.env`)
 
 El archivo `.env` vive en `/var/www/venezuelaselevanta/.env` y **no va a git**.
