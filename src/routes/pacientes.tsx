@@ -583,6 +583,20 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
           onChanged={onChanged}
         />
 
+        {p.source_label === "localizapacientes.com" && (
+          <div className="pt-1">
+            <a
+              href={p.source_url || "https://localizapacientes.com"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-500/20 transition"
+              title="Fuente: localizapacientes.com"
+            >
+              <span>🔗</span> Fuente: localizapacientes.com
+            </a>
+          </div>
+        )}
+
         <div className="flex items-center justify-between pt-1 border-t border-border/60">
           <span className="text-[10px] text-muted-foreground">
             {timeAgo(p.created_at)}
