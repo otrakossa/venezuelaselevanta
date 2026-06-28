@@ -119,6 +119,20 @@ function ApiDocsPage() {
           <Pill color="hsl(200 70% 80%)">CORS *</Pill>
           <Pill color="hsl(20 90% 80%)">JSON · GeoJSON · CSV+HXL</Pill>
         </div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          <a
+            href="/api/docs"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-[color:var(--midnight)] text-white text-sm font-semibold hover:opacity-90"
+          >
+            <FileJson className="h-4 w-4" /> Swagger UI interactivo
+          </a>
+          <a
+            href="/api/openapi.json"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-md border border-border text-sm font-semibold hover:bg-accent"
+          >
+            <Download className="h-4 w-4" /> openapi.json
+          </a>
+        </div>
       </header>
 
       <section className="mb-10">
