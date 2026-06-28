@@ -150,15 +150,16 @@ export function MissingDetailSheet({
     const lines = [
       "PERSONA DESAPARECIDA - Venezuela Se Levanta",
       "",
-      `Nombre: ${person.name}${person.age ? ` (${person.age} anios)` : ""}`,
+      `Nombre: ${person.name}${person.age ? ` (${person.age} años)` : ""}`,
     ];
-    if (person.last_seen_location) lines.push(`Ultima ubicacion: ${person.last_seen_location}`);
-    if (person.description) lines.push(`Descripcion: ${person.description}`);
+    if (person.last_seen_location) lines.push(`Última ubicación: ${person.last_seen_location}`);
+    if (person.description) lines.push(`Descripción: ${person.description}`);
     if (person.contact_phone) lines.push(`Contacto: ${person.contact_phone}`);
     lines.push("", `Ver ficha: ${directLink}`);
     const text = lines.join("\n");
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
+
 
 
   const copyLink = async () => {
