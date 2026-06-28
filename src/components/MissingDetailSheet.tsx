@@ -376,40 +376,56 @@ export function MissingDetailSheet({
               </section>
             )}
 
-            {/* Actions */}
-            <section className="flex items-stretch gap-1.5 pt-1">
-              {!person.matched_patient_id && (
+            {/* Actions — primary row */}
+            <section className="space-y-2 pt-1">
+              <div className="flex items-stretch gap-2">
+                {!person.matched_patient_id && (
+                  <button
+                    onClick={searchMatches}
+                    disabled={matchLoading}
+                    className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40"
+                  >
+                    {matchLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Hospital className="h-5 w-5 shrink-0" />}
+                    <span className="truncate">Buscar coincidencias</span>
+                  </button>
+                )}
                 <button
-                  onClick={searchMatches}
-                  disabled={matchLoading}
-                  className="flex-[2] min-w-0 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-sm font-bold px-2.5 py-2 rounded-lg disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40 animate-pulse-slow"
+                  onClick={markFound}
+                  disabled={markBusy}
+                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/40"
+                  title="Marcar como encontrada/o"
                 >
-                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Hospital className="h-4 w-4 shrink-0" />}
-                  <span className="truncate">Buscar coincidencias</span>
+                  {markBusy ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <UserCheck className="h-5 w-5 shrink-0" />}
+                  <span className="truncate">Marcar como encontrado{foundMarks ? ` (${foundMarks})` : ""}</span>
                 </button>
-              )}
-              <button
-                onClick={shareWA}
-                className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-sm font-bold px-2.5 py-2 rounded-lg"
-              >
-                <Share2 className="h-4 w-4 shrink-0" /> <span className="truncate">Difundir</span>
-              </button>
-              <button
-                onClick={openOnMap}
-                disabled={!hasCoords}
-                className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-sm font-bold px-2.5 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow shadow-primary/20"
-                title={hasCoords ? "Ver en el mapa" : "Sin ubicación geolocalizada"}
-              >
-                <MapIcon className="h-4 w-4 shrink-0" /> <span className="truncate">Mapa</span>
-              </button>
-              <button
-                onClick={copyLink}
-                title="Copiar enlace"
-                className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 border border-border text-sm font-semibold px-2.5 py-2 rounded-lg hover:bg-muted"
-              >
-                <LinkIcon className="h-4 w-4 shrink-0" /> <span className="truncate">Copiar</span>
-              </button>
+              </div>
+
+              {/* Secondary row */}
+              <div className="flex items-stretch gap-1.5">
+                <button
+                  onClick={shareWA}
+                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-sm font-semibold px-2.5 py-2 rounded-lg"
+                >
+                  <Share2 className="h-4 w-4 shrink-0" /> <span className="truncate">Difundir</span>
+                </button>
+                <button
+                  onClick={openOnMap}
+                  disabled={!hasCoords}
+                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold px-2.5 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={hasCoords ? "Ver en el mapa" : "Sin ubicación geolocalizada"}
+                >
+                  <MapIcon className="h-4 w-4 shrink-0" /> <span className="truncate">Mapa</span>
+                </button>
+                <button
+                  onClick={copyLink}
+                  title="Copiar enlace"
+                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 border border-border text-sm font-semibold px-2.5 py-2 rounded-lg hover:bg-muted"
+                >
+                  <LinkIcon className="h-4 w-4 shrink-0" /> <span className="truncate">Copiar</span>
+                </button>
+              </div>
             </section>
+
 
 
             {/* Match results */}
