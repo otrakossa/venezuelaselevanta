@@ -736,41 +736,41 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
           <div className="text-muted-foreground">🏥 {prefilledNeed.center_name}</div>
         </div>
       )}
-      <div className="sm:col-span-2">
-        <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-          {(Object.keys(CATEGORY_META) as Category[]).map((c) => {
-            const meta = CATEGORY_META[c];
-            const active = f.category === c;
-            const Icon = meta.icon;
-            const disabled = !!prefilledNeed && f.category !== c;
-            return (
-              <button
-                key={c}
-                type="button"
-                onClick={() => !prefilledNeed && setF({ ...f, category: c })}
-                aria-pressed={active}
-                disabled={disabled}
-                className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] disabled:opacity-40 disabled:cursor-not-allowed ${
-                  active
-                    ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
-                    : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
-                }`}
-              >
-                <div
-                  className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
-                    active ? "text-white" : "bg-muted text-muted-foreground"
+      {!prefilledNeed && (
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-bold text-[color:var(--midnight)] mb-3 uppercase tracking-wider">Categoría *</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {(Object.keys(CATEGORY_META) as Category[]).map((c) => {
+              const meta = CATEGORY_META[c];
+              const active = f.category === c;
+              const Icon = meta.icon;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setF({ ...f, category: c })}
+                  aria-pressed={active}
+                  className={`flex flex-col items-center text-center p-3 rounded-2xl border-2 transition-all active:scale-95 min-h-[96px] ${
+                    active
+                      ? "border-[color:var(--sunrise)] bg-[color:var(--sunrise)]/5 text-[color:var(--sunrise)]"
+                      : "border-border bg-card text-muted-foreground hover:border-[color:var(--sky)]/30"
                   }`}
-                  style={active ? { background: meta.color } : undefined}
                 >
-                  <Icon className="w-5 h-5" />
-                </div>
-                <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
-              </button>
-            );
-          })}
+                  <div
+                    className={`w-10 h-10 mb-2 rounded-xl flex items-center justify-center ${
+                      active ? "text-white" : "bg-muted text-muted-foreground"
+                    }`}
+                    style={active ? { background: meta.color } : undefined}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[11px] font-bold leading-tight">{meta.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
       <input
         className={field}
         placeholder="Cantidad o detalle (ej: 100 mascarillas, 2 voluntarios…)"
