@@ -7,7 +7,7 @@ import { type Site, SITE_TYPES, invalidateSitesCache } from "@/hooks/useSites";
 import { Wizard } from "@/components/wizard/Wizard";
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
-  Info, ChevronDown, PackageOpen,
+  Info, ChevronDown, PackageOpen, SlidersHorizontal,
   Pill, Apple, Droplet, HandHelping, Wrench, Droplets, Banknote, SprayCan, Baby, Package,
   type LucideIcon,
 } from "lucide-react";
@@ -114,6 +114,7 @@ function NecesidadesPage() {
   const [urgency, setUrgency]       = useState<NeedUrgency | "all">("all");
   const [statusFilter, setStatusFilter] = useState<"active" | "fulfilled">("active");
   const [showForm, setShowForm]     = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate({ from: "/necesidades" });
 
   const load = async (silent = false) => {
@@ -155,6 +156,12 @@ function NecesidadesPage() {
     low:      needs.filter((n) => n.urgency === "low").length,
   }), [needs]);
 
+  // Filtros secundarios fuera del default (Activas / sin categoría / sin urgencia).
+  const activeFilterCount =
+    (category !== "all" ? 1 : 0) +
+    (urgency !== "all" ? 1 : 0) +
+    (statusFilter !== "active" ? 1 : 0);
+
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
 
@@ -165,7 +172,7 @@ function NecesidadesPage() {
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-600 mb-2">
               <HandHeart className="h-3.5 w-3.5" /> Ayuda solidaria
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Necesidades de la comunidad</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Pedir ayuda</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">
               Publica lo que necesitas o encuentra cómo ayudar a quienes más lo necesitan.
             </p>
@@ -194,35 +201,9 @@ function NecesidadesPage() {
       )}
 
       <div className="sticky top-14 z-20 -mx-3 sm:mx-0 px-3 sm:px-0 pt-2 pb-2 mb-3 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70 border-b border-border/60 space-y-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            onClick={() => setCategory("all")}
-            className={`text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
-              category === "all"
-                ? "bg-primary text-primary-foreground border-primary shadow"
-                : "bg-card border-border text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Todas
-          </button>
-          {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
-                category === c
-                  ? "bg-primary text-primary-foreground border-primary shadow"
-                  : "bg-card border-border text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {CATEGORY_META[c].emoji} {CATEGORY_META[c].label}
-            </button>
-          ))}
-        </div>
-
-
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
+        {/* Siempre visible: búsqueda + acceso a filtros + actualizar */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               value={q}
@@ -240,48 +221,99 @@ function NecesidadesPage() {
               </button>
             )}
           </div>
-          <div className="flex flex-wrap gap-1 bg-muted/70 rounded-xl p-1">
-            {(["all", "critical", "high", "medium", "low"] as const).map((u) => (
-              <button
-                key={u}
-                onClick={() => setUrgency(u)}
-                className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
-                  urgency === u ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {u === "all"
-                  ? "Todas"
-                  : `${URGENCY_STYLES[u].emoji} ${URGENCY_STYLES[u].label}`}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1 bg-muted/70 rounded-xl p-1">
-            <button
-              onClick={() => setStatusFilter("active")}
-              className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
-                statusFilter === "active" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Activas
-            </button>
-            <button
-              onClick={() => setStatusFilter("fulfilled")}
-              className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
-                statusFilter === "fulfilled" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Cubiertas
-            </button>
-          </div>
+          <button
+            onClick={() => setShowFilters((s) => !s)}
+            aria-expanded={showFilters}
+            className={`relative shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition ${
+              showFilters || activeFilterCount > 0
+                ? "bg-primary text-primary-foreground border-primary shadow"
+                : "bg-card border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            <span className="hidden sm:inline">Filtrar</span>
+            {activeFilterCount > 0 && (
+              <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-background text-primary text-[10px] font-bold">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
           <button
             onClick={() => load(true)}
             disabled={refreshing}
-            className="p-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition disabled:opacity-50"
+            className="shrink-0 p-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition disabled:opacity-50"
             aria-label="Actualizar"
           >
             {refreshing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
           </button>
         </div>
+
+        {/* Filtros secundarios: ocultos por defecto, mostrados al pulsar "Filtrar" */}
+        {showFilters && (
+          <div className="space-y-2 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                onClick={() => setCategory("all")}
+                className={`text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+                  category === "all"
+                    ? "bg-primary text-primary-foreground border-primary shadow"
+                    : "bg-card border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                Todas
+              </button>
+              {(Object.keys(CATEGORY_META) as NeedCategory[]).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`inline-flex items-center gap-1 text-xs px-3 py-1.5 rounded-full font-semibold transition border ${
+                    category === c
+                      ? "bg-primary text-primary-foreground border-primary shadow"
+                      : "bg-card border-border text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {CATEGORY_META[c].emoji} {CATEGORY_META[c].label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap gap-1 bg-muted/70 rounded-xl p-1">
+                {(["all", "critical", "high", "medium", "low"] as const).map((u) => (
+                  <button
+                    key={u}
+                    onClick={() => setUrgency(u)}
+                    className={`text-xs px-2.5 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
+                      urgency === u ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {u === "all"
+                      ? "Todas"
+                      : `${URGENCY_STYLES[u].emoji} ${URGENCY_STYLES[u].label}`}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1 bg-muted/70 rounded-xl p-1">
+                <button
+                  onClick={() => setStatusFilter("active")}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
+                    statusFilter === "active" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Activas
+                </button>
+                <button
+                  onClick={() => setStatusFilter("fulfilled")}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-semibold whitespace-nowrap transition ${
+                    statusFilter === "fulfilled" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Cubiertas
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -667,7 +699,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
       )}
 
       <div>
-        <label className={label}>Ubicación (DIVIPOL)</label>
+        <label className={label}>Ubicación</label>
         <LocationSelect
           state={loc.state}
           municipality={loc.municipality}

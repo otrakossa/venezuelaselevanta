@@ -157,7 +157,7 @@ function AboutPage() {
               to="/ofertas"
               className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/30 text-white font-semibold rounded-full px-4 py-2 text-sm hover:bg-white/20 transition-colors"
             >
-              <HandHeart className="h-4 w-4" /> Quiero ayudar
+              <HandHeart className="h-4 w-4" /> Ofrecer ayuda
             </Link>
           </div>
         </div>

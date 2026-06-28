@@ -248,9 +248,9 @@ function OfertasPage() {
         <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-end sm:justify-between">
           <div className="min-w-0">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 mb-2">
-              <PackageOpen className="h-3.5 w-3.5" /> ¡Quiero ayudar!
+              <PackageOpen className="h-3.5 w-3.5" /> Ofrecer ayuda
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofrecimiento de ayuda</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Ofrecer ayuda</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">
               Publica insumos, recursos o voluntariado que puedas aportar. Después puedes vincularlos a una necesidad concreta.
             </p>
@@ -557,7 +557,7 @@ function StatusBadge({ status }: { status: "available" | "matched" | "delivered"
 
 function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () => void; onLinked: () => void }) {
   const [q, setQ] = useState("");
-  const [scope, setScope] = useState<"same-cat" | "all">("same-cat");
+  const [scope, setScope] = useState<"same-cat" | "all">("all");
   const [needs, setNeeds] = useState<NeedLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [linking, setLinking] = useState<string | null>(null);

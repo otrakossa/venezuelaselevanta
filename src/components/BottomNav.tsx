@@ -6,8 +6,8 @@ const TABS = [
   { to: "/", label: "Mapa", icon: Map },
   { to: "/desaparecidos", label: "Personas", icon: Users },
   // FAB sits in the middle slot
-  { to: "/necesidades", label: "Necesidades", icon: HandHeart },
-  { to: "/ofertas", label: "Ayudar", icon: PackageOpen },
+  { to: "/necesidades", label: "Pedir ayuda", icon: HandHeart },
+  { to: "/ofertas", label: "Ofrecer ayuda", icon: PackageOpen },
 ] as const;
 
 /**

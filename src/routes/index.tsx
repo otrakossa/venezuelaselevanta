@@ -311,7 +311,7 @@ function HomePage() {
                 </span>
                 <span className="min-w-0">
                   <span className="block font-display text-base sm:text-lg text-white leading-tight">
-                    Quiero ayudar
+                    Ofrecer ayuda
                   </span>
                   <span className="block text-[12px] sm:text-xs text-white/70 mt-0.5 leading-snug">
                     ¿Tienes recursos, tiempo o transporte?

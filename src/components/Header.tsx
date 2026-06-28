@@ -11,8 +11,8 @@ const NAV = [
   { to: "/reportar", label: "Reportar", icon: FilePlus },
   { to: "/desaparecidos", label: "Desaparecidos", icon: Users },
   { to: "/pacientes", label: "Atendidos", icon: HeartPulse },
-  { to: "/necesidades", label: "Necesidades", icon: HandHeart },
-  { to: "/ofertas", label: "¡Quiero ayudar!", icon: PackageOpen },
+  { to: "/necesidades", label: "Pedir ayuda", icon: HandHeart },
+  { to: "/ofertas", label: "Ofrecer ayuda", icon: PackageOpen },
   { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ] as const;
 
