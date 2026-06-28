@@ -16,6 +16,15 @@ type Comment = {
   created_at: string;
 };
 
+type PatientMatch = {
+  patient_id: string;
+  patient_name: string;
+  patient_age: number | null;
+  center_name: string | null;
+  status: string | null;
+  score: number;
+};
+
 const STATUS_PILL: Record<MissingStatus, string> = {
   missing: "bg-rose-500 text-white",
   found: "bg-emerald-500 text-white",
