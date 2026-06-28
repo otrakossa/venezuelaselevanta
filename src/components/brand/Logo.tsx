@@ -59,13 +59,13 @@ export function Mark({
   size?: number;
   variant?: "color" | "light" | "dark";
 }) {
-  const gradientId = `vsl-grad-${variant}`;
+  const uid = Math.random().toString(36).slice(2, 8);
+  const gradientId = `vsl-grad-${variant}-${uid}`;
   const heartFill =
-    variant === "light"
-      ? "#FFF8F0"
-      : variant === "dark"
-        ? "#0D2B45"
-        : `url(#${gradientId})`;
+    variant === "dark"
+      ? "#0D2B45"
+      : `url(#${gradientId})`;
+
 
   return (
     <svg
