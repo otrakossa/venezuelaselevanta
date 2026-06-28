@@ -354,6 +354,19 @@ function MissingCard({ person, onMarkFound, onChanged }: { person: MissingPerson
 
         {/* Body */}
         <div className="p-4 space-y-2.5">
+          {person.matched_patient_id && (
+            <div className="flex items-start gap-1.5 text-xs rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-2">
+              <span className="shrink-0">✅</span>
+              <div className="min-w-0">
+                <div className="font-bold text-emerald-700 dark:text-emerald-400 leading-tight">Localizado</div>
+                {person.matched_patient?.center_name && (
+                  <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5 line-clamp-2">
+                    🏥 {person.matched_patient.center_name}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {person.last_seen_location && (
             <div className="flex items-start gap-1.5 text-xs">
               <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
