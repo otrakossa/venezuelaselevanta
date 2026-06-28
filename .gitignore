@@ -16,6 +16,10 @@ dist-ssr
 .nitro
 *.local
 
+# Generado por el plugin de TanStack Router en cada dev/build — no se trackea
+# (el generador local y el de Lovable difieren y rompían el cambio de rama)
+src/routeTree.gen.ts
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
