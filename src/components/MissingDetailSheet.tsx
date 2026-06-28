@@ -73,6 +73,8 @@ export function MissingDetailSheet({
   const [foundMarks, setFoundMarks] = useState<number | null>(null);
 
   const [markBusy, setMarkBusy] = useState(false);
+  const [localPhoto, setLocalPhoto] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   // ESC to close
