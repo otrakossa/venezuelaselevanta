@@ -1,8 +1,3 @@
-import logoCodex from "@/assets/logo-codex.png.asset.json";
-import logoFcbosque from "@/assets/logo-fcbosque.png.asset.json";
-import logoMujeresXSL from "@/assets/logo-mujeres-xsl.png.asset.json";
-import logoDebatesSurGlobal from "@/assets/logo-debates-sur-global.png.asset.json";
-
 export type Person = {
   name: string;
   role: string;
@@ -43,13 +38,13 @@ export const organizations: Organization[] = [
     name: "Codex Tecnología",
     description: "Desarrollo, infraestructura y mantenimiento",
     url: "https://codextecnologia.com",
-    logo: logoCodex.url,
+    logo: "/logo-codex.png",
   },
   {
     name: "Fundación Casa del Bosque",
     description: "Organización aliada · activismo tecnopolítico",
     url: "https://x.com/fcbosque",
-    logo: logoFcbosque.url,
+    logo: "/logo-fcbosque.png",
   },
   {
     name: "CEESUR",
@@ -61,13 +56,13 @@ export const organizations: Organization[] = [
     name: "Mujeres Activistas XSL",
     description: "Promueven tecnología libre y soberana con perspectiva de género",
     url: "https://activistasxsl.org/",
-    logo: logoMujeresXSL.url,
+    logo: "/logo-mujeres-xsl.png",
   },
   {
     name: "Debates del Sur Global",
     description: "Espacio de análisis y reflexión desde el Sur Global",
     url: "https://debatesdelsurglobal.org",
-    logo: logoDebatesSurGlobal.url,
+    logo: "/logo-debates-sur-global.png",
   },
 ];
 
