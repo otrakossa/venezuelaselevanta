@@ -88,7 +88,27 @@ export function MissingDetailSheet({
   useEffect(() => {
     setMatches(null);
     setMatchLoading(false);
+    setFoundMarks((person as any)?.found_marks ?? null);
   }, [person?.id]);
+
+  const markFound = async () => {
+    if (!person || markBusy) return;
+    setMarkBusy(true);
+    try {
+      const { getDeviceId } = await import("@/lib/device-id");
+      const { data, error } = await (supabase as any).rpc("mark_missing_person_found", {
+        _person_id: person.id,
+        _device_id: getDeviceId(),
+      });
+      if (error) { toast.error(error.message); return; }
+      const row = Array.isArray(data) ? data[0] : data;
+      const n = row?.found_marks ?? (foundMarks ?? 0) + 1;
+      setFoundMarks(n);
+      toast.success(`Marcada como encontrada ❤️ (${n} confirmación${n === 1 ? "" : "es"})`);
+    } finally {
+      setMarkBusy(false);
+    }
+  };
 
   // Load comments + realtime
   useEffect(() => {
