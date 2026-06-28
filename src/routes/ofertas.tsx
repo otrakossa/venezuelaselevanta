@@ -289,20 +289,25 @@ function OfertasPage() {
 
 
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar por título, descripción o contacto…"
-              className="w-full pl-9 pr-9 py-2 rounded-xl border border-input bg-card text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
-            />
-            {q && (
-              <button onClick={() => setQ("")} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted" aria-label="Limpiar">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
+          <div className="relative flex-1 min-w-[260px] group">
+            <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-emerald-500/40 via-primary/40 to-emerald-500/40 opacity-60 group-focus-within:opacity-100 blur-sm transition" aria-hidden />
+            <div className="relative flex items-center rounded-2xl border-2 border-emerald-500/30 bg-card shadow-sm focus-within:border-emerald-500 focus-within:shadow-md transition">
+              <Search className="ml-4 h-5 w-5 text-emerald-600 shrink-0" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Buscar por título, descripción o contacto…"
+                aria-label="Buscar oferta de ayuda"
+                className="w-full px-3 py-3.5 sm:py-4 bg-transparent text-base sm:text-lg font-medium placeholder:text-muted-foreground/70 placeholder:font-normal focus:outline-none"
+              />
+              {q && (
+                <button onClick={() => setQ("")} className="mr-2 p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition" aria-label="Limpiar">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
+
           <div className="flex gap-1 bg-muted/70 rounded-xl p-1">
             {(["available", "matched", "delivered"] as const).map((t) => (
               <button
