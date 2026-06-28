@@ -780,7 +780,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
       />
       <input
         className={`${field} sm:col-span-2`}
-        placeholder="Título de tu oferta *"
+        placeholder="Título de la ayuda * (ej: Llevo 20 botellones de agua)"
         value={f.title}
         onChange={(e) => setF({ ...f, title: e.target.value })}
         required
@@ -788,7 +788,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
       />
       <textarea
         className={`${field} sm:col-span-2 resize-none`}
-        placeholder="Describe lo que ofreces (opcional)"
+        placeholder="Describe tu ayuda (opcional)"
         rows={3}
         value={f.description}
         onChange={(e) => setF({ ...f, description: e.target.value })}
