@@ -23,6 +23,9 @@ import { Wizard } from "@/components/wizard/Wizard";
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>) => ({
+    person: typeof search.person === "string" ? search.person : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Personas desaparecidas — Venezuela Se Levanta" },
@@ -31,6 +34,7 @@ export const Route = createFileRoute("/desaparecidos")({
   }),
   component: MissingPage,
 });
+
 
 type Filter = "all" | "missing" | "found" | "deceased";
 
@@ -51,6 +55,8 @@ function initials(name: string) {
 
 function MissingPage() {
   const { missing, counts, refetch, loadMore, hasMore, loadingMore } = useMissing();
+  const navigate = useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("missing");
   const [showForm, setShowForm] = useState(false);
@@ -63,6 +69,27 @@ function MissingPage() {
   const ptr = usePullToRefresh<HTMLDivElement>({
     onRefresh: async () => { await refetch(); toast.success("Lista actualizada"); },
   });
+
+  // Open detail sheet when ?person=<id> is present (shared links).
+  useEffect(() => {
+    const id = search.person;
+    if (!id) return;
+    if (selected?.id === id) return;
+    const found = missing.find((m) => m.id === id);
+    if (found) { setSelected(found); return; }
+    // Fetch from DB if not already in the loaded list.
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("missing_persons")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (!cancelled && !error && data) setSelected(data as unknown as MissingPerson);
+    })();
+    return () => { cancelled = true; };
+  }, [search.person, missing, selected?.id]);
+
 
   useEffect(() => {
     if (!q.trim() || q.trim().length < 2) { setSearchResults(null); return; }
@@ -273,8 +300,13 @@ function MissingPage() {
       <MissingDetailSheet
         person={selected}
         open={selected !== null}
-        onClose={() => setSelected(null)}
+        onClose={() => {
+          setSelected(null);
+          if (search.person) navigate({ search: ((prev: { person?: string }) => ({ ...prev, person: undefined })) as never, replace: true });
+
+        }}
       />
+
     </div>
   );
 }
@@ -309,7 +341,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
   const daysAgo = Math.floor((Date.now() - reported.getTime()) / 86_400_000);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://venezuelaselevanta.info";
-  const directLink = `${origin}/?missing=${person.id}`;
+  const directLink = `${origin}/desaparecidos?person=${person.id}`;
 
   const shareWA = () => {
     const text =
@@ -318,7 +350,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
       (person.last_seen_location ? `📍 Última ubicación: ${person.last_seen_location}\n` : "") +
       (person.description ? `📝 ${person.description}\n` : "") +
       (person.contact_phone ? `📞 Contacto: ${person.contact_phone}\n` : "") +
-      `\nVer en el mapa: ${directLink}`;
+      `\nVer ficha completa: ${directLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
