@@ -161,6 +161,44 @@ function NecesidadesPage() {
     low:      needs.filter((n) => n.urgency === "low").length,
   }), [needs]);
 
+  // Deep-link: ?need=<id> opens a focused detail modal for that need.
+  const [focused, setFocused] = useState<Need | null>(null);
+  const [focusedLoading, setFocusedLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("need");
+    if (!id) { setFocused(null); return; }
+    const inList = needs.find((n) => n.id === id);
+    if (inList) { setFocused(inList); return; }
+    setFocusedLoading(true);
+    fetch(`${SUPA_URL}/rest/v1/needs?id=eq.${id}&limit=1`, {
+      headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` },
+    })
+      .then((r) => r.ok ? r.json() : Promise.reject(new Error("No encontrado")))
+      .then((rows: Need[]) => {
+        const row = rows[0];
+        if (!row) { toast.error("Esta necesidad ya no está disponible"); return; }
+        setFocused({
+          ...row,
+          categories: Array.isArray(row.categories) && row.categories.length > 0
+            ? row.categories
+            : row.category ? [row.category] : [],
+        });
+      })
+      .catch((e: unknown) => toast.error(e instanceof Error ? e.message : "No se pudo cargar"))
+      .finally(() => setFocusedLoading(false));
+  }, [needs]);
+
+  const closeFocused = () => {
+    setFocused(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("need");
+    window.history.replaceState({}, "", url.toString());
+  };
+
+
+
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
 
@@ -342,9 +380,165 @@ function NecesidadesPage() {
           ))
         )}
       </div>
+
+      {(focused || focusedLoading) && (
+        <NeedDetailModal
+          need={focused}
+          loading={focusedLoading}
+          onClose={closeFocused}
+          onOffer={() => { if (focused) navigate({ to: "/ofertas", search: { need: focused.id } }); }}
+        />
+      )}
     </div>
   );
 }
+
+function NeedDetailModal({
+  need, loading, onClose, onOffer,
+}: { need: Need | null; loading: boolean; onClose: () => void; onOffer: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
+  }, [onClose]);
+
+  const cats = need ? (need.categories.length > 0 ? need.categories : [need.category]) : [];
+  const primary = need ? (CATEGORY_META[cats[0]] ?? CATEGORY_META.other) : null;
+  const urg = need ? URGENCY_STYLES[need.urgency] : null;
+
+  const share = () => {
+    if (!need) return;
+    const url = `${window.location.origin}/necesidades?need=${need.id}`;
+    const cat = (CATEGORY_META[cats[0]] ?? CATEGORY_META.other).label;
+    const text =
+      `🆘 NECESIDAD ${urg!.label.toUpperCase()} — ${cat}\n\n` +
+      `${need.title}\n` +
+      `📍 ${need.center_name}${need.center_address ? " · " + need.center_address : ""}\n` +
+      (need.description ? `\n${need.description}\n` : "") +
+      (need.quantity ? `\nCantidad: ${need.quantity}\n` : "") +
+      (need.contact_name ? `\nContacto: ${need.contact_name}` : "") +
+      (need.contact_phone ? ` · ${need.contact_phone}` : "") +
+      `\n\n¿Puedes ayudar? Ofrece tu apoyo aquí:\n${url}`;
+    if (navigator.share) {
+      navigator.share({ title: need.title, text, url }).catch(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      });
+    } else {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="relative bg-card w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/90 border border-border shadow hover:bg-muted transition"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        {loading || !need || !primary || !urg ? (
+          <div className="p-10 flex items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            <div className="p-5 pr-12 border-b border-border bg-gradient-to-br from-primary/5 to-transparent">
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                {cats.map((c) => {
+                  const m = CATEGORY_META[c] ?? CATEGORY_META.other;
+                  return (
+                    <span key={c} className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground uppercase tracking-wide">
+                      {m.emoji} {m.label}
+                    </span>
+                  );
+                })}
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${urg.pill}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${urg.dot} ${need.urgency === "critical" ? "animate-pulse" : ""}`} />
+                  {urg.label}
+                </span>
+                {need.status === "fulfilled" && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700">✅ Cubierta</span>
+                )}
+              </div>
+              <h2 className="text-xl font-black leading-tight">{need.title}</h2>
+              <div className="text-xs text-muted-foreground mt-2">
+                <span className="font-semibold text-foreground">🏥 {need.center_name}</span>
+                {need.center_address && <span className="ml-1">· {need.center_address}</span>}
+              </div>
+              <div className="text-[11px] text-muted-foreground mt-1">
+                Publicado {timeAgo(need.created_at)} · {new Date(need.created_at).toLocaleString("es-VE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </div>
+            </div>
+
+            <div className="p-5 space-y-4 overflow-y-auto flex-1">
+              {need.description && (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{need.description}</p>
+              )}
+              {need.quantity && (
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                  <Info className="h-3.5 w-3.5" /> Cantidad: {need.quantity}
+                </div>
+              )}
+              {(need.contact_name || need.contact_phone || need.contact_info) && (
+                <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1.5">
+                  <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Contacto</div>
+                  {need.contact_name && (
+                    <div className="flex items-center gap-1.5 text-sm"><User className="h-3.5 w-3.5 text-muted-foreground" /><span className="font-medium">{need.contact_name}</span></div>
+                  )}
+                  {need.contact_phone && (
+                    <a href={`tel:${need.contact_phone}`} className="flex items-center gap-1.5 text-sm text-primary hover:underline">
+                      <Phone className="h-3.5 w-3.5" /> {need.contact_phone}
+                    </a>
+                  )}
+                  {need.contact_info && (
+                    <div className="flex items-start gap-1.5 text-xs text-muted-foreground"><Info className="h-3.5 w-3.5 shrink-0 mt-0.5" /><span>{need.contact_info}</span></div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-border bg-card flex flex-wrap items-center gap-2">
+              {need.status !== "fulfilled" && (
+                <button
+                  onClick={onOffer}
+                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition"
+                >
+                  <PackageOpen className="h-4 w-4" /> Ofrecer ayuda
+                </button>
+              )}
+              <button
+                onClick={share}
+                className="inline-flex items-center justify-center gap-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 text-sm font-bold py-2.5 px-4 rounded-xl transition"
+              >
+                <Share2 className="h-4 w-4" /> Difundir
+              </button>
+              <button
+                onClick={() => {
+                  const url = `${window.location.origin}/necesidades?need=${need.id}`;
+                  navigator.clipboard.writeText(url).then(() => toast.success("Enlace copiado"));
+                }}
+                className="inline-flex items-center justify-center gap-1.5 bg-muted hover:bg-muted/70 text-foreground text-sm font-bold py-2.5 px-4 rounded-xl transition"
+              >
+                Copiar
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+
 
 function Kpi({ value, label, tone, emoji }: { value: number; label: string; tone: "red" | "orange" | "yellow" | "green"; emoji?: string }) {
   const tones = {
