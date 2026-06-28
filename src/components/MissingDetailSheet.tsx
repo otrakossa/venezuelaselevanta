@@ -68,7 +68,9 @@ export function MissingDetailSheet({
   const [submitting, setSubmitting] = useState(false);
   const [matches, setMatches] = useState<PatientMatch[] | null>(null);
   const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError] = useState<string | null>(null);
   const [foundMarks, setFoundMarks] = useState<number | null>(null);
+
   const [markBusy, setMarkBusy] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -88,8 +90,10 @@ export function MissingDetailSheet({
   useEffect(() => {
     setMatches(null);
     setMatchLoading(false);
+    setMatchError(null);
     setFoundMarks((person as any)?.found_marks ?? null);
   }, [person?.id]);
+
 
   const markFound = async () => {
     if (!person || markBusy) return;
@@ -196,13 +200,15 @@ export function MissingDetailSheet({
   const searchMatches = async () => {
     if (!person) return;
     setMatchLoading(true);
+    setMatchError(null);
     const { data, error } = await (supabase as any).rpc("suggest_patient_matches", {
       p_missing_id: person.id,
     });
     setMatchLoading(false);
-    if (error) { toast.error("No se pudo buscar coincidencias"); return; }
+    if (error) { setMatchError("No se pudo buscar coincidencias. Inténtalo de nuevo."); setMatches(null); return; }
     setMatches((data ?? []) as PatientMatch[]);
   };
+
 
 
   const submit = async (e: React.FormEvent) => {
@@ -390,12 +396,20 @@ export function MissingDetailSheet({
                   <button
                     onClick={searchMatches}
                     disabled={matchLoading}
-                    className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40"
+                    className="flex-1 min-w-0 inline-flex flex-col items-center justify-center gap-0.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40"
                   >
-                    {matchLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Hospital className="h-5 w-5 shrink-0" />}
-                    <span className="truncate">Buscar coincidencias</span>
+                    <span className="inline-flex items-center gap-2">
+                      {matchLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Hospital className="h-5 w-5 shrink-0" />}
+                      <span className="truncate">Buscar coincidencias</span>
+                    </span>
+                    {matches !== null && !matchLoading && (
+                      <span className="text-[10px] font-bold opacity-95 normal-case tracking-normal">
+                        {matches.length === 0 ? "Sin coincidencias" : `${matches.length} encontrada${matches.length === 1 ? "" : "s"}`}
+                      </span>
+                    )}
                   </button>
                 )}
+
                 <button
                   onClick={markFound}
                   disabled={markBusy}
@@ -436,12 +450,16 @@ export function MissingDetailSheet({
 
 
             {/* Match results */}
-            {!person.matched_patient_id && (
+            {!person.matched_patient_id && (matches !== null || matchError) && (
               <section className="space-y-2">
-
-
+                {matchError && (
+                  <div className="text-xs text-rose-700 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2 text-center">
+                    {matchError}
+                  </div>
+                )}
 
                 {matches !== null && (
+
                   matches.length === 0 ? (
                     <div className="text-xs text-muted-foreground italic text-center py-2">
                       No se encontraron coincidencias en este momento.
