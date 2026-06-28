@@ -30,6 +30,7 @@ import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPatientsDotjsonRouteImport } from './routes/api/patients[.]json'
 import { Route as ApiPatientsDotcsvRouteImport } from './routes/api/patients[.]csv'
+import { Route as ApiOpenapiDotjsonRouteImport } from './routes/api/openapi[.]json'
 import { Route as ApiOffersDotjsonRouteImport } from './routes/api/offers[.]json'
 import { Route as ApiOffersDotgeojsonRouteImport } from './routes/api/offers[.]geojson'
 import { Route as ApiOffersDotcsvRouteImport } from './routes/api/offers[.]csv'
@@ -42,6 +43,7 @@ import { Route as ApiMissingPersonsDotcsvRouteImport } from './routes/api/missin
 import { Route as ApiHealthCentersDotjsonRouteImport } from './routes/api/health-centers[.]json'
 import { Route as ApiHealthCentersDotgeojsonRouteImport } from './routes/api/health-centers[.]geojson'
 import { Route as ApiHealthCentersDotcsvRouteImport } from './routes/api/health-centers[.]csv'
+import { Route as ApiDocsRouteImport } from './routes/api.docs'
 import { Route as ApiCategoriesDotjsonRouteImport } from './routes/api/categories[.]json'
 import { Route as AdminObservabilidadRouteImport } from './routes/admin.observabilidad'
 import { Route as AdminInteropRouteImport } from './routes/admin.interop'
@@ -165,6 +167,11 @@ const ApiPatientsDotcsvRoute = ApiPatientsDotcsvRouteImport.update({
   path: '/patients.csv',
   getParentRoute: () => ApiRoute,
 } as any)
+const ApiOpenapiDotjsonRoute = ApiOpenapiDotjsonRouteImport.update({
+  id: '/openapi.json',
+  path: '/openapi.json',
+  getParentRoute: () => ApiRoute,
+} as any)
 const ApiOffersDotjsonRoute = ApiOffersDotjsonRouteImport.update({
   id: '/offers.json',
   path: '/offers.json',
@@ -226,6 +233,11 @@ const ApiHealthCentersDotgeojsonRoute =
 const ApiHealthCentersDotcsvRoute = ApiHealthCentersDotcsvRouteImport.update({
   id: '/health-centers.csv',
   path: '/health-centers.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiDocsRoute = ApiDocsRouteImport.update({
+  id: '/docs',
+  path: '/docs',
   getParentRoute: () => ApiRoute,
 } as any)
 const ApiCategoriesDotjsonRoute = ApiCategoriesDotjsonRouteImport.update({
@@ -337,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
   '/api/categories.json': typeof ApiCategoriesDotjsonRoute
+  '/api/docs': typeof ApiDocsRoute
   '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
   '/api/health-centers.geojson': typeof ApiHealthCentersDotgeojsonRoute
   '/api/health-centers.json': typeof ApiHealthCentersDotjsonRoute
@@ -349,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/api/offers.csv': typeof ApiOffersDotcsvRoute
   '/api/offers.geojson': typeof ApiOffersDotgeojsonRoute
   '/api/offers.json': typeof ApiOffersDotjsonRoute
+  '/api/openapi.json': typeof ApiOpenapiDotjsonRoute
   '/api/patients.csv': typeof ApiPatientsDotcsvRoute
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -389,6 +403,7 @@ export interface FileRoutesByTo {
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
   '/api/categories.json': typeof ApiCategoriesDotjsonRoute
+  '/api/docs': typeof ApiDocsRoute
   '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
   '/api/health-centers.geojson': typeof ApiHealthCentersDotgeojsonRoute
   '/api/health-centers.json': typeof ApiHealthCentersDotjsonRoute
@@ -401,6 +416,7 @@ export interface FileRoutesByTo {
   '/api/offers.csv': typeof ApiOffersDotcsvRoute
   '/api/offers.geojson': typeof ApiOffersDotgeojsonRoute
   '/api/offers.json': typeof ApiOffersDotjsonRoute
+  '/api/openapi.json': typeof ApiOpenapiDotjsonRoute
   '/api/patients.csv': typeof ApiPatientsDotcsvRoute
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -442,6 +458,7 @@ export interface FileRoutesById {
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
   '/api/categories.json': typeof ApiCategoriesDotjsonRoute
+  '/api/docs': typeof ApiDocsRoute
   '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
   '/api/health-centers.geojson': typeof ApiHealthCentersDotgeojsonRoute
   '/api/health-centers.json': typeof ApiHealthCentersDotjsonRoute
@@ -454,6 +471,7 @@ export interface FileRoutesById {
   '/api/offers.csv': typeof ApiOffersDotcsvRoute
   '/api/offers.geojson': typeof ApiOffersDotgeojsonRoute
   '/api/offers.json': typeof ApiOffersDotjsonRoute
+  '/api/openapi.json': typeof ApiOpenapiDotjsonRoute
   '/api/patients.csv': typeof ApiPatientsDotcsvRoute
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
@@ -496,6 +514,7 @@ export interface FileRouteTypes {
     | '/admin/interop'
     | '/admin/observabilidad'
     | '/api/categories.json'
+    | '/api/docs'
     | '/api/health-centers.csv'
     | '/api/health-centers.geojson'
     | '/api/health-centers.json'
@@ -508,6 +527,7 @@ export interface FileRouteTypes {
     | '/api/offers.csv'
     | '/api/offers.geojson'
     | '/api/offers.json'
+    | '/api/openapi.json'
     | '/api/patients.csv'
     | '/api/patients.json'
     | '/api/reports.csv'
@@ -548,6 +568,7 @@ export interface FileRouteTypes {
     | '/admin/interop'
     | '/admin/observabilidad'
     | '/api/categories.json'
+    | '/api/docs'
     | '/api/health-centers.csv'
     | '/api/health-centers.geojson'
     | '/api/health-centers.json'
@@ -560,6 +581,7 @@ export interface FileRouteTypes {
     | '/api/offers.csv'
     | '/api/offers.geojson'
     | '/api/offers.json'
+    | '/api/openapi.json'
     | '/api/patients.csv'
     | '/api/patients.json'
     | '/api/reports.csv'
@@ -600,6 +622,7 @@ export interface FileRouteTypes {
     | '/admin/interop'
     | '/admin/observabilidad'
     | '/api/categories.json'
+    | '/api/docs'
     | '/api/health-centers.csv'
     | '/api/health-centers.geojson'
     | '/api/health-centers.json'
@@ -612,6 +635,7 @@ export interface FileRouteTypes {
     | '/api/offers.csv'
     | '/api/offers.geojson'
     | '/api/offers.json'
+    | '/api/openapi.json'
     | '/api/patients.csv'
     | '/api/patients.json'
     | '/api/reports.csv'
@@ -810,6 +834,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPatientsDotcsvRouteImport
       parentRoute: typeof ApiRoute
     }
+    '/api/openapi.json': {
+      id: '/api/openapi.json'
+      path: '/openapi.json'
+      fullPath: '/api/openapi.json'
+      preLoaderRoute: typeof ApiOpenapiDotjsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
     '/api/offers.json': {
       id: '/api/offers.json'
       path: '/offers.json'
@@ -892,6 +923,13 @@ declare module '@tanstack/react-router' {
       path: '/health-centers.csv'
       fullPath: '/api/health-centers.csv'
       preLoaderRoute: typeof ApiHealthCentersDotcsvRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/docs': {
+      id: '/api/docs'
+      path: '/docs'
+      fullPath: '/api/docs'
+      preLoaderRoute: typeof ApiDocsRouteImport
       parentRoute: typeof ApiRoute
     }
     '/api/categories.json': {
@@ -1018,6 +1056,7 @@ declare module '@tanstack/react-router' {
 
 interface ApiRouteChildren {
   ApiCategoriesDotjsonRoute: typeof ApiCategoriesDotjsonRoute
+  ApiDocsRoute: typeof ApiDocsRoute
   ApiHealthCentersDotcsvRoute: typeof ApiHealthCentersDotcsvRoute
   ApiHealthCentersDotgeojsonRoute: typeof ApiHealthCentersDotgeojsonRoute
   ApiHealthCentersDotjsonRoute: typeof ApiHealthCentersDotjsonRoute
@@ -1030,6 +1069,7 @@ interface ApiRouteChildren {
   ApiOffersDotcsvRoute: typeof ApiOffersDotcsvRoute
   ApiOffersDotgeojsonRoute: typeof ApiOffersDotgeojsonRoute
   ApiOffersDotjsonRoute: typeof ApiOffersDotjsonRoute
+  ApiOpenapiDotjsonRoute: typeof ApiOpenapiDotjsonRoute
   ApiPatientsDotcsvRoute: typeof ApiPatientsDotcsvRoute
   ApiPatientsDotjsonRoute: typeof ApiPatientsDotjsonRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
@@ -1048,6 +1088,7 @@ interface ApiRouteChildren {
 
 const ApiRouteChildren: ApiRouteChildren = {
   ApiCategoriesDotjsonRoute: ApiCategoriesDotjsonRoute,
+  ApiDocsRoute: ApiDocsRoute,
   ApiHealthCentersDotcsvRoute: ApiHealthCentersDotcsvRoute,
   ApiHealthCentersDotgeojsonRoute: ApiHealthCentersDotgeojsonRoute,
   ApiHealthCentersDotjsonRoute: ApiHealthCentersDotjsonRoute,
@@ -1060,6 +1101,7 @@ const ApiRouteChildren: ApiRouteChildren = {
   ApiOffersDotcsvRoute: ApiOffersDotcsvRoute,
   ApiOffersDotgeojsonRoute: ApiOffersDotgeojsonRoute,
   ApiOffersDotjsonRoute: ApiOffersDotjsonRoute,
+  ApiOpenapiDotjsonRoute: ApiOpenapiDotjsonRoute,
   ApiPatientsDotcsvRoute: ApiPatientsDotcsvRoute,
   ApiPatientsDotjsonRoute: ApiPatientsDotjsonRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
