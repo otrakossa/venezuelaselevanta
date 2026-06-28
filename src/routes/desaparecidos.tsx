@@ -8,7 +8,9 @@ import { toast } from "sonner";
 import {
   Search, UserPlus, UserCheck, MapPin, Phone, Mail, User,
   CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, Map as MapIcon, RefreshCw, ChevronDown,
+  MessageCircle, Hospital,
 } from "lucide-react";
+
 import { geocodeAddress } from "@/lib/geocode";
 import { MissingGridSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
@@ -325,6 +327,20 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
     }
   };
 
+  const [commentsCount, setCommentsCount] = useState<number | null>(null);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { count } = await supabase
+        .from("missing_person_comments" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("missing_person_id", person.id);
+      if (active) setCommentsCount(count ?? 0);
+    })();
+    return () => { active = false; };
+  }, [person.id]);
+
+
   return (
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
       {/* Status ribbon */}
@@ -432,41 +448,75 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
         />
       </div>
 
-      {/* Actions */}
-      <div className="px-4 pb-4 flex items-center gap-2 flex-wrap">
+      {/* Actions — icon row */}
+      <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-1 border-t border-border/40">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}
+          className="inline-flex items-center gap-1 p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition"
+          title={`Comentarios${commentsCount != null ? ` (${commentsCount})` : ""}`}
+          aria-label="Comentarios"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span className="text-xs font-bold tabular-nums">{commentsCount ?? "—"}</span>
+        </button>
+
+        {!person.matched_patient_id && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpen(); }}
+            className="inline-flex items-center gap-1 p-2 rounded-lg text-sky-700 hover:bg-sky-500/10 transition"
+            title="Buscar coincidencias en atendidos"
+            aria-label="Buscar coincidencias"
+          >
+            <Hospital className="h-4 w-4" />
+          </button>
+        )}
+
         {hasCoords && (
           <button
+            type="button"
             onClick={openOnMap}
-            className="inline-flex items-center justify-center gap-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold py-2 px-3 rounded-lg transition"
+            className="p-2 rounded-lg text-primary hover:bg-primary/10 transition"
             title="Ver en el mapa"
+            aria-label="Ver en mapa"
           >
-            <MapIcon className="h-3.5 w-3.5" /> Ver en mapa
+            <MapIcon className="h-4 w-4" />
           </button>
         )}
+
         <button
-          onClick={shareWA}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold py-2 rounded-lg transition"
-          title="Compartir por WhatsApp"
+          type="button"
+          onClick={(e) => { e.stopPropagation(); shareWA(); }}
+          className="p-2 rounded-lg text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 transition"
+          title="Difundir por WhatsApp"
+          aria-label="Difundir"
         >
-          <Share2 className="h-3.5 w-3.5" /> Difundir
+          <Share2 className="h-4 w-4" />
         </button>
+
         <button
-          onClick={copyLink}
-          className="p-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition"
-          aria-label="Copiar enlace"
+          type="button"
+          onClick={(e) => { e.stopPropagation(); copyLink(); }}
+          className="p-2 rounded-lg text-muted-foreground hover:bg-muted transition"
           title="Copiar enlace"
+          aria-label="Copiar enlace"
         >
-          <LinkIcon className="h-3.5 w-3.5" />
+          <LinkIcon className="h-4 w-4" />
         </button>
+
         {person.status === "missing" && (
           <button
-            onClick={onMarkFound}
-            className="inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2 px-3 rounded-lg transition shadow shadow-emerald-500/20"
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onMarkFound(); }}
+            className="p-2 rounded-lg text-emerald-600 hover:bg-emerald-500/10 transition"
             title="Marcar como encontrada"
+            aria-label="Marcar como encontrada"
           >
-            <UserCheck className="h-3.5 w-3.5" /> Encontrada
+            <UserCheck className="h-4 w-4" />
           </button>
         )}
+
       </div>
     </article>
   );
