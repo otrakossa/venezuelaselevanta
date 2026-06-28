@@ -332,6 +332,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
   };
 
   const [commentsCount, setCommentsCount] = useState<number | null>(null);
+  const [matchesCount, setMatchesCount] = useState<number | null>(null);
   useEffect(() => {
     let active = true;
     (async () => {
@@ -341,8 +342,13 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
         .eq("missing_person_id", person.id);
       if (active) setCommentsCount(count ?? 0);
     })();
+    (async () => {
+      if (person.matched_patient_id) { if (active) setMatchesCount(0); return; }
+      const { data } = await supabase.rpc("suggest_patient_matches" as any, { p_missing_id: person.id });
+      if (active) setMatchesCount(Array.isArray(data) ? data.length : 0);
+    })();
     return () => { active = false; };
-  }, [person.id]);
+  }, [person.id, person.matched_patient_id]);
 
 
   return (
