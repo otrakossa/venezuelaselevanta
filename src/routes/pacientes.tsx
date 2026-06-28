@@ -229,7 +229,7 @@ function AtendidosPage() {
         </div>
 
         <div className="relative mt-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-          <Kpi tone="blue"    value={counts.all}        label="Total registrados" />
+          <Kpi tone="blue"    value={counts.all}        label="Total Registrados" />
           <Kpi tone="yellow"  value={counts.active}     label="En tratamiento" />
           <Kpi tone="slate"   value={counts.discharged} label="Con alta médica" />
           <Kpi tone="teal"    value={hospitals.length}  label="Hospitales activos" />
