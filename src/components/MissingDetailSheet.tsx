@@ -200,13 +200,15 @@ export function MissingDetailSheet({
   const searchMatches = async () => {
     if (!person) return;
     setMatchLoading(true);
+    setMatchError(null);
     const { data, error } = await (supabase as any).rpc("suggest_patient_matches", {
       p_missing_id: person.id,
     });
     setMatchLoading(false);
-    if (error) { toast.error("No se pudo buscar coincidencias"); return; }
+    if (error) { setMatchError("No se pudo buscar coincidencias. Inténtalo de nuevo."); setMatches(null); return; }
     setMatches((data ?? []) as PatientMatch[]);
   };
+
 
 
   const submit = async (e: React.FormEvent) => {
