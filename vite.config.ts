@@ -46,6 +46,19 @@ export default defineConfig({
                 expiration: { maxEntries: 500, maxAgeSeconds: 7 * 24 * 60 * 60 },
               },
             },
+            {
+              // Lectura offline del mapa: sirve la última copia cacheada de los
+              // incidentes públicos cuando no hay red. Acotado a `reports`
+              // (datos públicos del mapa) — NO cachear endpoints con PII
+              // (patients, missing_persons, site_responsibles).
+              urlPattern: /^https:\/\/[a-z0-9-]+\.supabase\.co\/rest\/v1\/reports\b.*/i,
+              handler: "StaleWhileRevalidate",
+              options: {
+                cacheName: "reports-read",
+                expiration: { maxEntries: 20, maxAgeSeconds: 24 * 60 * 60 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
           ],
         },
         manifest: {

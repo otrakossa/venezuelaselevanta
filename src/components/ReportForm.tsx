@@ -14,6 +14,8 @@ import { uploadMany } from "@/lib/media-upload";
 import { reverseGeocode } from "@/lib/geocode";
 import { LocationSelect } from "./LocationSelect";
 import { detectStateFromAddress } from "@/lib/venezuela-divipol";
+import { flags } from "@/lib/flags";
+import { TELEGRAM_BOT } from "@/lib/credits";
 
 const MAX_FILES = 4;
 const MAX_SIZE_MB = 10;
@@ -51,6 +53,10 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   const [addressTouched, setAddressTouched] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const geocodeAbort = useRef<AbortController | null>(null);
+  const autoGeoTried = useRef(false);
+  const quick = flags.quickReport;
+  const [showMore, setShowMore] = useState(false);
+  const showOptional = !quick || showMore;
 
   useEffect(() => {
     if (!coords) return;
@@ -89,6 +95,15 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
       { enableHighAccuracy: true, timeout: 10000 },
     );
   };
+
+  // Modo rápido: dispara el GPS automáticamente al entrar al paso de ubicación
+  // (una sola vez). Reusa el mismo geolocate() del botón "Usar mi ubicación".
+  useEffect(() => {
+    if (!quick || step !== 2 || coords || autoGeoTried.current) return;
+    autoGeoTried.current = true;
+    geolocate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quick, step, coords]);
 
   const onFilesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const incoming = Array.from(e.target.files ?? []);
@@ -139,7 +154,9 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
 
   const submit = async () => {
     if (!coords) { setStep(2); return toast.error("Selecciona una ubicación o usa 📍 Mi ubicación"); }
-    if (!form.title.trim()) { setStep(1); return toast.error("Ingresa un título"); }
+    // En modo rápido el título es opcional: si falta, usamos el nombre de la categoría.
+    const title = form.title.trim() || (quick ? (CATEGORY_MAP[form.category]?.name ?? "Reporte") : "");
+    if (!title) { setStep(1); return toast.error("Ingresa un título"); }
     setSubmitting(true);
 
     const isOffline = typeof navigator !== "undefined" && !navigator.onLine;
@@ -156,7 +173,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
 
     const photoUrl = mediaUrls.find((u) => /\.(jpe?g|png|webp|gif)(\?|$)/i.test(u)) ?? null;
     const payload = {
-      title: form.title.trim(),
+      title,
       description: form.description.trim() || null,
       category: form.category,
       urgency: form.urgency,
@@ -203,7 +220,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
   };
 
   // Step validation
-  const step1Valid = useMemo(() => form.title.trim().length > 0 && !!form.category && !!form.urgency, [form.title, form.category, form.urgency]);
+  const step1Valid = useMemo(() => (quick || form.title.trim().length > 0) && !!form.category && !!form.urgency, [quick, form.title, form.category, form.urgency]);
   const step2Valid = !!coords;
 
   const goNext = () => {
@@ -314,17 +331,27 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
                 placeholder="Ej. Edificio colapsado en Av. Bolívar"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Descripción</label>
-              <textarea
-                className={`${field} resize-none`}
-                rows={4}
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                maxLength={1000}
-                placeholder="Detalla lo que ocurre, cuántas personas, qué se necesita..."
-              />
-            </div>
+            {showOptional ? (
+              <div>
+                <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Descripción</label>
+                <textarea
+                  className={`${field} resize-none`}
+                  rows={4}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  maxLength={1000}
+                  placeholder="Detalla lo que ocurre, cuántas personas, qué se necesita..."
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowMore(true)}
+                className="text-sm font-semibold text-[color:var(--sky)] hover:underline"
+              >
+                + Agregar descripción (opcional)
+              </button>
+            )}
           </section>
         </div>
       )}
@@ -434,6 +461,8 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
             )}
           </section>
 
+          {showOptional ? (
+          <>
           <section className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1.5 uppercase tracking-widest">Tu nombre</label>
@@ -470,11 +499,21 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
               ))}
             </select>
           </section>
+          </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowMore(true)}
+              className="w-full text-sm font-semibold text-[color:var(--sky)] border border-dashed border-[color:var(--sky)]/40 rounded-xl py-3 hover:bg-[color:var(--sky)]/5 transition min-h-[48px]"
+            >
+              + Más detalles (nombre, afectados, estado)
+            </button>
+          )}
 
           {/* Summary */}
           <section className="rounded-2xl border border-border bg-card p-4 space-y-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-[color:var(--midnight)] mb-1">Resumen</h3>
-            <SummaryRow label="Título" value={form.title || "—"} />
+            <SummaryRow label="Título" value={form.title.trim() || (quick ? (CATEGORY_MAP[form.category]?.name ?? "—") : "—")} />
             <SummaryRow label="Categoría" value={selectedCat ? `${selectedCat.emoji} ${selectedCat.name}` : "—"} />
             <SummaryRow label="Urgencia" value={URGENCY_LABELS[form.urgency]?.label ?? "—"} />
             <SummaryRow
@@ -521,6 +560,17 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
             </button>
           )}
         </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          ¿Sin internet estable?{" "}
+          <a
+            href={TELEGRAM_BOT}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-[color:var(--sky)] underline underline-offset-2"
+          >
+            <Send className="h-3 w-3" /> Reporta por Telegram
+          </a>
+        </p>
       </div>
     </div>
   );

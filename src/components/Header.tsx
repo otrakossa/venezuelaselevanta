@@ -1,10 +1,17 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Map, FilePlus, Users, BarChart3, LogOut, Heart, HandHeart, HeartPulse, PackageOpen } from "lucide-react";
+import { Map, FilePlus, Users, BarChart3, LogOut, Heart, HandHeart, HeartPulse, PackageOpen, MoreHorizontal } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useEffect, useState } from "react";
 import { useReports, useAuth } from "@/hooks/useReports";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { flags } from "@/lib/flags";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 const NAV = [
   { to: "/", label: "Mapa", icon: Map },
@@ -16,10 +23,17 @@ const NAV = [
   { to: "/estadisticas", label: "Estadísticas", icon: BarChart3 },
 ] as const;
 
+// Rutas secundarias que se mueven al menú "Más" cuando el flag navMore está ON,
+// para acercar el desktop al modelo de 4 del BottomNav móvil.
+const SECONDARY_NAV: ReadonlySet<string> = new Set(["/pacientes", "/estadisticas"]);
+
 export function Header() {
   const { reports } = useReports();
   const { isAuthenticated } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const primaryNav = flags.navMore ? NAV.filter((i) => !SECONDARY_NAV.has(i.to)) : NAV;
+  const moreNav = flags.navMore ? NAV.filter((i) => SECONDARY_NAV.has(i.to)) : [];
+  const moreActive = moreNav.some((i) => i.to === pathname);
 
   useEffect(() => {
     document.documentElement.classList.remove("dark");
@@ -79,7 +93,7 @@ export function Header() {
 
         {/* Desktop nav only — mobile uses BottomNav */}
         <nav className="hidden lg:flex gap-1 pb-1.5">
-          {NAV.map((item) => {
+          {primaryNav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to;
             return (
@@ -99,6 +113,32 @@ export function Header() {
               </Link>
             );
           })}
+          {moreNav.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors outline-none",
+                  moreActive ? "bg-[color:var(--sunrise)] text-white" : "text-header-foreground/80 hover:bg-white/10",
+                )}
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" />
+                Más
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="z-[1100]">
+                {moreNav.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <DropdownMenuItem key={item.to} asChild>
+                      <Link to={item.to} className="flex items-center gap-2 cursor-pointer">
+                        <Icon className="h-3.5 w-3.5" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
           <Link
             to="/donar"
             className={cn(

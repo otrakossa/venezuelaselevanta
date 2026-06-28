@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMissing } from "@/hooks/useReports";
@@ -15,11 +16,14 @@ import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { LocationSelect } from "@/components/LocationSelect";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { PeopleTabs } from "@/components/PeopleTabs";
+import { flags } from "@/lib/flags";
 import { Wizard } from "@/components/wizard/Wizard";
 
 
 export const Route = createFileRoute("/desaparecidos")({
   ssr: false,
+  validateSearch: z.object({ q: z.string().optional() }),
   head: () => ({
     meta: [
       { title: "Personas desaparecidas — Venezuela Se Levanta" },
@@ -48,7 +52,8 @@ function initials(name: string) {
 
 function MissingPage() {
   const { missing, counts, refetch, loadMore, hasMore, loadingMore } = useMissing();
-  const [q, setQ] = useState("");
+  const { q: qParam } = Route.useSearch();
+  const [q, setQ] = useState(qParam ?? "");
   const [filter, setFilter] = useState<Filter>("missing");
   const [showForm, setShowForm] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -99,6 +104,7 @@ function MissingPage() {
 
   return (
     <div ref={ptr.ref} className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
+      <PeopleTabs />
       {(ptr.pull > 0 || ptr.refreshing) && (
         <div className="ptr-indicator" style={{ height: Math.max(28, ptr.pull) }}>
           {ptr.refreshing ? (
@@ -163,6 +169,15 @@ function MissingPage() {
               </button>
             )}
           </div>
+          {flags.peopleLink && q.trim() && (
+            <Link
+              to="/pacientes"
+              search={{ q }}
+              className="w-full text-xs font-semibold text-primary hover:underline"
+            >
+              ¿No aparece? Buscar «{q.trim()}» en Atendidos →
+            </Link>
+          )}
           <div className="flex gap-1 bg-muted/70 rounded-xl p-1 overflow-x-auto">
             {(["missing", "found", "deceased", "all"] as const).map((f) => (
               <button

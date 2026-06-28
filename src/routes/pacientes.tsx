@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -8,12 +8,15 @@ import {
   ChevronDown, ChevronUp,
 } from "lucide-react";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { PeopleTabs } from "@/components/PeopleTabs";
+import { flags } from "@/lib/flags";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { Wizard } from "@/components/wizard/Wizard";
 
 
 const searchSchema = z.object({
   center: z.string().optional(),
+  q: z.string().optional(),
 });
 
 export const Route = createFileRoute("/pacientes")({
@@ -116,12 +119,12 @@ function shortHospital(name: string) {
 
 function AtendidosPage() {
   const navigate = useNavigate({ from: "/pacientes" });
-  const { center } = Route.useSearch();
+  const { center, q: qParam } = Route.useSearch();
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(qParam ?? "");
   const [filter, setFilter] = useState<Filter>("active");
   const [showForm, setShowForm] = useState(false);
   const [page, setPage] = useState(1);
@@ -208,6 +211,7 @@ function AtendidosPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative overflow-x-hidden">
+      <PeopleTabs />
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
         <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-end sm:justify-between">
@@ -312,6 +316,15 @@ function AtendidosPage() {
               </button>
             )}
           </div>
+          {flags.peopleLink && q.trim() && (
+            <Link
+              to="/desaparecidos"
+              search={{ q }}
+              className="w-full text-xs font-semibold text-primary hover:underline"
+            >
+              ¿No aparece? Buscar «{q.trim()}» en Desaparecidos →
+            </Link>
+          )}
           <div className="flex gap-1 bg-muted/70 rounded-xl p-1 flex-wrap">
             {(["active", "discharged", "all"] as const).map((f) => (
               <button
