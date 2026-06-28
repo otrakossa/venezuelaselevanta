@@ -664,7 +664,7 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
 function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; onDone: () => void }) {
   const [f, setF] = useState({
     category: (prefilledNeed?.category ?? "other") as Category,
-    title: prefilledNeed ? `Oferta para: ${prefilledNeed.title}` : "",
+    title: prefilledNeed ? `Ayuda para: ${prefilledNeed.title}` : "",
     description: "",
     quantity: "",
     state: "",
