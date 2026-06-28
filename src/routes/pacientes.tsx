@@ -53,6 +53,8 @@ interface Patient {
   state: string | null;
   sector: string | null;
   matched_missing_id: string | null;
+  source_url: string | null;
+  source_label: string | null;
 }
 
 const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: string }> = {
@@ -91,7 +93,7 @@ function initials(name: string) {
 
 async function fetchPatients(): Promise<Patient[]> {
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/patients?order=created_at.desc&limit=2000`,
+    `${SUPA_URL}/rest/v1/patients?order=created_at.desc&limit=3500`,
     {
       headers: {
         apikey: SUPA_ANON,
@@ -101,6 +103,26 @@ async function fetchPatients(): Promise<Patient[]> {
   );
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+async function fetchPatientsTotal(): Promise<number> {
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/patients?select=id`,
+    {
+      headers: {
+        apikey: SUPA_ANON,
+        Authorization: `Bearer ${SUPA_ANON}`,
+        Prefer: "count=exact",
+        Range: "0-0",
+      },
+    },
+  );
+  const cr = res.headers.get("content-range");
+  if (cr) {
+    const m = cr.match(/\/(\d+)$/);
+    if (m) return parseInt(m[1], 10);
+  }
+  return 0;
 }
 
 const PAGE_SIZE = 24;
