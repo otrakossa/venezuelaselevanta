@@ -118,7 +118,7 @@ function MissingPage() {
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 mb-2">
               <HeartHandshake className="h-3.5 w-3.5" /> Búsqueda colaborativa
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Personas desaparecidas</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Registro de Personas desaparecidas</h1>
             <p className="text-sm text-muted-foreground mt-1 max-w-prose">
               Comparte, busca y ayuda a reunir familias. Cada reporte llega a toda la red de voluntarios.
             </p>
