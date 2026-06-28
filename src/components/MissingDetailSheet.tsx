@@ -312,8 +312,14 @@ export function MissingDetailSheet({
               <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 text-white">
                 <h3 className="font-bold text-xl leading-tight drop-shadow line-clamp-2">{person.name}</h3>
-                <div className="flex items-center gap-2 text-xs opacity-95 mt-1">
+                <div className="flex items-center gap-2 text-xs opacity-95 mt-1 flex-wrap">
                   {person.age != null && <><span>{person.age} años</span><span className="opacity-50">•</span></>}
+                  {person.id_number && (
+                    <>
+                      <span className="inline-flex items-center gap-1 font-mono">CI {person.id_number}</span>
+                      <span className="opacity-50">•</span>
+                    </>
+                  )}
                   <span className="inline-flex items-center gap-1">
                     <CalendarDays className="h-3 w-3" />
                     {daysAgo === 0 ? "Reportado hoy" : `Hace ${daysAgo} día${daysAgo === 1 ? "" : "s"}`}
