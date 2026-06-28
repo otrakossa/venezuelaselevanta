@@ -351,38 +351,40 @@ export function MissingDetailSheet({
             )}
 
             {/* Actions */}
-            <section className="flex flex-wrap items-center gap-2 pt-1">
+            <section className="flex items-stretch gap-1.5 pt-1">
               {!person.matched_patient_id && (
                 <button
                   onClick={searchMatches}
                   disabled={matchLoading}
-                  className="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-3 py-2 rounded-lg disabled:opacity-60"
+                  className="flex-[2] min-w-0 inline-flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-sm font-bold px-2.5 py-2 rounded-lg disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40 animate-pulse-slow"
                 >
-                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hospital className="h-4 w-4" />}
-                  Buscar coincidencias
+                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin shrink-0" /> : <Hospital className="h-4 w-4 shrink-0" />}
+                  <span className="truncate">Buscar coincidencias</span>
                 </button>
               )}
               <button
                 onClick={shareWA}
-                className="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-sm font-bold px-3 py-2 rounded-lg"
+                className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-sm font-bold px-2.5 py-2 rounded-lg"
               >
-                <Share2 className="h-4 w-4" /> Difundir
+                <Share2 className="h-4 w-4 shrink-0" /> <span className="truncate">Difundir</span>
               </button>
               <button
                 onClick={openOnMap}
                 disabled={!hasCoords}
-                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-bold px-3.5 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow shadow-primary/20"
+                className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-sm font-bold px-2.5 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow shadow-primary/20"
                 title={hasCoords ? "Ver en el mapa" : "Sin ubicación geolocalizada"}
               >
-                <MapIcon className="h-4 w-4" /> Ver en mapa
+                <MapIcon className="h-4 w-4 shrink-0" /> <span className="truncate">Ver en mapa</span>
               </button>
               <button
                 onClick={copyLink}
-                className="inline-flex items-center gap-1.5 border border-border text-sm font-semibold px-3 py-2 rounded-lg hover:bg-muted"
+                title="Copiar enlace"
+                className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 border border-border text-sm font-semibold px-2.5 py-2 rounded-lg hover:bg-muted"
               >
-                <LinkIcon className="h-4 w-4" /> Copiar enlace
+                <LinkIcon className="h-4 w-4 shrink-0" /> <span className="truncate">Copiar</span>
               </button>
             </section>
+
 
             {/* Match results */}
             {!person.matched_patient_id && (
