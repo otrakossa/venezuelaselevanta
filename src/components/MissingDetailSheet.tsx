@@ -218,6 +218,16 @@ export function MissingDetailSheet({
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
+        {/* Floating close button — always visible */}
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-3 z-50 h-11 w-11 grid place-items-center rounded-full bg-white text-neutral-900 border-2 border-neutral-900 shadow-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-colors"
+          aria-label="Cerrar ficha"
+          title="Cerrar (Esc)"
+        >
+          <X className="h-6 w-6" strokeWidth={3} />
+        </button>
+
         {/* Header */}
         <div className="relative shrink-0 border-b border-border bg-card">
           <div className="flex items-start gap-3 p-4 pr-12">
@@ -255,14 +265,6 @@ export function MissingDetailSheet({
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="absolute right-3 top-3 z-10 h-10 w-10 grid place-items-center rounded-full bg-background border-2 border-border shadow-lg hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-colors"
-            aria-label="Cerrar ficha"
-            title="Cerrar (Esc)"
-          >
-            <X className="h-5 w-5" strokeWidth={2.5} />
-          </button>
 
         </div>
 
