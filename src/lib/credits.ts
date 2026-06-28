@@ -38,7 +38,7 @@ export const collaborators: Person[] = [
 export const organizations: Organization[] = [
   {
     name: "Codex Tecnología",
-    description: "Desarrollo, infraestructura y mantenimiento",
+    description: "Tecnología e innovación con sentido humano",
     url: "https://codextecnologia.com",
     logo: "/logo-codex.png",
   },
