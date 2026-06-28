@@ -450,12 +450,16 @@ export function MissingDetailSheet({
 
 
             {/* Match results */}
-            {!person.matched_patient_id && (
+            {!person.matched_patient_id && (matches !== null || matchError) && (
               <section className="space-y-2">
-
-
+                {matchError && (
+                  <div className="text-xs text-rose-700 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2 text-center">
+                    {matchError}
+                  </div>
+                )}
 
                 {matches !== null && (
+
                   matches.length === 0 ? (
                     <div className="text-xs text-muted-foreground italic text-center py-2">
                       No se encontraron coincidencias en este momento.
