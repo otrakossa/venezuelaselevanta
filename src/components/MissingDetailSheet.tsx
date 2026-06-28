@@ -333,14 +333,34 @@ export function MissingDetailSheet({
                   {initials(person.name) || <User className="h-10 w-10" />}
                 </div>
               </div>
-              {person.photo_url && (
+              {(localPhoto || person.photo_url) && (
                 <img
-                  src={person.photo_url}
+                  src={localPhoto || person.photo_url!}
                   alt={person.name}
                   referrerPolicy="no-referrer"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
+              )}
+              {!(localPhoto || person.photo_url) && (
+                <label
+                  className={`absolute top-3 right-3 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-sky-600 text-white shadow-lg hover:bg-sky-700 cursor-pointer ${photoBusy ? "opacity-70 pointer-events-none" : ""}`}
+                  title="Sube una foto si conoces a esta persona"
+                >
+                  {photoBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                  {photoBusy ? "Subiendo…" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (f) uploadPhoto(f);
+                    }}
+                    disabled={photoBusy}
+                  />
+                </label>
               )}
               <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 text-white">
