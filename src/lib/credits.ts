@@ -64,6 +64,12 @@ export const organizations: Organization[] = [
     url: "https://debatesdelsurglobal.org",
     logo: "/logo-debates-sur-global.png",
   },
+  {
+    name: "Heez Studio",
+    description: "Diseño e identidad gráfica",
+    url: "https://www.instagram.com/heezstudio/",
+    logo: "/logo-heezstudio.svg",
+  },
 ];
 
 export const tech: TechCredit[] = [
