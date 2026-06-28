@@ -155,7 +155,7 @@ export function MissingDetailSheet({
     if (!text) return;
     if (text.length > 1000) { toast.error("Máximo 1000 caracteres"); return; }
     setSubmitting(true);
-    const { error } = await supabase.from("missing_person_comments").insert({
+    const { error } = await (supabase as any).from("missing_person_comments").insert({
       missing_person_id: person.id,
       author_name: author.trim() || null,
       content: text,
