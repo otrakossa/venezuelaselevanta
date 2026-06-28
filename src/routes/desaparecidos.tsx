@@ -350,7 +350,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
       (person.last_seen_location ? `📍 Última ubicación: ${person.last_seen_location}\n` : "") +
       (person.description ? `📝 ${person.description}\n` : "") +
       (person.contact_phone ? `📞 Contacto: ${person.contact_phone}\n` : "") +
-      `\nVer en el mapa: ${directLink}`;
+      `\nVer ficha completa: ${directLink}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
