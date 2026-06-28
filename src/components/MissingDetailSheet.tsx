@@ -397,7 +397,7 @@ export function MissingDetailSheet({
             />
             <button
               type="submit"
-              disabled={submitting || !content.trim()}
+              disabled={submitting || !content.trim() || !author.trim()}
               className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-bold px-3 py-2.5 rounded-lg disabled:opacity-50"
               aria-label="Publicar comentario"
             >
