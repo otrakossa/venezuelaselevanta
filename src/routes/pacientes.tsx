@@ -140,6 +140,7 @@ function AtendidosPage() {
   const { center } = Route.useSearch();
 
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [q, setQ] = useState("");
@@ -154,8 +155,9 @@ function AtendidosPage() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const data = await fetchPatients();
+      const [data, total] = await Promise.all([fetchPatients(), fetchPatientsTotal()]);
       setPatients(data);
+      setTotalCount(total || data.length);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error cargando datos";
       toast.error(msg);
@@ -174,10 +176,10 @@ function AtendidosPage() {
 
   // counts overall (no filter applied)
   const counts = useMemo(() => ({
-    all:        patients.length,
+    all:        totalCount || patients.length,
     active:     patients.filter((p) => p.status !== "discharged").length,
     discharged: patients.filter((p) => p.status === "discharged").length,
-  }), [patients]);
+  }), [patients, totalCount]);
 
   // hospitals: name -> active count, sorted desc
   const hospitals = useMemo(() => {
