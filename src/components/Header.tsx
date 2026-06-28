@@ -38,7 +38,7 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between gap-2 h-14">
           <Link to="/" className="flex items-center min-w-0">
-            <span className="animate-heartbeat shrink-0">
+            <span className="shrink-0">
               <Logo size={36} withWordmark variant="color" />
             </span>
           </Link>
