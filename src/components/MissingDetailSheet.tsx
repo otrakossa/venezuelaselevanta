@@ -352,6 +352,22 @@ export function MissingDetailSheet({
 
             {/* Actions */}
             <section className="flex flex-wrap items-center gap-2 pt-1">
+              {!person.matched_patient_id && (
+                <button
+                  onClick={searchMatches}
+                  disabled={matchLoading}
+                  className="inline-flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-3 py-2 rounded-lg disabled:opacity-60"
+                >
+                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hospital className="h-4 w-4" />}
+                  Buscar coincidencias
+                </button>
+              )}
+              <button
+                onClick={shareWA}
+                className="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-sm font-bold px-3 py-2 rounded-lg"
+              >
+                <Share2 className="h-4 w-4" /> Difundir
+              </button>
               <button
                 onClick={openOnMap}
                 disabled={!hasCoords}
@@ -361,12 +377,6 @@ export function MissingDetailSheet({
                 <MapIcon className="h-4 w-4" /> Ver en mapa
               </button>
               <button
-                onClick={shareWA}
-                className="inline-flex items-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 text-sm font-bold px-3 py-2 rounded-lg"
-              >
-                <Share2 className="h-4 w-4" /> Difundir
-              </button>
-              <button
                 onClick={copyLink}
                 className="inline-flex items-center gap-1.5 border border-border text-sm font-semibold px-3 py-2 rounded-lg hover:bg-muted"
               >
@@ -374,17 +384,10 @@ export function MissingDetailSheet({
               </button>
             </section>
 
-            {/* Match search */}
+            {/* Match results */}
             {!person.matched_patient_id && (
               <section className="space-y-2">
-                <button
-                  onClick={searchMatches}
-                  disabled={matchLoading}
-                  className="w-full inline-flex items-center justify-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-3 py-2 rounded-lg disabled:opacity-60"
-                >
-                  {matchLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Hospital className="h-4 w-4" />}
-                  Buscar coincidencias en centros de salud
-                </button>
+
 
 
                 {matches !== null && (
