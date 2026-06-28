@@ -263,6 +263,12 @@ function MissingPage() {
           </>
         )}
       </div>
+
+      <MissingDetailSheet
+        person={selected}
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
