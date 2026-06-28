@@ -396,12 +396,20 @@ export function MissingDetailSheet({
                   <button
                     onClick={searchMatches}
                     disabled={matchLoading}
-                    className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40"
+                    className="flex-1 min-w-0 inline-flex flex-col items-center justify-center gap-0.5 bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-700 hover:to-sky-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-sky-500/30 ring-2 ring-sky-400/40"
                   >
-                    {matchLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Hospital className="h-5 w-5 shrink-0" />}
-                    <span className="truncate">Buscar coincidencias</span>
+                    <span className="inline-flex items-center gap-2">
+                      {matchLoading ? <Loader2 className="h-5 w-5 animate-spin shrink-0" /> : <Hospital className="h-5 w-5 shrink-0" />}
+                      <span className="truncate">Buscar coincidencias</span>
+                    </span>
+                    {matches !== null && !matchLoading && (
+                      <span className="text-[10px] font-bold opacity-95 normal-case tracking-normal">
+                        {matches.length === 0 ? "Sin coincidencias" : `${matches.length} encontrada${matches.length === 1 ? "" : "s"}`}
+                      </span>
+                    )}
                   </button>
                 )}
+
                 <button
                   onClick={markFound}
                   disabled={markBusy}
