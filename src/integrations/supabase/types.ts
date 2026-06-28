@@ -918,6 +918,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      set_missing_person_photo: {
+        Args: { p_person_id: string; p_photo_url: string }
+        Returns: undefined
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       suggest_missing_matches: {

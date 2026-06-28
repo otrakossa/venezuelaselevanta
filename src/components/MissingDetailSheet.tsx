@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   X, MapPin, Phone, Mail, User, CalendarDays, Share2, Link as LinkIcon,
-  Map as MapIcon, MessageCircle, Send, Loader2, ShieldCheck, Hospital, Search, UserCheck,
+  Map as MapIcon, MessageCircle, Send, Loader2, ShieldCheck, Hospital, Search, UserCheck, Camera,
 } from "lucide-react";
+import { uploadOne } from "@/lib/media-upload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { MissingPerson, MissingStatus } from "@/lib/types";
@@ -72,6 +73,8 @@ export function MissingDetailSheet({
   const [foundMarks, setFoundMarks] = useState<number | null>(null);
 
   const [markBusy, setMarkBusy] = useState(false);
+  const [localPhoto, setLocalPhoto] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   // ESC to close
@@ -92,7 +95,29 @@ export function MissingDetailSheet({
     setMatchLoading(false);
     setMatchError(null);
     setFoundMarks((person as any)?.found_marks ?? null);
+    setLocalPhoto(null);
   }, [person?.id]);
+
+  const uploadPhoto = async (file: File) => {
+    if (!person) return;
+    if (!file.type.startsWith("image/")) { toast.error("Solo imágenes"); return; }
+    if (file.size > 15 * 1024 * 1024) { toast.error("La imagen supera 15 MB"); return; }
+    setPhotoBusy(true);
+    try {
+      const url = await uploadOne(file);
+      const { error } = await (supabase as any).rpc("set_missing_person_photo", {
+        p_person_id: person.id,
+        p_photo_url: url,
+      });
+      if (error) throw error;
+      setLocalPhoto(url);
+      toast.success("Foto agregada — ¡gracias por ayudar!");
+    } catch (err) {
+      toast.error((err as Error).message || "No se pudo subir la foto");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
 
   const markFound = async () => {
@@ -261,9 +286,9 @@ export function MissingDetailSheet({
         <div className="relative shrink-0 border-b border-border bg-card">
           <div className="flex items-start gap-3 p-4 pr-12">
             <div className="relative h-16 w-16 shrink-0 rounded-full bg-muted border-2 border-border grid place-items-center text-xl font-black text-muted-foreground overflow-hidden">
-              {person.photo_url ? (
+              {(localPhoto || person.photo_url) ? (
                 <img
-                  src={person.photo_url}
+                  src={localPhoto || person.photo_url!}
                   alt={person.name}
                   className="absolute inset-0 h-full w-full object-cover"
                   referrerPolicy="no-referrer"
@@ -308,14 +333,34 @@ export function MissingDetailSheet({
                   {initials(person.name) || <User className="h-10 w-10" />}
                 </div>
               </div>
-              {person.photo_url && (
+              {(localPhoto || person.photo_url) && (
                 <img
-                  src={person.photo_url}
+                  src={localPhoto || person.photo_url!}
                   alt={person.name}
                   referrerPolicy="no-referrer"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
+              )}
+              {!(localPhoto || person.photo_url) && (
+                <label
+                  className={`absolute top-3 right-3 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-sky-600 text-white shadow-lg hover:bg-sky-700 cursor-pointer ${photoBusy ? "opacity-70 pointer-events-none" : ""}`}
+                  title="Sube una foto si conoces a esta persona"
+                >
+                  {photoBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                  {photoBusy ? "Subiendo…" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (f) uploadPhoto(f);
+                    }}
+                    disabled={photoBusy}
+                  />
+                </label>
               )}
               <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 text-white">

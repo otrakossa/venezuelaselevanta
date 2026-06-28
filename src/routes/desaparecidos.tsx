@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import {
   Search, UserPlus, MapPin, Phone, Mail, User,
   CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, Map as MapIcon, RefreshCw, ChevronDown,
-  MessageCircle, Hospital,
+  MessageCircle, Hospital, Camera,
 } from "lucide-react";
+import { uploadOne } from "@/lib/media-upload";
 
 import { geocodeAddress } from "@/lib/geocode";
 import { MissingGridSkeleton } from "@/components/skeletons";
@@ -563,7 +564,27 @@ function MissingForm({ onDone }: { onDone: () => void }) {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+  const onPickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Solo se permiten imágenes"); return; }
+    if (file.size > 15 * 1024 * 1024) { toast.error("La imagen supera 15 MB"); return; }
+    setPhotoBusy(true);
+    try {
+      const url = await uploadOne(file);
+      setPhotoUrl(url);
+      toast.success("Foto cargada");
+    } catch (err) {
+      toast.error((err as Error).message || "No se pudo subir la foto");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const doGeocode = async () => {
     if (!f.last_seen_location.trim()) return toast.error("Escribe la ubicación primero");
@@ -609,6 +630,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       contact_name: f.contact_name.trim() || null,
       contact_phone: f.contact_phone.trim() || null,
       contact_email: f.contact_email.trim() || null,
+      photo_url: photoUrl,
     } as never);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
@@ -649,6 +671,31 @@ function MissingForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setF({ ...f, description: e.target.value })}
         maxLength={500}
       />
+      <div className="sm:col-span-2">
+        <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Foto (opcional, ayuda mucho a identificar)</label>
+        <div className="flex items-center gap-3">
+          {photoUrl ? (
+            <div className="relative">
+              <img src={photoUrl} alt="Foto" className="h-20 w-20 rounded-lg object-cover border border-border" />
+              <button
+                type="button"
+                onClick={() => setPhotoUrl(null)}
+                className="absolute -top-2 -right-2 bg-background border border-border rounded-full p-0.5 shadow"
+                aria-label="Quitar foto"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-border bg-muted/40 hover:bg-muted cursor-pointer text-sm font-semibold ${photoBusy ? "opacity-60 pointer-events-none" : ""}`}>
+              {photoBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+              {photoBusy ? "Subiendo…" : "Subir foto"}
+              <input type="file" accept="image/*" className="hidden" onChange={onPickPhoto} disabled={photoBusy} />
+            </label>
+          )}
+          <span className="text-[11px] text-muted-foreground">JPG/PNG, máx 15 MB. Se comprime automáticamente.</span>
+        </div>
+      </div>
     </div>
   );
 
