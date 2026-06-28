@@ -1,5 +1,5 @@
-import utopixLogo from "@/assets/logo-utopix.jpeg.asset.json";
-import awaLogo from "@/assets/logo-awa.jpeg.asset.json";
+const utopixLogo = { url: "/aliados/utopix.jpeg" };
+const awaLogo = { url: "/aliados/awa.jpeg" };
 
 export type Person = {
   name: string;
