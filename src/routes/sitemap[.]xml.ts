@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 const SITE = "https://venezuelaselevanta.info";
-const STATIC_PATHS = ["/", "/que-es", "/reportar", "/desaparecidos", "/pacientes", "/necesidades", "/ofertas", "/estadisticas", "/donar"];
+const STATIC_PATHS = ["/", "/que-es", "/reportar", "/desaparecidos", "/pacientes", "/necesidades", "/ofertas", "/estadisticas", "/donar", "/api"];
 
 async function fetchReportsMeta(): Promise<{ id: string; updated_at: string }[]> {
   const url = process.env.SUPABASE_URL!;

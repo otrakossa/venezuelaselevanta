@@ -34,30 +34,44 @@ export function Footer() {
           <ul className="space-y-1.5 text-sm">
             <li>
               <a
+                href="/api"
+                className="opacity-90 hover:text-[color:var(--sunrise)] transition-colors font-semibold"
+              >
+                Documentación API pública →
+              </a>
+            </li>
+            <li>
+              <a
                 href="/api/reports.geojson"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="opacity-90 hover:text-[color:var(--sunrise)] transition-colors"
               >
-                Descargar GeoJSON
+                Reportes (GeoJSON)
               </a>
             </li>
             <li>
               <a
-                href="/api/reports.csv"
+                href="/api/missing-persons.csv"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="opacity-90 hover:text-[color:var(--sunrise)] transition-colors"
               >
-                Descargar CSV (HXL)
+                Desaparecidos (CSV+HXL)
               </a>
             </li>
             <li>
-              <span className="opacity-40 cursor-not-allowed">
-                Documentación API (próximamente)
-              </span>
+              <a
+                href="/api/needs.geojson"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="opacity-90 hover:text-[color:var(--sunrise)] transition-colors"
+              >
+                Necesidades (GeoJSON)
+              </a>
             </li>
           </ul>
+
           <p className="text-xs opacity-60 pt-1">
             Compatible con QGIS, ArcGIS, UNOCHA HDX.
           </p>
