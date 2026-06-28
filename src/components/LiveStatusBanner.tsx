@@ -10,7 +10,7 @@ const DISMISS_KEY = "vsl-live-banner-dismissed";
  * Sticky bajo el header, dismissible y persistente por sesión.
  */
 export function LiveStatusBanner() {
-  const { reports } = useReports();
+  const { reports, loading } = useReports();
   const { missing, counts } = useMissing();
   const [hidden, setHidden] = useState(true); // empezar oculto para evitar flash
 
@@ -46,7 +46,7 @@ export function LiveStatusBanner() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-2 sm:gap-4 text-xs sm:text-[13px]">
         <Activity className="h-3.5 w-3.5 text-[color:var(--gold)] shrink-0 hidden sm:block" aria-hidden />
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-x-auto no-scrollbar">
-          <Stat label="activos" value={stats.activeReports} tone="sunrise" />
+          <Stat label="activos" value={stats.activeReports} tone="sunrise" loading={loading} />
           <Sep />
           <Stat label="desaparecidos" value={counts.missing} tone="rose" />
           <Sep />
@@ -76,12 +76,22 @@ export function LiveStatusBanner() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: number; tone: "sunrise" | "rose" | "emerald" }) {
+function Stat({
+  label,
+  value,
+  tone,
+  loading,
+}: {
+  label: string;
+  value: number;
+  tone: "sunrise" | "rose" | "emerald";
+  loading?: boolean;
+}) {
   const colorVar = tone === "sunrise" ? "var(--sunrise)" : tone === "rose" ? "#fb7185" : "#34d399";
   return (
     <span className="whitespace-nowrap">
       <span className="font-display text-sm sm:text-base font-bold" style={{ color: colorVar }}>
-        {value.toLocaleString("es-VE")}
+        {loading ? "—" : value.toLocaleString("es-VE")}
       </span>{" "}
       <span className="text-white/75">{label}</span>
     </span>
