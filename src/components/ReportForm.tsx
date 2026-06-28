@@ -347,7 +347,7 @@ export function ReportForm({ existingReports }: { existingReports: Report[] }) {
               <button
                 type="button"
                 onClick={() => setShowMore(true)}
-                className="text-sm font-semibold text-[color:var(--sky)] hover:underline"
+                className="inline-flex items-center min-h-[44px] py-2 text-sm font-semibold text-[color:var(--sky)] hover:underline"
               >
                 + Agregar descripción (opcional)
               </button>

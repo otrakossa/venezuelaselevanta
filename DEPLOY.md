@@ -53,6 +53,14 @@ Como `client.ts` es **env-driven** y las `VITE_*` se hornean en **build time** (
 cd /var/www/venezuelaselevanta && ./deploy.sh
 ```
 
+> **Rutas y `routeTree.gen.ts`.** El árbol de rutas se genera del directorio `src/routes/`.
+> `src/routeTree.gen.ts` está committeado pero con `git skip-worktree` (evita churn al cambiar
+> de rama), así que `git reset --hard` **no** lo actualiza — lo regenera el `bun run build`
+> (plugin de TanStack Start) en cada deploy, por lo que `deploy.sh` siempre deja el árbol
+> correcto. Si una ruta da 404 en **local** (p.ej. `/atendidos`, que es un redirect a
+> `/pacientes`), suele ser árbol stale: re-correr `bun run build` o reiniciar el dev server
+> para regenerarlo. **No es un bug de la ruta** — el `redirect` en `beforeLoad` es correcto.
+
 ---
 
 ## 3. Reglas de base de datos (producción)
@@ -115,9 +123,16 @@ curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getWebhookInfo" # url +
 Webhook: **no** requiere re-registro si el token y la URL no cambiaron (el secret se deriva
 `sha256(TELEGRAM_BOT_TOKEN)`). Solo re-correr `setWebhook` si cambió alguno.
 
-### Paso 8 — Rollout progresivo de flags (runtime, sin rebuild)
-Los flags se leen de `process.env` en runtime. Activar = editar `.env` del VPS +
-`pm2 restart venezuela-levanta --update-env`. Verificar en cada gate antes de avanzar.
+### Paso 8 — Rollout progresivo de flags
+**Flags del BOT** (`BOT_NEEDS_FLOW`, `BOT_HELP_FLOW`) — se leen de `process.env` en **runtime**:
+activar = editar `.env` del VPS + `pm2 restart venezuela-levanta --update-env`.
+
+**Flags del FRONTEND** (`VITE_FEATURE_QUICK_REPORT`, `VITE_FEATURE_PEOPLE_LINK`,
+`VITE_FEATURE_NAV_MORE`) — se hornean en **BUILD time** (como las `VITE_SUPABASE_*`): activar =
+editar `.env` del VPS y **reconstruir** (`./deploy.sh` o `bun run build`). `pm2 restart
+--update-env` **NO** los activa. Defaults off → desplegables sin efecto hasta el rebuild con el flag.
+
+Verificar en cada gate antes de avanzar.
 
 ---
 

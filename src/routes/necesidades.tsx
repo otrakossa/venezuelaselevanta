@@ -224,7 +224,7 @@ function NecesidadesPage() {
           <button
             onClick={() => setShowFilters((s) => !s)}
             aria-expanded={showFilters}
-            className={`relative shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition ${
+            className={`relative shrink-0 inline-flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl border text-sm font-semibold transition ${
               showFilters || activeFilterCount > 0
                 ? "bg-primary text-primary-foreground border-primary shadow"
                 : "bg-card border-border text-muted-foreground hover:text-foreground"
