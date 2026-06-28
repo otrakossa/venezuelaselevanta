@@ -517,6 +517,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
 function MissingForm({ onDone }: { onDone: () => void }) {
   const [f, setF] = useState({
     name: "",
+    id_number: "",
     age: "",
     description: "",
     last_seen_location: "",
@@ -564,6 +565,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
     setBusy(true);
     const { error } = await supabase.from("missing_persons").insert({
       name: f.name.trim(),
+      id_number: f.id_number.trim() || null,
       age: f.age ? Number(f.age) : null,
       description: f.description.trim() || null,
       last_seen_location: f.last_seen_location.trim() || null,
@@ -575,7 +577,7 @@ function MissingForm({ onDone }: { onDone: () => void }) {
       contact_name: f.contact_name.trim() || null,
       contact_phone: f.contact_phone.trim() || null,
       contact_email: f.contact_email.trim() || null,
-    });
+    } as never);
     setBusy(false);
     if (error) { toast.error(error.message); return; }
     toast.success(coords ? "Publicada y geolocalizada en el mapa" : "Reporte enviado");
@@ -586,6 +588,15 @@ function MissingForm({ onDone }: { onDone: () => void }) {
   const stepPersona = (
     <div className="grid sm:grid-cols-2 gap-3">
       <input className={field} placeholder="Nombre completo *" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} required maxLength={100} />
+      <input
+        className={field}
+        placeholder="Cédula (V-12345678)"
+        value={f.id_number}
+        onChange={(e) => setF({ ...f, id_number: e.target.value })}
+        maxLength={20}
+        inputMode="text"
+        autoComplete="off"
+      />
       <input
         type="number"
         min="0"
