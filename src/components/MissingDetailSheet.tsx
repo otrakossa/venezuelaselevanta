@@ -76,12 +76,12 @@ export function MissingDetailSheet({
     if (!person || !open) return;
     let mounted = true;
     setLoading(true);
-    supabase
+    (supabase as any)
       .from("missing_person_comments")
       .select("*")
       .eq("missing_person_id", person.id)
       .order("created_at", { ascending: true })
-      .then(({ data, error }) => {
+      .then(({ data, error }: { data: Comment[] | null; error: { message: string } | null }) => {
         if (!mounted) return;
         if (error) toast.error("No se pudieron cargar los comentarios");
         setComments((data ?? []) as Comment[]);
