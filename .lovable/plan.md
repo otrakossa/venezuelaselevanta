@@ -1,108 +1,24 @@
-## API pública v1 — Venezuela Se Levanta
+## Problema
 
-Expongo todos los datasets principales como endpoints públicos, sin auth, con CORS abierto, caché, licencia CC BY 4.0 y sin PII sensible.
+Las miniaturas que se ven antes de cargar la página y el icono que aparece al instalar la PWA en el móvil muestran una versión antigua: un mapa de Venezuela en anaranjado. El logo nuevo es el corazoncito anaranjado del favicon, y debería ser el único icono que se vea en todas partes.
 
-### Endpoints nuevos
+El favicon SVG (`public/favicon.svg`) ya es el corazón nuevo, pero los PNG que usan iOS/Android y los previewers de WhatsApp/Twitter siguen siendo los viejos. Se nota además porque no son cuadrados (192×168, 512×448, 180×158), señal de que se generaron del lockup viejo con mapa, no del corazón.
 
-Bajo `src/routes/api/` (servidos en `venezuelaselevanta.info/api/...`):
+## Cambios
 
-| Recurso | JSON | GeoJSON | CSV (HXL) |
-|---|---|---|---|
-| reports | ya existe (añadir filtros + paginación) | ✅ ya existe | ✅ ya existe |
-| missing-persons | ✅ nuevo | ✅ nuevo | ✅ nuevo |
-| patients | ✅ nuevo | — (la mayoría sin coords) | ✅ nuevo |
-| needs | ✅ nuevo | ✅ nuevo | ✅ nuevo |
-| offers | ✅ nuevo | ✅ nuevo | ✅ nuevo |
-| health-centers | ✅ nuevo | ✅ nuevo | ✅ nuevo |
-| categories | ✅ nuevo | — | — |
+1. **Regenerar los tres PNG de icono** a partir del corazón nuevo, todos cuadrados y centrados sobre el fondo de marca (`#0D2B45` midnight, igual al `background_color` del manifest). Tamaños finales:
+   - `public/apple-touch-icon.png` → 180×180
+   - `public/icon-192.png` → 192×192 (con área segura ~80% para que funcione como `maskable`)
+   - `public/icon-512.png` → 512×512 (idem)
+   
+   Se generan en el VPS con `rsvg-convert` + `PIL` desde `public/favicon.svg`, sin tocar el SVG fuente.
 
-Patrón de ruta: `src/routes/api/<recurso>[.]{json,geojson,csv}.ts`.
+2. **Bump de cache-buster a `?v=6`** en `src/routes/__root.tsx` para `favicon.svg`, `icon-192.png` y `apple-touch-icon.png`, y también en `og:image` / `twitter:image` por si alguna caché de red social todavía sirve el mapa viejo.
 
-### Reglas comunes a todos los endpoints
+3. **`public/manifest.webmanifest`**: añadir `?v=6` a las URLs de `icon-192.png` e `icon-512.png` (y a los `shortcuts`), para forzar a Chrome/Android a re-descargar el icono al actualizar la PWA instalada. Mantener `theme_color` y `background_color` actuales.
 
-1. **Server-side fetch** vía `fetch(${SUPABASE_URL}/rest/v1/...)` con `SUPABASE_PUBLISHABLE_KEY` — nunca `createClient` (rompe en Node 20 sin WebSocket, regla del proyecto).
-2. **CORS abierto** (`Access-Control-Allow-Origin: *`) + handler `OPTIONS`.
-3. **Caché**: `Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=600`.
-4. **Paginación por cursor** vía querystring:
-   - `?limit=` (default 500, máx 5000)
-   - `?cursor=` (opaque, basado en `created_at` + `id`)
-   - Respuesta JSON/GeoJSON incluye `metadata.next_cursor` y `Link: <...>; rel="next"` header.
-   - CSV streamea sin cursor (un solo dump por petición, con `limit` aplicado).
-5. **Filtros por querystring** (cuando aplique):
-   - `state`, `municipality`, `parish`
-   - `category` / `urgency` / `status`
-   - `since` (ISO date, filtra `created_at >=`)
-   - `bbox=minLng,minLat,maxLng,maxLat` (sólo en GeoJSON)
-6. **Sin PII sensible**: se omiten `reporter_phone`, `reporter_email`, `reporter_cedula`, `contact_phone`, etc. La RLS ya los oculta a `anon`, pero además filtramos por columna en el `select=` para defensa en profundidad.
-7. **HXL tags** en la segunda fila del CSV según el estándar humanitario (`#geo+lat`, `#geo+lon`, `#adm1+name`, `#contact+name`, `#date+created`, `#status`, `#severity`, etc.).
-8. **Metadata block** en cada GeoJSON/JSON: `generated`, `title`, `description`, `license`, `source`, `count`, `next_cursor`.
+4. **No se toca** el lockup `public/logo-vsl.svg` ni `Logo.tsx` — el header/footer ya usan el logo nuevo. Tampoco se cambia `og-cover.jpg` (es la imagen banner ya aprobada, no el mapa viejo).
 
-### Helper compartido
+## Aviso al usuario
 
-Creo `src/lib/api-public.ts` con:
-- `CORS` headers + `withCors(response)`
-- `fetchSupabase(path, { signal })` — wrapper de `fetch` REST
-- `parseCursor` / `encodeCursor` (`base64(created_at|id)`)
-- `csvCell` / `buildCsv(headers, hxl, rows)`
-- `buildGeoJSON(features, metadata)`
-- `applyCommonFilters(searchParams, supabaseQuery)` — concatena `state=eq.…`, `created_at=gte.…`, etc.
-- `parseBbox(param)` → cláusulas `lat=gte`, `lat=lte`, `lng=gte`, `lng=lte`
-
-Esto evita duplicar la misma lógica en 15 archivos.
-
-### Página `/api` de documentación
-
-Nueva ruta `src/routes/api.tsx` (UI, no endpoint) con:
-- Tabla de endpoints con descripción y ejemplo `curl`
-- Lista de filtros soportados por recurso
-- Sección "Paginación por cursor" con ejemplo
-- Sección "Etiquetas HXL" con enlace al estándar
-- Nota de licencia CC BY 4.0 + atribución requerida
-- Bloque de "Sin auth, sin rate limit duro — usar responsablemente; contacto para volúmenes altos"
-
-Se enlaza desde el footer (`src/components/Footer.tsx`) reemplazando los enlaces sueltos de geojson/csv por un único "API pública" → `/api`.
-
-### Reports existentes — mejoras
-
-A los tres endpoints actuales (`reports[.]json`/geojson/csv) les añado:
-- Paginación por cursor (hoy traen todo sin límite — peligroso si crece).
-- Filtros comunes (`state`, `category`, `urgency`, `since`, `bbox`).
-- Migración al helper compartido para que el código quede uniforme.
-
-### Sitemap
-
-Agrego `/api` a `STATIC_PATHS` en `src/routes/sitemap[.]xml.ts`.
-
-### Lo que NO hago en este plan
-
-- No expongo `report_comments`, `report_votes`, `contact_messages`, `user_roles`, `bot_*`, `email_*`, `push_*`, `telegram_*` (operativos/sensibles).
-- No agrego rate limiting persistente (sólo el ya existente en `POST /api/public/reports`). Si más adelante hace falta, se mete en una capa nginx o un middleware compartido.
-- No agrego API keys ni OAuth — sigue siendo lectura pública pura.
-- No toco la lógica de escritura existente (`POST /api/public/reports`).
-
-### Resumen de archivos
-
-Crear:
-- `src/lib/api-public.ts`
-- `src/routes/api/missing-persons[.]json.ts`
-- `src/routes/api/missing-persons[.]geojson.ts`
-- `src/routes/api/missing-persons[.]csv.ts`
-- `src/routes/api/patients[.]json.ts`
-- `src/routes/api/patients[.]csv.ts`
-- `src/routes/api/needs[.]json.ts`
-- `src/routes/api/needs[.]geojson.ts`
-- `src/routes/api/needs[.]csv.ts`
-- `src/routes/api/offers[.]json.ts`
-- `src/routes/api/offers[.]geojson.ts`
-- `src/routes/api/offers[.]csv.ts`
-- `src/routes/api/health-centers[.]json.ts`
-- `src/routes/api/health-centers[.]geojson.ts`
-- `src/routes/api/health-centers[.]csv.ts`
-- `src/routes/api/categories[.]json.ts`
-- `src/routes/api.tsx` (documentación)
-
-Modificar:
-- `src/routes/api/reports[.]geojson.ts` (helper + filtros + cursor)
-- `src/routes/api/reports[.]csv.ts` (helper + filtros)
-- `src/components/Footer.tsx` (enlace a `/api`)
-- `src/routes/sitemap[.]xml.ts` (añadir `/api`)
+PWA ya instalada en el móvil: Android suele tardar uno o dos arranques en refrescar el icono; en algunos casos hace falta desinstalar y volver a instalar. iOS cachea `apple-touch-icon` muy agresivamente — la única forma garantizada es quitar la app de la pantalla de inicio y volver a añadirla.
