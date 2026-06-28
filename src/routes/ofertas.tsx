@@ -501,7 +501,7 @@ function OfferCard({ offer: o, onMatch, onChanged }: { offer: Offer; onMatch: ()
               disabled={busy}
               className="inline-flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-bold py-2 px-3 rounded-lg transition disabled:opacity-50"
             >
-              <Link2 className="h-3.5 w-3.5" /> Vincular
+              <Link2 className="h-3.5 w-3.5" /> ¡Necesitamos tu ayuda!
             </button>
           )}
           {status === "matched" && (
