@@ -55,6 +55,7 @@ function MissingPage() {
   const [loaded, setLoaded] = useState(false);
   const [searchResults, setSearchResults] = useState<MissingPerson[] | null>(null);
   const [searching, setSearching] = useState(false);
+  const [selected, setSelected] = useState<MissingPerson | null>(null);
   // Mark loaded once we have any data, or after first render tick.
   useMemo(() => { if (missing.length > 0) setLoaded(true); }, [missing.length]);
   const ptr = usePullToRefresh<HTMLDivElement>({
