@@ -286,9 +286,9 @@ export function MissingDetailSheet({
         <div className="relative shrink-0 border-b border-border bg-card">
           <div className="flex items-start gap-3 p-4 pr-12">
             <div className="relative h-16 w-16 shrink-0 rounded-full bg-muted border-2 border-border grid place-items-center text-xl font-black text-muted-foreground overflow-hidden">
-              {person.photo_url ? (
+              {(localPhoto || person.photo_url) ? (
                 <img
-                  src={person.photo_url}
+                  src={localPhoto || person.photo_url!}
                   alt={person.name}
                   className="absolute inset-0 h-full w-full object-cover"
                   referrerPolicy="no-referrer"
