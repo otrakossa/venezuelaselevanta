@@ -44,7 +44,7 @@ export const organizations: Organization[] = [
   },
   {
     name: "Fundación Casa del Bosque",
-    description: "Organización aliada · activismo tecnopolítico",
+    description: "Activismo tecnopolítico",
     url: "https://x.com/fcbosque",
     logo: "/logo-fcbosque.png",
   },
