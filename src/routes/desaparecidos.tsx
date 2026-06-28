@@ -6,7 +6,7 @@ import { MISSING_STATUS_LABELS } from "@/lib/categories";
 import type { MissingPerson, MissingStatus } from "@/lib/types";
 import { toast } from "sonner";
 import {
-  Search, UserPlus, UserCheck, MapPin, Phone, Mail, User,
+  Search, UserPlus, MapPin, Phone, Mail, User,
   CalendarDays, Share2, Link as LinkIcon, X, HeartHandshake, Loader2, Crosshair, Map as MapIcon, RefreshCw, ChevronDown,
   MessageCircle, Hospital,
 } from "lucide-react";
