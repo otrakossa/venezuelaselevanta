@@ -280,41 +280,45 @@ export function MapView({
                     else missingMarkersRef.current.delete(m.id);
                   }}
                 >
-                  <Popup maxWidth={260} minWidth={240}>
-                    <div className="w-[240px] space-y-2">
-                      <div className="-mx-3 -mt-3 px-3 py-2 rounded-t flex items-center gap-2" style={{ background: "#f43f5e", color: "white" }}>
+                  <Popup maxWidth={280} minWidth={260}>
+                    <div className="w-[260px] -m-1">
+                      <div className="-mx-3 -mt-3 px-3 py-3 rounded-t-lg flex items-center gap-3" style={{ background: "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)", color: "white" }}>
                         {m.photo_url ? (
-                          <img src={m.photo_url} alt="" className="h-8 w-8 rounded-full object-cover border border-white/60" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
+                          <img src={m.photo_url} alt="" className="h-12 w-12 rounded-full object-cover border-2 border-white/80 shadow-md flex-shrink-0" onError={(e) => ((e.currentTarget as HTMLImageElement).style.display = "none")} />
                         ) : (
-                          <span className="h-8 w-8 rounded-full bg-white/20 grid place-items-center text-sm font-black">{(m.name?.[0] ?? "?").toUpperCase()}</span>
+                          <span className="h-12 w-12 rounded-full bg-white/25 grid place-items-center text-lg font-black border-2 border-white/60 flex-shrink-0">{(m.name?.[0] ?? "?").toUpperCase()}</span>
                         )}
                         <div className="min-w-0 flex-1">
-                          <div className="text-[10px] uppercase tracking-wide opacity-90 font-semibold leading-none">Desaparecida</div>
-                          <div className="font-bold text-[13px] truncate leading-tight mt-0.5">{m.name}{m.age ? ` · ${m.age}a` : ""}</div>
+                          <div className="text-[10px] uppercase tracking-widest opacity-95 font-bold leading-none">Desaparecida</div>
+                          <div className="font-extrabold text-[15px] truncate leading-tight mt-1">{m.name}{m.age ? <span className="opacity-90 font-semibold"> · {m.age}a</span> : null}</div>
                         </div>
                       </div>
-                      {m.last_seen_location && (
-                        <div className="text-[11px] text-neutral-600 truncate">📍 {m.last_seen_location}</div>
-                      )}
-                      {m.description && (
-                        <p className="text-xs text-neutral-600 line-clamp-3">{m.description}</p>
-                      )}
-                      <div className="text-[10px] text-neutral-400">
-                        Reportada {format(new Date(m.report_date), "dd MMM HH:mm")}
-                      </div>
-                      <div className="flex gap-1.5">
-                        <Link to="/desaparecidos" className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition">
-                          Ver ficha →
-                        </Link>
-                        <a
-                          href={`https://wa.me/?text=${encodeURIComponent(waText)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition"
-                          title="Difundir por WhatsApp"
-                        >
-                          Difundir
-                        </a>
+                      <div className="px-1 pt-2.5 space-y-2">
+                        {m.last_seen_location && (
+                          <div className="flex items-start gap-1.5 text-[12px] text-neutral-700 font-medium">
+                            <span>📍</span><span className="truncate">{m.last_seen_location}</span>
+                          </div>
+                        )}
+                        {m.description && (
+                          <p className="text-[12px] text-neutral-600 leading-snug line-clamp-3">{m.description}</p>
+                        )}
+                        <div className="text-[10px] text-neutral-400 pt-0.5 border-t border-neutral-100">
+                          Reportada {format(new Date(m.report_date), "dd MMM HH:mm")}
+                        </div>
+                        <div className="flex gap-1.5 pt-1">
+                          <Link to="/desaparecidos" search={{ person: m.id } as any} className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-md bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 shadow-sm transition">
+                            Ver ficha →
+                          </Link>
+                          <a
+                            href={`https://wa.me/?text=${encodeURIComponent(waText)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center px-3 py-2 rounded-md bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 shadow-sm transition"
+                            title="Difundir por WhatsApp"
+                          >
+                            Difundir
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </Popup>
