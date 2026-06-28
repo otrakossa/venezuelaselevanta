@@ -1,4 +1,5 @@
 import utopixLogo from "@/assets/logo-utopix.jpeg.asset.json";
+import awaLogo from "@/assets/logo-awa.jpeg.asset.json";
 
 export type Person = {
   name: string;
