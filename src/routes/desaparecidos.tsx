@@ -517,6 +517,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
 function MissingForm({ onDone }: { onDone: () => void }) {
   const [f, setF] = useState({
     name: "",
+    id_number: "",
     age: "",
     description: "",
     last_seen_location: "",
