@@ -16,9 +16,9 @@ import {
 } from "@/lib/api-public";
 
 const SAFE_COLS =
-  "id,title,description,category,urgency,status,address,lat,lng,reporter_name,photo_url,affected_count,verified,created_at,updated_at,media_urls,media_thumbs,confirm_count,dispute_count,state,municipality,parish,external_id,source";
+  "id,center_name,center_address,lat,lng,category,categories,title,description,quantity,urgency,status,contact_name,created_at,updated_at";
 
-export const Route = createFileRoute("/api/reports.geojson")({
+export const Route = createFileRoute("/api/needs.geojson")({
   server: {
     handlers: {
       OPTIONS: async () => optionsHandler(),
@@ -29,26 +29,24 @@ export const Route = createFileRoute("/api/reports.geojson")({
           const limit = parseLimit(sp);
           const cursor = decodeCursor(sp.get("cursor"));
           const q =
-            `reports?select=${SAFE_COLS}&hidden=is.false` +
+            `needs?select=${SAFE_COLS}&lat=not.is.null&lng=not.is.null` +
             `&order=created_at.desc,id.desc&limit=${limit}` +
-            commonFilters(sp, { allow: ["state", "municipality", "parish", "category", "urgency", "status", "since"] }) +
+            commonFilters(sp, { allow: ["category", "urgency", "status", "since"] }) +
             bboxClause(sp, "lat", "lng") +
             cursorClause(cursor);
           const rows = await supaFetch(q);
           const next = nextCursorFromRows(rows, limit);
-          const features = rows
-            .filter((r) => typeof r.lng === "number" && typeof r.lat === "number")
-            .map((r) => ({
-              type: "Feature" as const,
-              geometry: { type: "Point" as const, coordinates: [Number(r.lng), Number(r.lat)] },
-              properties: { ...r, lat: undefined, lng: undefined },
-            }));
+          const features = rows.map((r) => ({
+            type: "Feature" as const,
+            geometry: { type: "Point" as const, coordinates: [Number(r.lng), Number(r.lat)] },
+            properties: { ...r, lat: undefined, lng: undefined },
+          }));
           return geojsonResponse(
             {
               type: "FeatureCollection",
               metadata: metadata({
-                title: "Venezuela Se Levanta — Reportes",
-                description: "Reportes ciudadanos georreferenciados.",
+                title: "Venezuela Se Levanta — Necesidades georreferenciadas",
+                description: "Solo necesidades con ubicación.",
                 count: features.length,
                 nextCursor: next,
               }),

@@ -21,12 +21,28 @@ import { Route as DonarRouteImport } from './routes/donar'
 import { Route as DesaparecidosRouteImport } from './routes/desaparecidos'
 import { Route as CreditosRouteImport } from './routes/creditos'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ApiRouteImport } from './routes/api'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
+import { Route as ApiPatientsDotjsonRouteImport } from './routes/api/patients[.]json'
+import { Route as ApiPatientsDotcsvRouteImport } from './routes/api/patients[.]csv'
+import { Route as ApiOffersDotjsonRouteImport } from './routes/api/offers[.]json'
+import { Route as ApiOffersDotgeojsonRouteImport } from './routes/api/offers[.]geojson'
+import { Route as ApiOffersDotcsvRouteImport } from './routes/api/offers[.]csv'
+import { Route as ApiNeedsDotjsonRouteImport } from './routes/api/needs[.]json'
+import { Route as ApiNeedsDotgeojsonRouteImport } from './routes/api/needs[.]geojson'
+import { Route as ApiNeedsDotcsvRouteImport } from './routes/api/needs[.]csv'
+import { Route as ApiMissingPersonsDotjsonRouteImport } from './routes/api/missing-persons[.]json'
+import { Route as ApiMissingPersonsDotgeojsonRouteImport } from './routes/api/missing-persons[.]geojson'
+import { Route as ApiMissingPersonsDotcsvRouteImport } from './routes/api/missing-persons[.]csv'
+import { Route as ApiHealthCentersDotjsonRouteImport } from './routes/api/health-centers[.]json'
+import { Route as ApiHealthCentersDotgeojsonRouteImport } from './routes/api/health-centers[.]geojson'
+import { Route as ApiHealthCentersDotcsvRouteImport } from './routes/api/health-centers[.]csv'
+import { Route as ApiCategoriesDotjsonRouteImport } from './routes/api/categories[.]json'
 import { Route as AdminObservabilidadRouteImport } from './routes/admin.observabilidad'
 import { Route as AdminInteropRouteImport } from './routes/admin.interop'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -104,6 +120,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRoute = ApiRouteImport.update({
+  id: '/api',
+  path: '/api',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -125,14 +146,92 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiReportsDotgeojsonRoute = ApiReportsDotgeojsonRouteImport.update({
-  id: '/api/reports.geojson',
-  path: '/api/reports.geojson',
-  getParentRoute: () => rootRouteImport,
+  id: '/reports.geojson',
+  path: '/reports.geojson',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiReportsDotcsvRoute = ApiReportsDotcsvRouteImport.update({
-  id: '/api/reports.csv',
-  path: '/api/reports.csv',
-  getParentRoute: () => rootRouteImport,
+  id: '/reports.csv',
+  path: '/reports.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiPatientsDotjsonRoute = ApiPatientsDotjsonRouteImport.update({
+  id: '/patients.json',
+  path: '/patients.json',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiPatientsDotcsvRoute = ApiPatientsDotcsvRouteImport.update({
+  id: '/patients.csv',
+  path: '/patients.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiOffersDotjsonRoute = ApiOffersDotjsonRouteImport.update({
+  id: '/offers.json',
+  path: '/offers.json',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiOffersDotgeojsonRoute = ApiOffersDotgeojsonRouteImport.update({
+  id: '/offers.geojson',
+  path: '/offers.geojson',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiOffersDotcsvRoute = ApiOffersDotcsvRouteImport.update({
+  id: '/offers.csv',
+  path: '/offers.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiNeedsDotjsonRoute = ApiNeedsDotjsonRouteImport.update({
+  id: '/needs.json',
+  path: '/needs.json',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiNeedsDotgeojsonRoute = ApiNeedsDotgeojsonRouteImport.update({
+  id: '/needs.geojson',
+  path: '/needs.geojson',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiNeedsDotcsvRoute = ApiNeedsDotcsvRouteImport.update({
+  id: '/needs.csv',
+  path: '/needs.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiMissingPersonsDotjsonRoute =
+  ApiMissingPersonsDotjsonRouteImport.update({
+    id: '/missing-persons.json',
+    path: '/missing-persons.json',
+    getParentRoute: () => ApiRoute,
+  } as any)
+const ApiMissingPersonsDotgeojsonRoute =
+  ApiMissingPersonsDotgeojsonRouteImport.update({
+    id: '/missing-persons.geojson',
+    path: '/missing-persons.geojson',
+    getParentRoute: () => ApiRoute,
+  } as any)
+const ApiMissingPersonsDotcsvRoute = ApiMissingPersonsDotcsvRouteImport.update({
+  id: '/missing-persons.csv',
+  path: '/missing-persons.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiHealthCentersDotjsonRoute = ApiHealthCentersDotjsonRouteImport.update({
+  id: '/health-centers.json',
+  path: '/health-centers.json',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiHealthCentersDotgeojsonRoute =
+  ApiHealthCentersDotgeojsonRouteImport.update({
+    id: '/health-centers.geojson',
+    path: '/health-centers.geojson',
+    getParentRoute: () => ApiRoute,
+  } as any)
+const ApiHealthCentersDotcsvRoute = ApiHealthCentersDotcsvRouteImport.update({
+  id: '/health-centers.csv',
+  path: '/health-centers.csv',
+  getParentRoute: () => ApiRoute,
+} as any)
+const ApiCategoriesDotjsonRoute = ApiCategoriesDotjsonRouteImport.update({
+  id: '/categories.json',
+  path: '/categories.json',
+  getParentRoute: () => ApiRoute,
 } as any)
 const AdminObservabilidadRoute = AdminObservabilidadRouteImport.update({
   id: '/admin/observabilidad',
@@ -150,24 +249,24 @@ const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicReportsRoute = ApiPublicReportsRouteImport.update({
-  id: '/api/public/reports',
-  path: '/api/public/reports',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/reports',
+  path: '/public/reports',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/health',
+  path: '/public/health',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiPublicGeocodeRoute = ApiPublicGeocodeRouteImport.update({
-  id: '/api/public/geocode',
-  path: '/api/public/geocode',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/geocode',
+  path: '/public/geocode',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiPublicContactRoute = ApiPublicContactRouteImport.update({
-  id: '/api/public/contact',
-  path: '/api/public/contact',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/contact',
+  path: '/public/contact',
+  getParentRoute: () => ApiRoute,
 } as any)
 const LovableEmailTransactionalSendRoute =
   LovableEmailTransactionalSendRouteImport.update({
@@ -189,39 +288,40 @@ const LovableEmailQueueProcessRoute =
   } as any)
 const ApiPublicTelegramWebhookRoute =
   ApiPublicTelegramWebhookRouteImport.update({
-    id: '/api/public/telegram/webhook',
-    path: '/api/public/telegram/webhook',
-    getParentRoute: () => rootRouteImport,
+    id: '/public/telegram/webhook',
+    path: '/public/telegram/webhook',
+    getParentRoute: () => ApiRoute,
   } as any)
 const ApiPublicPushManageRoute = ApiPublicPushManageRouteImport.update({
-  id: '/api/public/push/manage',
-  path: '/api/public/push/manage',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/push/manage',
+  path: '/public/push/manage',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiPublicPushBroadcastRoute = ApiPublicPushBroadcastRouteImport.update({
-  id: '/api/public/push/broadcast',
-  path: '/api/public/push/broadcast',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/push/broadcast',
+  path: '/public/push/broadcast',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiPublicMediaSplatRoute = ApiPublicMediaSplatRouteImport.update({
-  id: '/api/public/media/$',
-  path: '/api/public/media/$',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/media/$',
+  path: '/public/media/$',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiPublicHooksIngestUsgsRoute =
   ApiPublicHooksIngestUsgsRouteImport.update({
-    id: '/api/public/hooks/ingest-usgs',
-    path: '/api/public/hooks/ingest-usgs',
-    getParentRoute: () => rootRouteImport,
+    id: '/public/hooks/ingest-usgs',
+    path: '/public/hooks/ingest-usgs',
+    getParentRoute: () => ApiRoute,
   } as any)
 const ApiPublicAdminHealthRoute = ApiPublicAdminHealthRouteImport.update({
-  id: '/api/public/admin/health',
-  path: '/api/public/admin/health',
-  getParentRoute: () => rootRouteImport,
+  id: '/public/admin/health',
+  path: '/public/admin/health',
+  getParentRoute: () => ApiRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api': typeof ApiRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -236,6 +336,21 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
+  '/api/categories.json': typeof ApiCategoriesDotjsonRoute
+  '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
+  '/api/health-centers.geojson': typeof ApiHealthCentersDotgeojsonRoute
+  '/api/health-centers.json': typeof ApiHealthCentersDotjsonRoute
+  '/api/missing-persons.csv': typeof ApiMissingPersonsDotcsvRoute
+  '/api/missing-persons.geojson': typeof ApiMissingPersonsDotgeojsonRoute
+  '/api/missing-persons.json': typeof ApiMissingPersonsDotjsonRoute
+  '/api/needs.csv': typeof ApiNeedsDotcsvRoute
+  '/api/needs.geojson': typeof ApiNeedsDotgeojsonRoute
+  '/api/needs.json': typeof ApiNeedsDotjsonRoute
+  '/api/offers.csv': typeof ApiOffersDotcsvRoute
+  '/api/offers.geojson': typeof ApiOffersDotgeojsonRoute
+  '/api/offers.json': typeof ApiOffersDotjsonRoute
+  '/api/patients.csv': typeof ApiPatientsDotcsvRoute
+  '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -258,6 +373,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api': typeof ApiRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -272,6 +388,21 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
+  '/api/categories.json': typeof ApiCategoriesDotjsonRoute
+  '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
+  '/api/health-centers.geojson': typeof ApiHealthCentersDotgeojsonRoute
+  '/api/health-centers.json': typeof ApiHealthCentersDotjsonRoute
+  '/api/missing-persons.csv': typeof ApiMissingPersonsDotcsvRoute
+  '/api/missing-persons.geojson': typeof ApiMissingPersonsDotgeojsonRoute
+  '/api/missing-persons.json': typeof ApiMissingPersonsDotjsonRoute
+  '/api/needs.csv': typeof ApiNeedsDotcsvRoute
+  '/api/needs.geojson': typeof ApiNeedsDotgeojsonRoute
+  '/api/needs.json': typeof ApiNeedsDotjsonRoute
+  '/api/offers.csv': typeof ApiOffersDotcsvRoute
+  '/api/offers.geojson': typeof ApiOffersDotgeojsonRoute
+  '/api/offers.json': typeof ApiOffersDotjsonRoute
+  '/api/patients.csv': typeof ApiPatientsDotcsvRoute
+  '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -295,6 +426,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api': typeof ApiRouteWithChildren
   '/auth': typeof AuthRoute
   '/creditos': typeof CreditosRoute
   '/desaparecidos': typeof DesaparecidosRoute
@@ -309,6 +441,21 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
+  '/api/categories.json': typeof ApiCategoriesDotjsonRoute
+  '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
+  '/api/health-centers.geojson': typeof ApiHealthCentersDotgeojsonRoute
+  '/api/health-centers.json': typeof ApiHealthCentersDotjsonRoute
+  '/api/missing-persons.csv': typeof ApiMissingPersonsDotcsvRoute
+  '/api/missing-persons.geojson': typeof ApiMissingPersonsDotgeojsonRoute
+  '/api/missing-persons.json': typeof ApiMissingPersonsDotjsonRoute
+  '/api/needs.csv': typeof ApiNeedsDotcsvRoute
+  '/api/needs.geojson': typeof ApiNeedsDotgeojsonRoute
+  '/api/needs.json': typeof ApiNeedsDotjsonRoute
+  '/api/offers.csv': typeof ApiOffersDotcsvRoute
+  '/api/offers.geojson': typeof ApiOffersDotgeojsonRoute
+  '/api/offers.json': typeof ApiOffersDotjsonRoute
+  '/api/patients.csv': typeof ApiPatientsDotcsvRoute
+  '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
@@ -333,6 +480,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/api'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -347,6 +495,21 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
+    | '/api/categories.json'
+    | '/api/health-centers.csv'
+    | '/api/health-centers.geojson'
+    | '/api/health-centers.json'
+    | '/api/missing-persons.csv'
+    | '/api/missing-persons.geojson'
+    | '/api/missing-persons.json'
+    | '/api/needs.csv'
+    | '/api/needs.geojson'
+    | '/api/needs.json'
+    | '/api/offers.csv'
+    | '/api/offers.geojson'
+    | '/api/offers.json'
+    | '/api/patients.csv'
+    | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
@@ -369,6 +532,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -383,6 +547,21 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
+    | '/api/categories.json'
+    | '/api/health-centers.csv'
+    | '/api/health-centers.geojson'
+    | '/api/health-centers.json'
+    | '/api/missing-persons.csv'
+    | '/api/missing-persons.geojson'
+    | '/api/missing-persons.json'
+    | '/api/needs.csv'
+    | '/api/needs.geojson'
+    | '/api/needs.json'
+    | '/api/offers.csv'
+    | '/api/offers.geojson'
+    | '/api/offers.json'
+    | '/api/patients.csv'
+    | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
@@ -405,6 +584,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/api'
     | '/auth'
     | '/creditos'
     | '/desaparecidos'
@@ -419,6 +599,21 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
+    | '/api/categories.json'
+    | '/api/health-centers.csv'
+    | '/api/health-centers.geojson'
+    | '/api/health-centers.json'
+    | '/api/missing-persons.csv'
+    | '/api/missing-persons.geojson'
+    | '/api/missing-persons.json'
+    | '/api/needs.csv'
+    | '/api/needs.geojson'
+    | '/api/needs.json'
+    | '/api/offers.csv'
+    | '/api/offers.geojson'
+    | '/api/offers.json'
+    | '/api/patients.csv'
+    | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
     | '/email/unsubscribe'
@@ -442,6 +637,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiRoute: typeof ApiRouteWithChildren
   AuthRoute: typeof AuthRoute
   CreditosRoute: typeof CreditosRoute
   DesaparecidosRoute: typeof DesaparecidosRoute
@@ -456,22 +652,10 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   AdminInteropRoute: typeof AdminInteropRoute
   AdminObservabilidadRoute: typeof AdminObservabilidadRoute
-  ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
-  ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ReportesIdRoute: typeof ReportesIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
-  ApiPublicContactRoute: typeof ApiPublicContactRoute
-  ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
-  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
-  ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
-  ApiPublicAdminHealthRoute: typeof ApiPublicAdminHealthRoute
-  ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
-  ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
-  ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
-  ApiPublicPushManageRoute: typeof ApiPublicPushManageRoute
-  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
   LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
@@ -563,6 +747,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api': {
+      id: '/api'
+      path: '/api'
+      fullPath: '/api'
+      preLoaderRoute: typeof ApiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -593,17 +784,122 @@ declare module '@tanstack/react-router' {
     }
     '/api/reports.geojson': {
       id: '/api/reports.geojson'
-      path: '/api/reports.geojson'
+      path: '/reports.geojson'
       fullPath: '/api/reports.geojson'
       preLoaderRoute: typeof ApiReportsDotgeojsonRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/reports.csv': {
       id: '/api/reports.csv'
-      path: '/api/reports.csv'
+      path: '/reports.csv'
       fullPath: '/api/reports.csv'
       preLoaderRoute: typeof ApiReportsDotcsvRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/patients.json': {
+      id: '/api/patients.json'
+      path: '/patients.json'
+      fullPath: '/api/patients.json'
+      preLoaderRoute: typeof ApiPatientsDotjsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/patients.csv': {
+      id: '/api/patients.csv'
+      path: '/patients.csv'
+      fullPath: '/api/patients.csv'
+      preLoaderRoute: typeof ApiPatientsDotcsvRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/offers.json': {
+      id: '/api/offers.json'
+      path: '/offers.json'
+      fullPath: '/api/offers.json'
+      preLoaderRoute: typeof ApiOffersDotjsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/offers.geojson': {
+      id: '/api/offers.geojson'
+      path: '/offers.geojson'
+      fullPath: '/api/offers.geojson'
+      preLoaderRoute: typeof ApiOffersDotgeojsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/offers.csv': {
+      id: '/api/offers.csv'
+      path: '/offers.csv'
+      fullPath: '/api/offers.csv'
+      preLoaderRoute: typeof ApiOffersDotcsvRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/needs.json': {
+      id: '/api/needs.json'
+      path: '/needs.json'
+      fullPath: '/api/needs.json'
+      preLoaderRoute: typeof ApiNeedsDotjsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/needs.geojson': {
+      id: '/api/needs.geojson'
+      path: '/needs.geojson'
+      fullPath: '/api/needs.geojson'
+      preLoaderRoute: typeof ApiNeedsDotgeojsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/needs.csv': {
+      id: '/api/needs.csv'
+      path: '/needs.csv'
+      fullPath: '/api/needs.csv'
+      preLoaderRoute: typeof ApiNeedsDotcsvRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/missing-persons.json': {
+      id: '/api/missing-persons.json'
+      path: '/missing-persons.json'
+      fullPath: '/api/missing-persons.json'
+      preLoaderRoute: typeof ApiMissingPersonsDotjsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/missing-persons.geojson': {
+      id: '/api/missing-persons.geojson'
+      path: '/missing-persons.geojson'
+      fullPath: '/api/missing-persons.geojson'
+      preLoaderRoute: typeof ApiMissingPersonsDotgeojsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/missing-persons.csv': {
+      id: '/api/missing-persons.csv'
+      path: '/missing-persons.csv'
+      fullPath: '/api/missing-persons.csv'
+      preLoaderRoute: typeof ApiMissingPersonsDotcsvRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/health-centers.json': {
+      id: '/api/health-centers.json'
+      path: '/health-centers.json'
+      fullPath: '/api/health-centers.json'
+      preLoaderRoute: typeof ApiHealthCentersDotjsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/health-centers.geojson': {
+      id: '/api/health-centers.geojson'
+      path: '/health-centers.geojson'
+      fullPath: '/api/health-centers.geojson'
+      preLoaderRoute: typeof ApiHealthCentersDotgeojsonRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/health-centers.csv': {
+      id: '/api/health-centers.csv'
+      path: '/health-centers.csv'
+      fullPath: '/api/health-centers.csv'
+      preLoaderRoute: typeof ApiHealthCentersDotcsvRouteImport
+      parentRoute: typeof ApiRoute
+    }
+    '/api/categories.json': {
+      id: '/api/categories.json'
+      path: '/categories.json'
+      fullPath: '/api/categories.json'
+      preLoaderRoute: typeof ApiCategoriesDotjsonRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/admin/observabilidad': {
       id: '/admin/observabilidad'
@@ -628,31 +924,31 @@ declare module '@tanstack/react-router' {
     }
     '/api/public/reports': {
       id: '/api/public/reports'
-      path: '/api/public/reports'
+      path: '/public/reports'
       fullPath: '/api/public/reports'
       preLoaderRoute: typeof ApiPublicReportsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/health': {
       id: '/api/public/health'
-      path: '/api/public/health'
+      path: '/public/health'
       fullPath: '/api/public/health'
       preLoaderRoute: typeof ApiPublicHealthRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/geocode': {
       id: '/api/public/geocode'
-      path: '/api/public/geocode'
+      path: '/public/geocode'
       fullPath: '/api/public/geocode'
       preLoaderRoute: typeof ApiPublicGeocodeRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/contact': {
       id: '/api/public/contact'
-      path: '/api/public/contact'
+      path: '/public/contact'
       fullPath: '/api/public/contact'
       preLoaderRoute: typeof ApiPublicContactRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/lovable/email/transactional/send': {
       id: '/lovable/email/transactional/send'
@@ -677,51 +973,114 @@ declare module '@tanstack/react-router' {
     }
     '/api/public/telegram/webhook': {
       id: '/api/public/telegram/webhook'
-      path: '/api/public/telegram/webhook'
+      path: '/public/telegram/webhook'
       fullPath: '/api/public/telegram/webhook'
       preLoaderRoute: typeof ApiPublicTelegramWebhookRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/push/manage': {
       id: '/api/public/push/manage'
-      path: '/api/public/push/manage'
+      path: '/public/push/manage'
       fullPath: '/api/public/push/manage'
       preLoaderRoute: typeof ApiPublicPushManageRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/push/broadcast': {
       id: '/api/public/push/broadcast'
-      path: '/api/public/push/broadcast'
+      path: '/public/push/broadcast'
       fullPath: '/api/public/push/broadcast'
       preLoaderRoute: typeof ApiPublicPushBroadcastRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/media/$': {
       id: '/api/public/media/$'
-      path: '/api/public/media/$'
+      path: '/public/media/$'
       fullPath: '/api/public/media/$'
       preLoaderRoute: typeof ApiPublicMediaSplatRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/hooks/ingest-usgs': {
       id: '/api/public/hooks/ingest-usgs'
-      path: '/api/public/hooks/ingest-usgs'
+      path: '/public/hooks/ingest-usgs'
       fullPath: '/api/public/hooks/ingest-usgs'
       preLoaderRoute: typeof ApiPublicHooksIngestUsgsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/public/admin/health': {
       id: '/api/public/admin/health'
-      path: '/api/public/admin/health'
+      path: '/public/admin/health'
       fullPath: '/api/public/admin/health'
       preLoaderRoute: typeof ApiPublicAdminHealthRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiRoute
     }
   }
 }
 
+interface ApiRouteChildren {
+  ApiCategoriesDotjsonRoute: typeof ApiCategoriesDotjsonRoute
+  ApiHealthCentersDotcsvRoute: typeof ApiHealthCentersDotcsvRoute
+  ApiHealthCentersDotgeojsonRoute: typeof ApiHealthCentersDotgeojsonRoute
+  ApiHealthCentersDotjsonRoute: typeof ApiHealthCentersDotjsonRoute
+  ApiMissingPersonsDotcsvRoute: typeof ApiMissingPersonsDotcsvRoute
+  ApiMissingPersonsDotgeojsonRoute: typeof ApiMissingPersonsDotgeojsonRoute
+  ApiMissingPersonsDotjsonRoute: typeof ApiMissingPersonsDotjsonRoute
+  ApiNeedsDotcsvRoute: typeof ApiNeedsDotcsvRoute
+  ApiNeedsDotgeojsonRoute: typeof ApiNeedsDotgeojsonRoute
+  ApiNeedsDotjsonRoute: typeof ApiNeedsDotjsonRoute
+  ApiOffersDotcsvRoute: typeof ApiOffersDotcsvRoute
+  ApiOffersDotgeojsonRoute: typeof ApiOffersDotgeojsonRoute
+  ApiOffersDotjsonRoute: typeof ApiOffersDotjsonRoute
+  ApiPatientsDotcsvRoute: typeof ApiPatientsDotcsvRoute
+  ApiPatientsDotjsonRoute: typeof ApiPatientsDotjsonRoute
+  ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
+  ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
+  ApiPublicContactRoute: typeof ApiPublicContactRoute
+  ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
+  ApiPublicReportsRoute: typeof ApiPublicReportsRoute
+  ApiPublicAdminHealthRoute: typeof ApiPublicAdminHealthRoute
+  ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
+  ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
+  ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
+  ApiPublicPushManageRoute: typeof ApiPublicPushManageRoute
+  ApiPublicTelegramWebhookRoute: typeof ApiPublicTelegramWebhookRoute
+}
+
+const ApiRouteChildren: ApiRouteChildren = {
+  ApiCategoriesDotjsonRoute: ApiCategoriesDotjsonRoute,
+  ApiHealthCentersDotcsvRoute: ApiHealthCentersDotcsvRoute,
+  ApiHealthCentersDotgeojsonRoute: ApiHealthCentersDotgeojsonRoute,
+  ApiHealthCentersDotjsonRoute: ApiHealthCentersDotjsonRoute,
+  ApiMissingPersonsDotcsvRoute: ApiMissingPersonsDotcsvRoute,
+  ApiMissingPersonsDotgeojsonRoute: ApiMissingPersonsDotgeojsonRoute,
+  ApiMissingPersonsDotjsonRoute: ApiMissingPersonsDotjsonRoute,
+  ApiNeedsDotcsvRoute: ApiNeedsDotcsvRoute,
+  ApiNeedsDotgeojsonRoute: ApiNeedsDotgeojsonRoute,
+  ApiNeedsDotjsonRoute: ApiNeedsDotjsonRoute,
+  ApiOffersDotcsvRoute: ApiOffersDotcsvRoute,
+  ApiOffersDotgeojsonRoute: ApiOffersDotgeojsonRoute,
+  ApiOffersDotjsonRoute: ApiOffersDotjsonRoute,
+  ApiPatientsDotcsvRoute: ApiPatientsDotcsvRoute,
+  ApiPatientsDotjsonRoute: ApiPatientsDotjsonRoute,
+  ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
+  ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
+  ApiPublicContactRoute: ApiPublicContactRoute,
+  ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
+  ApiPublicReportsRoute: ApiPublicReportsRoute,
+  ApiPublicAdminHealthRoute: ApiPublicAdminHealthRoute,
+  ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
+  ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
+  ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
+  ApiPublicPushManageRoute: ApiPublicPushManageRoute,
+  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
+}
+
+const ApiRouteWithChildren = ApiRoute._addFileChildren(ApiRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiRoute: ApiRouteWithChildren,
   AuthRoute: AuthRoute,
   CreditosRoute: CreditosRoute,
   DesaparecidosRoute: DesaparecidosRoute,
@@ -736,22 +1095,10 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   AdminInteropRoute: AdminInteropRoute,
   AdminObservabilidadRoute: AdminObservabilidadRoute,
-  ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
-  ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ReportesIdRoute: ReportesIdRoute,
   AdminIndexRoute: AdminIndexRoute,
-  ApiPublicContactRoute: ApiPublicContactRoute,
-  ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
-  ApiPublicHealthRoute: ApiPublicHealthRoute,
-  ApiPublicReportsRoute: ApiPublicReportsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
-  ApiPublicAdminHealthRoute: ApiPublicAdminHealthRoute,
-  ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
-  ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
-  ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
-  ApiPublicPushManageRoute: ApiPublicPushManageRoute,
-  ApiPublicTelegramWebhookRoute: ApiPublicTelegramWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
   LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,

@@ -1,53 +1,108 @@
-Entiendo la frustración. No creo que sea necesario mandarlo directo a Claude en la VPS todavía; el problema ya se puede aislar desde aquí. Si después de aplicar este cambio sigue fallando solo en producción, sí te dejaré un bloque exacto para que Claude lo ejecute en la VPS.
+## API pública v1 — Venezuela Se Levanta
 
-## Diagnóstico real
+Expongo todos los datasets principales como endpoints públicos, sin auth, con CORS abierto, caché, licencia CC BY 4.0 y sin PII sensible.
 
-La pantalla sí está enviando un token válido del proyecto nuevo (`advebubtfjgxwpjxprok`) y del usuario `kenny@codextecnologia.com`.
+### Endpoints nuevos
 
-El `401 Unauthorized` viene del endpoint `/api/public/admin/health`, específicamente de esta validación:
+Bajo `src/routes/api/` (servidos en `venezuelaselevanta.info/api/...`):
 
-```ts
-GET /auth/v1/user
-headers: {
-  apikey: PROD_SUPABASE_ANON_KEY,
-  Authorization: Bearer <token usuario>
-}
-```
+| Recurso | JSON | GeoJSON | CSV (HXL) |
+|---|---|---|---|
+| reports | ya existe (añadir filtros + paginación) | ✅ ya existe | ✅ ya existe |
+| missing-persons | ✅ nuevo | ✅ nuevo | ✅ nuevo |
+| patients | ✅ nuevo | — (la mayoría sin coords) | ✅ nuevo |
+| needs | ✅ nuevo | ✅ nuevo | ✅ nuevo |
+| offers | ✅ nuevo | ✅ nuevo | ✅ nuevo |
+| health-centers | ✅ nuevo | ✅ nuevo | ✅ nuevo |
+| categories | ✅ nuevo | — | — |
 
-La causa más probable ya no es el token del usuario, sino una de estas dos:
+Patrón de ruta: `src/routes/api/<recurso>[.]{json,geojson,csv}.ts`.
 
-1. En el runtime del preview/VPS, `process.env.SUPABASE_URL` o `process.env.SUPABASE_PUBLISHABLE_KEY` todavía apuntan al proyecto viejo de Lovable Cloud, porque el endpoint los prioriza antes del hardcode nuevo.
-2. El fallback hardcodeado funciona, pero el endpoint no expone suficiente diagnóstico seguro para distinguir si falla `auth/v1/user`, si falta header, o si el token pertenece a otro emisor.
+### Reglas comunes a todos los endpoints
 
-## Plan de corrección
+1. **Server-side fetch** vía `fetch(${SUPABASE_URL}/rest/v1/...)` con `SUPABASE_PUBLISHABLE_KEY` — nunca `createClient` (rompe en Node 20 sin WebSocket, regla del proyecto).
+2. **CORS abierto** (`Access-Control-Allow-Origin: *`) + handler `OPTIONS`.
+3. **Caché**: `Cache-Control: public, max-age=60, s-maxage=300, stale-while-revalidate=600`.
+4. **Paginación por cursor** vía querystring:
+   - `?limit=` (default 500, máx 5000)
+   - `?cursor=` (opaque, basado en `created_at` + `id`)
+   - Respuesta JSON/GeoJSON incluye `metadata.next_cursor` y `Link: <...>; rel="next"` header.
+   - CSV streamea sin cursor (un solo dump por petición, con `limit` aplicado).
+5. **Filtros por querystring** (cuando aplique):
+   - `state`, `municipality`, `parish`
+   - `category` / `urgency` / `status`
+   - `since` (ISO date, filtra `created_at >=`)
+   - `bbox=minLng,minLat,maxLng,maxLat` (sólo en GeoJSON)
+6. **Sin PII sensible**: se omiten `reporter_phone`, `reporter_email`, `reporter_cedula`, `contact_phone`, etc. La RLS ya los oculta a `anon`, pero además filtramos por columna en el `select=` para defensa en profundidad.
+7. **HXL tags** en la segunda fila del CSV según el estándar humanitario (`#geo+lat`, `#geo+lon`, `#adm1+name`, `#contact+name`, `#date+created`, `#status`, `#severity`, etc.).
+8. **Metadata block** en cada GeoJSON/JSON: `generated`, `title`, `description`, `license`, `source`, `count`, `next_cursor`.
 
-1. Cambiar `src/routes/api/public/admin/health.ts` para que la ruta de observabilidad use explícitamente el proyecto de producción nuevo por defecto:
-   - URL: `https://advebubtfjgxwpjxprok.supabase.co`
-   - publishable key del proyecto nuevo
-   - Solo permitir override con variables específicas tipo `NEW_SUPABASE_URL` / `NEW_SUPABASE_PUBLISHABLE_KEY`, no con `SUPABASE_URL`, porque esas pueden estar apuntando al proyecto viejo en Lovable/preview.
+### Helper compartido
 
-2. Mejorar el error del endpoint sin filtrar secretos:
-   - `401 Unauthorized: missing bearer` si no llega token.
-   - `401 Unauthorized: token rejected by production auth` si falla `/auth/v1/user`.
-   - `403 Forbidden: admin role required` si el usuario existe pero no tiene rol admin.
-   - Incluir `authStatus` y `projectRef` no sensibles solo en desarrollo/preview para confirmar que está validando contra `advebubtfjgxwpjxprok`.
+Creo `src/lib/api-public.ts` con:
+- `CORS` headers + `withCors(response)`
+- `fetchSupabase(path, { signal })` — wrapper de `fetch` REST
+- `parseCursor` / `encodeCursor` (`base64(created_at|id)`)
+- `csvCell` / `buildCsv(headers, hxl, rows)`
+- `buildGeoJSON(features, metadata)`
+- `applyCommonFilters(searchParams, supabaseQuery)` — concatena `state=eq.…`, `created_at=gte.…`, etc.
+- `parseBbox(param)` → cláusulas `lat=gte`, `lat=lte`, `lng=gte`, `lng=lte`
 
-3. Corregir la pantalla `admin.observabilidad.tsx` para esperar explícitamente a que la sesión esté lista antes de llamar al endpoint:
-   - Evitar llamadas tempranas con sesión parcial o token viejo.
-   - Si hay token, enviar solo ese token actual.
-   - Mostrar un mensaje distinto entre “sin sesión”, “no admin” y “token rechazado por backend”.
+Esto evita duplicar la misma lógica en 15 archivos.
 
-4. Verificar desde el navegador/preview:
-   - Confirmar que la request a `/api/public/admin/health` ya no devuelve 401.
-   - Si devuelve 403, el problema sería que `kenny@codextecnologia.com` no tiene rol admin en la tabla `user_roles` del proyecto nuevo.
-   - Si devuelve 200, la observabilidad queda resuelta.
+### Página `/api` de documentación
 
-5. Si al publicar sigue fallando solo en la VPS, preparar un bloque para Claude con comandos exactos:
-   - Revisar `.env` del VPS sin imprimir secretos.
-   - Confirmar que `NEW_SUPABASE_URL` y/o `SUPABASE_URL` apuntan al proyecto nuevo.
-   - Reiniciar PM2 con `--update-env`.
-   - Probar el endpoint local con curl usando un token real desde la sesión.
+Nueva ruta `src/routes/api.tsx` (UI, no endpoint) con:
+- Tabla de endpoints con descripción y ejemplo `curl`
+- Lista de filtros soportados por recurso
+- Sección "Paginación por cursor" con ejemplo
+- Sección "Etiquetas HXL" con enlace al estándar
+- Nota de licencia CC BY 4.0 + atribución requerida
+- Bloque de "Sin auth, sin rate limit duro — usar responsablemente; contacto para volúmenes altos"
 
-## Resultado esperado
+Se enlaza desde el footer (`src/components/Footer.tsx`) reemplazando los enlaces sueltos de geojson/csv por un único "API pública" → `/api`.
 
-La observabilidad dejará de depender de variables ambiguas del proyecto viejo y validará el token contra la base/auth real de producción. Si queda algún fallo, el mensaje indicará exactamente si es sesión, rol admin o configuración de entorno.
+### Reports existentes — mejoras
+
+A los tres endpoints actuales (`reports[.]json`/geojson/csv) les añado:
+- Paginación por cursor (hoy traen todo sin límite — peligroso si crece).
+- Filtros comunes (`state`, `category`, `urgency`, `since`, `bbox`).
+- Migración al helper compartido para que el código quede uniforme.
+
+### Sitemap
+
+Agrego `/api` a `STATIC_PATHS` en `src/routes/sitemap[.]xml.ts`.
+
+### Lo que NO hago en este plan
+
+- No expongo `report_comments`, `report_votes`, `contact_messages`, `user_roles`, `bot_*`, `email_*`, `push_*`, `telegram_*` (operativos/sensibles).
+- No agrego rate limiting persistente (sólo el ya existente en `POST /api/public/reports`). Si más adelante hace falta, se mete en una capa nginx o un middleware compartido.
+- No agrego API keys ni OAuth — sigue siendo lectura pública pura.
+- No toco la lógica de escritura existente (`POST /api/public/reports`).
+
+### Resumen de archivos
+
+Crear:
+- `src/lib/api-public.ts`
+- `src/routes/api/missing-persons[.]json.ts`
+- `src/routes/api/missing-persons[.]geojson.ts`
+- `src/routes/api/missing-persons[.]csv.ts`
+- `src/routes/api/patients[.]json.ts`
+- `src/routes/api/patients[.]csv.ts`
+- `src/routes/api/needs[.]json.ts`
+- `src/routes/api/needs[.]geojson.ts`
+- `src/routes/api/needs[.]csv.ts`
+- `src/routes/api/offers[.]json.ts`
+- `src/routes/api/offers[.]geojson.ts`
+- `src/routes/api/offers[.]csv.ts`
+- `src/routes/api/health-centers[.]json.ts`
+- `src/routes/api/health-centers[.]geojson.ts`
+- `src/routes/api/health-centers[.]csv.ts`
+- `src/routes/api/categories[.]json.ts`
+- `src/routes/api.tsx` (documentación)
+
+Modificar:
+- `src/routes/api/reports[.]geojson.ts` (helper + filtros + cursor)
+- `src/routes/api/reports[.]csv.ts` (helper + filtros)
+- `src/components/Footer.tsx` (enlace a `/api`)
+- `src/routes/sitemap[.]xml.ts` (añadir `/api`)
