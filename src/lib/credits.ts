@@ -1,3 +1,8 @@
+import logoCodex from "@/assets/logo-codex.png.asset.json";
+import logoFcbosque from "@/assets/logo-fcbosque.png.asset.json";
+import logoMujeresXSL from "@/assets/logo-mujeres-xsl.png.asset.json";
+import logoDebatesSurGlobal from "@/assets/logo-debates-sur-global.png.asset.json";
+
 export type Person = {
   name: string;
   role: string;
