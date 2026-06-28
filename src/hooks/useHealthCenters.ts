@@ -18,8 +18,8 @@ let inflight: Promise<HealthCenter[]> | null = null;
 async function fetchAll(): Promise<HealthCenter[]> {
   if (cache) return cache;
   if (inflight) return inflight;
-  const url = import.meta.env.VITE_SUPABASE_URL as string;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+  const { SUPA_URL: url, SUPA_ANON: key } = await import("@/lib/supabase-rest");
+  
   inflight = fetch(
     `${url}/rest/v1/health_centers?select=id,name,type,city,state,address,phone,lat,lng&order=name.asc`,
     { headers: { apikey: key, Authorization: `Bearer ${key}` } },

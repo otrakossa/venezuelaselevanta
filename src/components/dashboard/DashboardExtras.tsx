@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Report } from "@/lib/types";
 import { ArrowRight, Clock, AlertTriangle, Scale, Activity } from "lucide-react";
 
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 type RangeKey = "24h" | "7d" | "30d" | "all";
 const RANGE_MS: Record<RangeKey, number> = {

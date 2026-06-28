@@ -15,8 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DashboardExtras } from "@/components/dashboard/DashboardExtras";
 
-const SUPA_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPA_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 type PatientZone = { state: string | null; sector: string | null };
 
