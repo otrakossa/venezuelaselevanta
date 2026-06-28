@@ -341,8 +341,8 @@ function HomePage() {
           "flex flex-col lg:flex-row",
           // Mobile: fill the viewport minus header (3.5rem) and bottom nav spacer area
           showHero
-            ? "h-[60vh] min-h-[360px] lg:h-[calc(100vh-22rem)]"
-            : "h-[calc(100vh-3.5rem-5rem)] lg:h-[calc(100vh-7rem)]",
+            ? "h-[60vh] supports-[height:100dvh]:h-[60dvh] min-h-[360px] lg:h-[calc(100vh-22rem)] lg:supports-[height:100dvh]:h-[calc(100dvh-22rem)]"
+            : "h-[calc(100vh-3.5rem-5rem)] supports-[height:100dvh]:h-[calc(100dvh-3.5rem-5rem)] lg:h-[calc(100vh-7rem)] lg:supports-[height:100dvh]:h-[calc(100dvh-7rem)]",
         )}
       >
         <div className="flex-1 relative">
@@ -577,7 +577,7 @@ function HomePage() {
             "lg:w-80 lg:overflow-y-auto",
             // Mobile: fixed bottom sheet that slides up
             "lg:static lg:translate-y-0 lg:max-h-none",
-            "fixed inset-x-0 bottom-16 z-[900] rounded-t-2xl border-t shadow-2xl transition-transform duration-300 max-h-[55vh] overflow-y-auto lg:rounded-none lg:shadow-none",
+            "fixed inset-x-0 bottom-16 z-[900] rounded-t-2xl border-t shadow-2xl transition-transform duration-300 max-h-[55vh] supports-[height:100dvh]:max-h-[55dvh] overflow-y-auto lg:rounded-none lg:shadow-none",
             sheetOpen ? "translate-y-0" : "translate-y-full lg:translate-y-0",
           )}
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
