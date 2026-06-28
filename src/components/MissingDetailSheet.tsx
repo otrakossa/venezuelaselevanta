@@ -381,7 +381,8 @@ export function MissingDetailSheet({
           <input
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            placeholder="Tu nombre (opcional)"
+            placeholder="Tu nombre *"
+            required
             maxLength={60}
             className="w-full px-3 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
