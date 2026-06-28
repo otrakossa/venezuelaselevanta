@@ -70,6 +70,12 @@ export const organizations: Organization[] = [
     url: "https://www.instagram.com/heezstudio/",
     logo: "/logo-heezstudio.svg",
   },
+  {
+    name: "Utopix",
+    description: "Aliado en comunicación y diseño",
+    url: "https://utopix.cc/",
+    logo: "/logo-utopix.jpeg",
+  },
 ];
 
 export const tech: TechCredit[] = [
