@@ -452,7 +452,12 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
       </div>
 
       <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-2 border-t border-border/60">
-        <span className="text-[10px] text-muted-foreground">{timeAgo(n.created_at)}</span>
+        <span className="text-[10px] text-muted-foreground flex flex-col leading-tight">
+          <span>{timeAgo(n.created_at)}</span>
+          <time dateTime={n.created_at} className="text-[10px] opacity-75">
+            {new Date(n.created_at).toLocaleString("es-VE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </time>
+        </span>
         {n.status !== "fulfilled" && (
           <button
             onClick={onOffer}
