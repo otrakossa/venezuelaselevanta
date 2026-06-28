@@ -54,6 +54,7 @@ export interface ReportComment {
 export interface MissingPerson {
   id: string;
   name: string;
+  id_number?: string | null;
   age: number | null;
   description: string | null;
   last_seen_location: string | null;
