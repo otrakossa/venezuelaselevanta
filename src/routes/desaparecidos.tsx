@@ -564,7 +564,27 @@ function MissingForm({ onDone }: { onDone: () => void }) {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoBusy, setGeoBusy] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const field = "w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+  const onPickPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Solo se permiten imágenes"); return; }
+    if (file.size > 15 * 1024 * 1024) { toast.error("La imagen supera 15 MB"); return; }
+    setPhotoBusy(true);
+    try {
+      const url = await uploadOne(file);
+      setPhotoUrl(url);
+      toast.success("Foto cargada");
+    } catch (err) {
+      toast.error((err as Error).message || "No se pudo subir la foto");
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const doGeocode = async () => {
     if (!f.last_seen_location.trim()) return toast.error("Escribe la ubicación primero");
