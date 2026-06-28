@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { LocationSelect } from "@/components/LocationSelect";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
+import { MissingDetailSheet } from "@/components/MissingDetailSheet";
 import { Wizard } from "@/components/wizard/Wizard";
 
 
