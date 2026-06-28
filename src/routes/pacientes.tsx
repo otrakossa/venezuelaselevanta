@@ -53,6 +53,8 @@ interface Patient {
   state: string | null;
   sector: string | null;
   matched_missing_id: string | null;
+  source_url: string | null;
+  source_label: string | null;
 }
 
 const STATUS_STYLES: Record<PatientStatus, { pill: string; dot: string; label: string }> = {
@@ -91,7 +93,7 @@ function initials(name: string) {
 
 async function fetchPatients(): Promise<Patient[]> {
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/patients?order=created_at.desc&limit=2000`,
+    `${SUPA_URL}/rest/v1/patients?order=created_at.desc&limit=3500`,
     {
       headers: {
         apikey: SUPA_ANON,
@@ -101,6 +103,26 @@ async function fetchPatients(): Promise<Patient[]> {
   );
   if (!res.ok) throw new Error(await res.text());
   return res.json();
+}
+
+async function fetchPatientsTotal(): Promise<number> {
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/patients?select=id`,
+    {
+      headers: {
+        apikey: SUPA_ANON,
+        Authorization: `Bearer ${SUPA_ANON}`,
+        Prefer: "count=exact",
+        Range: "0-0",
+      },
+    },
+  );
+  const cr = res.headers.get("content-range");
+  if (cr) {
+    const m = cr.match(/\/(\d+)$/);
+    if (m) return parseInt(m[1], 10);
+  }
+  return 0;
 }
 
 const PAGE_SIZE = 24;
@@ -118,6 +140,7 @@ function AtendidosPage() {
   const { center } = Route.useSearch();
 
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [q, setQ] = useState("");
@@ -132,8 +155,9 @@ function AtendidosPage() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const data = await fetchPatients();
+      const [data, total] = await Promise.all([fetchPatients(), fetchPatientsTotal()]);
       setPatients(data);
+      setTotalCount(total || data.length);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error cargando datos";
       toast.error(msg);
@@ -152,10 +176,10 @@ function AtendidosPage() {
 
   // counts overall (no filter applied)
   const counts = useMemo(() => ({
-    all:        patients.length,
+    all:        totalCount || patients.length,
     active:     patients.filter((p) => p.status !== "discharged").length,
     discharged: patients.filter((p) => p.status === "discharged").length,
-  }), [patients]);
+  }), [patients, totalCount]);
 
   // hospitals: name -> active count, sorted desc
   const hospitals = useMemo(() => {
@@ -458,7 +482,7 @@ function Kpi({ value, label, tone }: { value: number; label: string; tone: "blue
   } as const;
   return (
     <div className={`rounded-xl bg-gradient-to-br ${tones[tone]} border border-border/60 px-3 py-2.5`}>
-      <div className="text-xl sm:text-2xl font-black leading-none">{value}</div>
+      <div className="text-xl sm:text-2xl font-black leading-none">{value.toLocaleString("es-VE")}</div>
       <div className="text-[11px] sm:text-xs text-muted-foreground mt-1 font-medium">{label}</div>
     </div>
   );
@@ -558,6 +582,20 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
           matchedId={p.matched_missing_id}
           onChanged={onChanged}
         />
+
+        {p.source_label === "localizapacientes.com" && (
+          <div className="pt-1">
+            <a
+              href={p.source_url || "https://localizapacientes.com"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-500/20 transition"
+              title="Fuente: localizapacientes.com"
+            >
+              <span>🔗</span> Fuente: localizapacientes.com
+            </a>
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-1 border-t border-border/60">
           <span className="text-[10px] text-muted-foreground">
