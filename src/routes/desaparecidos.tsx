@@ -55,6 +55,8 @@ function initials(name: string) {
 
 function MissingPage() {
   const { missing, counts, refetch, loadMore, hasMore, loadingMore } = useMissing();
+  const navigate = useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Filter>("missing");
   const [showForm, setShowForm] = useState(false);
@@ -67,6 +69,27 @@ function MissingPage() {
   const ptr = usePullToRefresh<HTMLDivElement>({
     onRefresh: async () => { await refetch(); toast.success("Lista actualizada"); },
   });
+
+  // Open detail sheet when ?person=<id> is present (shared links).
+  useEffect(() => {
+    const id = search.person;
+    if (!id) return;
+    if (selected?.id === id) return;
+    const found = missing.find((m) => m.id === id);
+    if (found) { setSelected(found); return; }
+    // Fetch from DB if not already in the loaded list.
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("missing_persons")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (!cancelled && !error && data) setSelected(data as unknown as MissingPerson);
+    })();
+    return () => { cancelled = true; };
+  }, [search.person, missing, selected?.id]);
+
 
   useEffect(() => {
     if (!q.trim() || q.trim().length < 2) { setSearchResults(null); return; }
