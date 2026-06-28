@@ -327,6 +327,20 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
     }
   };
 
+  const [commentsCount, setCommentsCount] = useState<number | null>(null);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { count } = await supabase
+        .from("missing_person_comments" as any)
+        .select("id", { count: "exact", head: true })
+        .eq("missing_person_id", person.id);
+      if (active) setCommentsCount(count ?? 0);
+    })();
+    return () => { active = false; };
+  }, [person.id]);
+
+
   return (
     <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
       {/* Status ribbon */}
