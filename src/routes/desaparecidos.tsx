@@ -212,7 +212,7 @@ function MissingPage() {
         ) : (
           <>
             {list.map((m) => (
-              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} onChanged={refetch} />
+              <MissingCard key={m.id} person={m} onMarkFound={() => markFound(m.id)} onChanged={refetch} onOpen={() => setSelected(m)} />
             ))}
             {list.length === 0 && (
               <div className="col-span-full">
