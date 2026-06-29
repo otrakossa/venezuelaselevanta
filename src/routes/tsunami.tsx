@@ -384,7 +384,7 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
 }
 
 function MissingFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
-  const url = data.url ? String(data.url) : undefined;
+  const photo = data.photo_url ? String(data.photo_url) : null;
   const photo = data.photo_url ? String(data.photo_url) : null;
   const status = data.status ? String(data.status) : null;
   const statusColor =
