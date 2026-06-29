@@ -618,14 +618,14 @@ function renderToolOutput(
     return (
       <div className="space-y-2">
         {results.map((r) => (
-          <NeedFicha key={String(r.id)} data={r} compact />
+          <NeedFicha key={String(r.id)} data={r} compact send={send} />
         ))}
       </div>
     );
   }
 
   if (toolName === "get_need" && o.id) {
-    return <NeedFicha data={o} />;
+    return <NeedFicha data={o} send={send} />;
   }
 
   if (toolName === "guide_offer_help" && Array.isArray(o.steps)) {
