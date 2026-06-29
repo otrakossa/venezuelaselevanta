@@ -439,7 +439,7 @@ function MissingFicha({ data, compact = false }: { data: Record<string, unknown>
 }
 
 function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
-  const offerUrl = data.offer_url ? String(data.offer_url) : data.url ? String(data.url) : undefined;
+  function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
   const urgencyColors: Record<string, string> = {
     critical: "bg-red-100 text-red-900",
     high: "bg-orange-100 text-orange-900",
