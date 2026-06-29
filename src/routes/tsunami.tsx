@@ -190,7 +190,10 @@ function TsunamiPage() {
                         <ToolContent>
                           <ToolInput input={p.input} />
                           {(p.output !== undefined || p.errorText) && (
-                            <ToolOutput output={renderToolOutput(toolName, p.output)} errorText={p.errorText} />
+                            <ToolOutput
+                              output={renderToolOutput(toolName, p.output, p.input, send)}
+                              errorText={p.errorText}
+                            />
                           )}
                         </ToolContent>
                       </Tool>
