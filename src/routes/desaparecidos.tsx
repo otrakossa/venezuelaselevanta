@@ -415,7 +415,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
               loading="lazy"
               referrerPolicy="no-referrer"
               onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover object-top"
             />
           )}
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/55 to-transparent" />
