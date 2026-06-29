@@ -895,7 +895,15 @@ function MissingFicha({
   );
 }
 
-function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
+function NeedFicha({
+  data,
+  compact = false,
+  send,
+}: {
+  data: Record<string, unknown>;
+  compact?: boolean;
+  send?: (text: string) => void;
+}) {
   const urgencyColors: Record<string, string> = {
     critical: "bg-red-100 text-red-900",
     high: "bg-orange-100 text-orange-900",
@@ -903,8 +911,36 @@ function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; c
     low: "bg-blue-100 text-blue-900",
   };
   const urg = String(data.urgency ?? "");
+  const id = data.id ? String(data.id) : null;
+  const title = String(data.title ?? "esta necesidad");
+  const actionable = Boolean(send && id);
+
+  const handleClick = () => {
+    if (!send || !id) return;
+    send(
+      `Cuéntame más sobre la necesidad "${title}" (id ${id}) y guíame para ofrecer ayuda.`,
+    );
+  };
+
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
+    <div
+      className={`rounded-lg border bg-card overflow-hidden transition ${
+        actionable ? "cursor-pointer hover:border-[color:var(--sunrise)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]" : ""
+      }`}
+      role={actionable ? "button" : undefined}
+      tabIndex={actionable ? 0 : undefined}
+      onClick={actionable ? handleClick : undefined}
+      onKeyDown={
+        actionable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleClick();
+              }
+            }
+          : undefined
+      }
+    >
       <div className="p-3 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           {Boolean(data.category) && (
@@ -929,6 +965,11 @@ function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; c
         </div>
         {!compact && Boolean(data.description) && (
           <p className="text-xs text-foreground/80 line-clamp-4">{String(data.description)}</p>
+        )}
+        {actionable && compact && (
+          <div className="text-[11px] text-[color:var(--sunrise)] font-medium">
+            Toca para ofrecer ayuda →
+          </div>
         )}
       </div>
     </div>
