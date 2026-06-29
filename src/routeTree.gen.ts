@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UnsubscribeRouteImport } from './routes/unsubscribe'
+import { Route as TsunamiRouteImport } from './routes/tsunami'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ReportarRouteImport } from './routes/reportar'
 import { Route as QueEsRouteImport } from './routes/que-es'
@@ -26,6 +27,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ApiTsunamiRouteImport } from './routes/api/tsunami'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPatientsDotjsonRouteImport } from './routes/api/patients[.]json'
@@ -65,6 +67,11 @@ import { Route as ApiPublicAdminHealthRouteImport } from './routes/api/public/ad
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
   id: '/unsubscribe',
   path: '/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TsunamiRoute = TsunamiRouteImport.update({
+  id: '/tsunami',
+  path: '/tsunami',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -146,6 +153,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTsunamiRoute = ApiTsunamiRouteImport.update({
+  id: '/tsunami',
+  path: '/tsunami',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiReportsDotgeojsonRoute = ApiReportsDotgeojsonRouteImport.update({
   id: '/reports.geojson',
@@ -345,6 +357,7 @@ export interface FileRoutesByFullPath {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tsunami': typeof TsunamiRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
@@ -367,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/api/tsunami': typeof ApiTsunamiRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -399,6 +413,7 @@ export interface FileRoutesByTo {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tsunami': typeof TsunamiRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
@@ -421,6 +436,7 @@ export interface FileRoutesByTo {
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/api/tsunami': typeof ApiTsunamiRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin': typeof AdminIndexRoute
@@ -454,6 +470,7 @@ export interface FileRoutesById {
   '/que-es': typeof QueEsRoute
   '/reportar': typeof ReportarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tsunami': typeof TsunamiRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
@@ -476,6 +493,7 @@ export interface FileRoutesById {
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/api/tsunami': typeof ApiTsunamiRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -510,6 +528,7 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/tsunami'
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
@@ -532,6 +551,7 @@ export interface FileRouteTypes {
     | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/api/tsunami'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
@@ -564,6 +584,7 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/tsunami'
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
@@ -586,6 +607,7 @@ export interface FileRouteTypes {
     | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/api/tsunami'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin'
@@ -618,6 +640,7 @@ export interface FileRouteTypes {
     | '/que-es'
     | '/reportar'
     | '/sitemap.xml'
+    | '/tsunami'
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
@@ -640,6 +663,7 @@ export interface FileRouteTypes {
     | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/api/tsunami'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
@@ -673,6 +697,7 @@ export interface RootRouteChildren {
   QueEsRoute: typeof QueEsRoute
   ReportarRoute: typeof ReportarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TsunamiRoute: typeof TsunamiRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   AdminInteropRoute: typeof AdminInteropRoute
   AdminObservabilidadRoute: typeof AdminObservabilidadRoute
@@ -692,6 +717,13 @@ declare module '@tanstack/react-router' {
       path: '/unsubscribe'
       fullPath: '/unsubscribe'
       preLoaderRoute: typeof UnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tsunami': {
+      id: '/tsunami'
+      path: '/tsunami'
+      fullPath: '/tsunami'
+      preLoaderRoute: typeof TsunamiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -805,6 +837,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/tsunami': {
+      id: '/api/tsunami'
+      path: '/tsunami'
+      fullPath: '/api/tsunami'
+      preLoaderRoute: typeof ApiTsunamiRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/reports.geojson': {
       id: '/api/reports.geojson'
@@ -1074,6 +1113,7 @@ interface ApiRouteChildren {
   ApiPatientsDotjsonRoute: typeof ApiPatientsDotjsonRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
+  ApiTsunamiRoute: typeof ApiTsunamiRoute
   ApiPublicContactRoute: typeof ApiPublicContactRoute
   ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -1106,6 +1146,7 @@ const ApiRouteChildren: ApiRouteChildren = {
   ApiPatientsDotjsonRoute: ApiPatientsDotjsonRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
+  ApiTsunamiRoute: ApiTsunamiRoute,
   ApiPublicContactRoute: ApiPublicContactRoute,
   ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
@@ -1134,6 +1175,7 @@ const rootRouteChildren: RootRouteChildren = {
   QueEsRoute: QueEsRoute,
   ReportarRoute: ReportarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TsunamiRoute: TsunamiRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   AdminInteropRoute: AdminInteropRoute,
   AdminObservabilidadRoute: AdminObservabilidadRoute,

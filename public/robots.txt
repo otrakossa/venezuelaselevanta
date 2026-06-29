@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
+Disallow: /tsunami
 
 Sitemap: https://venezuelaselevanta.info/sitemap.xml
