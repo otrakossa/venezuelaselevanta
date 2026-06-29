@@ -1069,7 +1069,8 @@ function MissingFicha({
       </div>
 
       {expanded && (
-        <div className="border-t bg-muted/20 p-3 space-y-2 text-xs">
+        <div id={`ficha-body-${stableKey}`} className="border-t bg-muted/20 p-3 space-y-2 text-xs">
+
           {loadingFull && <div className="text-muted-foreground">Cargando ficha…</div>}
           {Boolean(full.last_seen_location) && (
             <div>
