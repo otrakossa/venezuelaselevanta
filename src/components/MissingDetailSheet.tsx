@@ -76,6 +76,7 @@ export function MissingDetailSheet({
   const [markBusy, setMarkBusy] = useState(false);
   const [localPhoto, setLocalPhoto] = useState<string | null>(null);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   // ESC to close
