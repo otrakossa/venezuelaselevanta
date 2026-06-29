@@ -475,16 +475,6 @@ function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; c
           <p className="text-xs text-foreground/80 line-clamp-4">{String(data.description)}</p>
         )}
       </div>
-      {offerUrl && (
-        <a
-          href={offerUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block px-3 py-2 text-xs font-semibold text-white bg-[color:var(--sunrise)] hover:opacity-90 text-center"
-        >
-          Ofrecer ayuda →
-        </a>
-      )}
     </div>
   );
 }
