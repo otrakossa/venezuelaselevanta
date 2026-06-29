@@ -245,6 +245,99 @@ export type Database = {
         }
         Relationships: []
       }
+      missing_dedupe_queue: {
+        Row: {
+          canonical_id: string
+          created_at: string
+          duplicate_id: string
+          id: string
+          reason: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score: number
+          status: string
+        }
+        Insert: {
+          canonical_id: string
+          created_at?: string
+          duplicate_id: string
+          id?: string
+          reason: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score: number
+          status?: string
+        }
+        Update: {
+          canonical_id?: string
+          created_at?: string
+          duplicate_id?: string
+          id?: string
+          reason?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missing_dedupe_queue_canonical_id_fkey"
+            columns: ["canonical_id"]
+            isOneToOne: false
+            referencedRelation: "missing_persons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "missing_dedupe_queue_duplicate_id_fkey"
+            columns: ["duplicate_id"]
+            isOneToOne: false
+            referencedRelation: "missing_persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      missing_merge_log: {
+        Row: {
+          auto: boolean
+          canonical_id: string
+          deleted_id: string
+          deleted_snapshot: Json
+          id: string
+          merged_at: string
+          merged_by: string | null
+          moved_comments: number
+          moved_found_votes: number
+          reason: string | null
+          score: number | null
+        }
+        Insert: {
+          auto?: boolean
+          canonical_id: string
+          deleted_id: string
+          deleted_snapshot: Json
+          id?: string
+          merged_at?: string
+          merged_by?: string | null
+          moved_comments?: number
+          moved_found_votes?: number
+          reason?: string | null
+          score?: number | null
+        }
+        Update: {
+          auto?: boolean
+          canonical_id?: string
+          deleted_id?: string
+          deleted_snapshot?: Json
+          id?: string
+          merged_at?: string
+          merged_by?: string | null
+          moved_comments?: number
+          moved_found_votes?: number
+          reason?: string | null
+          score?: number | null
+        }
+        Relationships: []
+      }
       missing_person_found_votes: {
         Row: {
           created_at: string
@@ -875,6 +968,14 @@ export type Database = {
         Args: { p_device_id: string; p_report_id: string; p_vote: string }
         Returns: undefined
       }
+      dedupe_missing_persons_run: {
+        Args: never
+        Returns: {
+          auto_merged: number
+          detected: number
+          queued: number
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -900,6 +1001,14 @@ export type Database = {
           found_marks: number
           status: string
         }[]
+      }
+      merge_missing_persons: {
+        Args: {
+          p_auto?: boolean
+          p_canonical_id: string
+          p_duplicate_id: string
+        }
+        Returns: undefined
       }
       move_to_dlq: {
         Args: {
