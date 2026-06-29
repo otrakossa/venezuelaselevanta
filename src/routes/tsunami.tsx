@@ -365,7 +365,155 @@ function renderToolOutput(
   return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
 }
 
-function MissingFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
+const DECISIONS_KEY = "tsunami:match-decisions:v1";
+type Decision = "confirmed" | "discarded";
+function loadDecisions(): Record<string, Decision> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(DECISIONS_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, Decision>) : {};
+  } catch {
+    return {};
+  }
+}
+function saveDecisions(d: Record<string, Decision>) {
+  try {
+    window.localStorage.setItem(DECISIONS_KEY, JSON.stringify(d));
+  } catch {
+    /* noop */
+  }
+}
+
+function MatchList({
+  matches,
+  missingId,
+  missingName,
+  send,
+}: {
+  matches: Array<Record<string, unknown>>;
+  missingId: string;
+  missingName: string;
+  send: (text: string) => void;
+}) {
+  const [decisions, setDecisions] = useState<Record<string, Decision>>(() => loadDecisions());
+
+  const decide = (m: Record<string, unknown>, decision: Decision) => {
+    const key = `${missingId}:${String(m.patient_id)}`;
+    const next = { ...decisions, [key]: decision };
+    setDecisions(next);
+    saveDecisions(next);
+    const patientName = String(m.patient_name ?? "el paciente");
+    const center = m.center_name ? ` en ${String(m.center_name)}` : "";
+    if (decision === "confirmed") {
+      send(
+        `✅ Confirmo que "${patientName}"${center} es la misma persona que ${missingName}. ¿Qué pasos sigo ahora para contactar al centro y notificar a la familia?`,
+      );
+    } else {
+      send(
+        `❌ Descarto que "${patientName}"${center} sea ${missingName}. No es la misma persona.`,
+      );
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-muted-foreground">
+        {matches.length} posible{matches.length === 1 ? "" : "s"} coincidencia
+        {matches.length === 1 ? "" : "s"}. Revisa cada una y dime si es{" "}
+        <strong>la misma persona</strong> o no:
+      </p>
+      {matches.map((m) => {
+        const key = `${missingId}:${String(m.patient_id)}`;
+        const decision = decisions[key];
+        const confidence = String(m.confidence ?? "baja");
+        const conColor =
+          confidence === "alta"
+            ? "bg-green-100 text-green-900 border-green-300"
+            : confidence === "media"
+              ? "bg-amber-100 text-amber-900 border-amber-300"
+              : "bg-slate-100 text-slate-800 border-slate-300";
+        const reasons = Array.isArray(m.reasons) ? (m.reasons as string[]) : [];
+        const scorePct =
+          typeof m.score === "number" ? Math.round(Number(m.score) * 100) : null;
+        return (
+          <div
+            key={String(m.patient_id)}
+            className={`p-3 rounded-lg border bg-card space-y-2 ${
+              decision === "discarded" ? "opacity-50" : ""
+            }`}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-sm truncate">
+                  🏥 {String(m.patient_name ?? "Sin nombre")}
+                </div>
+                <div className="text-xs text-muted-foreground space-y-0.5 mt-0.5">
+                  {Boolean(m.center_name) && <div>📍 {String(m.center_name)}</div>}
+                  {m.patient_age != null && <div>📅 {String(m.patient_age)} años</div>}
+                  {Boolean(m.patient_id_number) && (
+                    <div>🪪 Cédula: {String(m.patient_id_number)}</div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1 shrink-0">
+                <span
+                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${conColor}`}
+                >
+                  Confianza {confidence}
+                </span>
+                {scorePct != null && (
+                  <span className="text-[10px] text-muted-foreground">{scorePct}% similitud</span>
+                )}
+              </div>
+            </div>
+
+            {reasons.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {reasons.map((r, i) => (
+                  <span
+                    key={i}
+                    className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-foreground/80"
+                  >
+                    {r}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {decision ? (
+              <div
+                className={`text-xs font-semibold ${
+                  decision === "confirmed" ? "text-green-700" : "text-muted-foreground"
+                }`}
+              >
+                {decision === "confirmed" ? "✅ Confirmada por ti" : "❌ Descartada por ti"}
+              </div>
+            ) : (
+              <div className="flex gap-2 pt-1">
+                <Button
+                  size="sm"
+                  className="flex-1 h-8"
+                  onClick={() => decide(m, "confirmed")}
+                >
+                  ✅ Es la misma persona
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 h-8"
+                  onClick={() => decide(m, "discarded")}
+                >
+                  ❌ No es
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
   const photo = data.photo_url ? String(data.photo_url) : null;
 
   const status = data.status ? String(data.status) : null;
