@@ -917,6 +917,15 @@ function MissingFicha({
   const [loadingMatches, setLoadingMatches] = useState(false);
 
   const id = data.id ? String(data.id) : null;
+  // Stable identifier for refs/keys across re-renders (survives data merges).
+  const stableKey = id ?? useMemo(() => `mf-${Math.random().toString(36).slice(2)}`, []);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const savedOffsetRef = useRef<number | null>(null);
+  const scrollerRef = useRef<HTMLElement | null>(null);
+  const pendingFocusRef = useRef(false);
+
   const photoUrl = full.photo_url && !imgFailed ? String(full.photo_url) : null;
   const status = full.status ? String(full.status) : null;
   const statusColor =
@@ -926,12 +935,58 @@ function MissingFicha({
         ? "bg-gray-200 text-gray-900"
         : "bg-amber-100 text-amber-900";
 
+  function getScrollParent(node: HTMLElement | null): HTMLElement | null {
+    let el: HTMLElement | null = node?.parentElement ?? null;
+    while (el) {
+      const s = getComputedStyle(el);
+      if (/(auto|scroll|overlay)/.test(s.overflowY) && el.scrollHeight > el.clientHeight) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return (document.scrollingElement as HTMLElement | null) ?? document.documentElement;
+  }
+
+  // After expand/collapse re-render, restore the card's viewport offset so the
+  // header stays visually anchored, and re-focus the trigger without scrolling.
+  useLayoutEffect(() => {
+    if (savedOffsetRef.current == null || !cardRef.current) return;
+    const scroller = scrollerRef.current ?? getScrollParent(cardRef.current);
+    if (scroller) {
+      const cardTop = cardRef.current.getBoundingClientRect().top;
+      const scrollerTop =
+        scroller === document.scrollingElement || scroller === document.documentElement
+          ? 0
+          : scroller.getBoundingClientRect().top;
+      const currentOffset = cardTop - scrollerTop;
+      const delta = currentOffset - savedOffsetRef.current;
+      if (delta !== 0) scroller.scrollTop += delta;
+    }
+    savedOffsetRef.current = null;
+    scrollerRef.current = null;
+    if (pendingFocusRef.current) {
+      triggerRef.current?.focus({ preventScroll: true });
+      pendingFocusRef.current = false;
+    }
+  }, [expanded, loadingFull, loadingMatches, matches, full]);
+
   const toggle = async () => {
     if (!id) return;
+    // Snapshot the card's offset within its scroll container BEFORE state changes.
+    if (cardRef.current) {
+      const scroller = getScrollParent(cardRef.current);
+      scrollerRef.current = scroller;
+      const cardTop = cardRef.current.getBoundingClientRect().top;
+      const scrollerTop =
+        scroller && scroller !== document.scrollingElement && scroller !== document.documentElement
+          ? scroller.getBoundingClientRect().top
+          : 0;
+      savedOffsetRef.current = cardTop - scrollerTop;
+    }
+    pendingFocusRef.current = true;
     const next = !expanded;
     setExpanded(next);
     if (!next) return;
-    // Lazy load full record if we're missing description/contact fields
     if (!full.description && !full.contact_name && !loadingFull) {
       setLoadingFull(true);
       const row = await loadFullMissing(id);
@@ -949,8 +1004,9 @@ function MissingFicha({
   const actionable = compact && Boolean(id);
 
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
+    <div ref={cardRef} data-ficha-id={stableKey} className="rounded-lg border bg-card overflow-hidden">
       <div
+        ref={triggerRef}
         className={`flex gap-3 p-3 transition ${
           actionable
             ? "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]"
@@ -959,6 +1015,7 @@ function MissingFicha({
         role={actionable ? "button" : undefined}
         tabIndex={actionable ? 0 : undefined}
         aria-expanded={actionable ? expanded : undefined}
+        aria-controls={actionable ? `ficha-body-${stableKey}` : undefined}
         onClick={actionable ? toggle : undefined}
         onKeyDown={
           actionable
@@ -971,6 +1028,7 @@ function MissingFicha({
             : undefined
         }
       >
+
         {photoUrl ? (
           <img
             src={photoUrl}
