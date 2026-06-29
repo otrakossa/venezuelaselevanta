@@ -339,19 +339,11 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
       return (
         <div className="p-3 rounded-lg border bg-green-50 border-green-200 space-y-1">
           <div className="text-sm font-semibold text-green-900">✅ Registro creado</div>
-          {Boolean(o.url) && (
-            <a
-              href={String(o.url)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-[color:var(--sunrise)] font-semibold underline"
-            >
-              Abrir ficha completa →
-            </a>
-          )}
+          <div className="text-xs text-green-900/80">Ya quedó guardado en la plataforma. Sigamos por aquí si necesitas algo más. 🐾</div>
         </div>
       );
     }
+
   }
 
   if (toolName === "list_needs" && Array.isArray(o.results)) {
