@@ -645,6 +645,84 @@ export function MissingDetailSheet({
         toast.success("Marcado como no coincidente");
       }}
     />
+
+    {showOutcomeDialog && person && (
+      <OutcomePickerDialog
+        busy={markBusy}
+        onSkip={() => markFound(null)}
+        onSelect={(o, note) => markFound(o, note)}
+        onClose={() => setShowOutcomeDialog(false)}
+      />
+    )}
     </>
+  );
+}
+
+function OutcomePickerDialog({
+  busy, onSkip, onSelect, onClose,
+}: {
+  busy: boolean;
+  onSkip: () => void;
+  onSelect: (o: MissingOutcome, note: string | null) => void;
+  onClose: () => void;
+}) {
+  const [note, setNote] = useState("");
+  return (
+    <div className="fixed inset-0 z-[1300] grid place-items-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+        <div>
+          <h3 className="text-lg font-extrabold leading-tight">¿Sabes dónde está?</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Marcar como encontrada/o es público. Si conoces el detalle, ayúdanos a contar mejor la historia.
+          </p>
+        </div>
+        <div className="grid gap-2">
+          {PUBLIC_OUTCOMES.map((o) => (
+            <button
+              key={o}
+              type="button"
+              disabled={busy}
+              onClick={() => onSelect(o, note.trim() ? note.trim() : null)}
+              className={`w-full text-left rounded-xl border border-border hover:border-emerald-500 hover:bg-emerald-500/5 px-3 py-2.5 transition disabled:opacity-60`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{OUTCOME_EMOJI[o]}</span>
+                <span className="font-bold">{OUTCOME_LABELS[o]}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+        <div>
+          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Detalle (opcional)</label>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ej.: Hospital Universitario de Caracas"
+            maxLength={140}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-input bg-background text-sm"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground px-3 py-2"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={busy}
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-lg disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Solo marcar como encontrada
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
