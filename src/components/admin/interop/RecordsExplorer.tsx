@@ -212,6 +212,11 @@ export function RecordsExplorer() {
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       </button>
                     )}
+                    {kind === "missing" && r.status !== "deceased" && (
+                      <button onClick={() => markDeceased(r.id)} className="p-1.5 rounded hover:bg-neutral-200 text-neutral-700" title="Marcar como fallecida/o">
+                        🕊️
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
