@@ -616,11 +616,57 @@ function renderToolOutput(
     const results = o.results as Array<Record<string, unknown>>;
     if (results.length === 0)
       return <p className="text-sm text-muted-foreground">No hay necesidades abiertas.</p>;
+
+    const byUrgency = results.reduce<Record<string, number>>((acc, r) => {
+      const u = String(r.urgency ?? "sin urgencia");
+      acc[u] = (acc[u] ?? 0) + 1;
+      return acc;
+    }, {});
+    const byCategory = results.reduce<Record<string, number>>((acc, r) => {
+      const c = String(r.category ?? "otros");
+      acc[c] = (acc[c] ?? 0) + 1;
+      return acc;
+    }, {});
+    const urgencyLabel: Record<string, string> = {
+      critical: "🔴 críticas",
+      high: "🟠 altas",
+      medium: "🟡 medias",
+      low: "🔵 bajas",
+    };
+    const topCats = Object.entries(byCategory)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+
     return (
-      <div className="space-y-2">
-        {results.map((r) => (
-          <NeedFicha key={String(r.id)} data={r} compact send={send} />
-        ))}
+      <div className="space-y-3">
+        <div className="rounded-lg border bg-gradient-to-br from-[color:var(--cream)]/40 to-transparent p-3 space-y-2">
+          <div className="text-sm font-semibold">
+            🐾 Encontré <span className="text-[color:var(--sunrise)]">{results.length}</span>{" "}
+            {results.length === 1 ? "necesidad activa" : "necesidades activas"}
+          </div>
+          <div className="text-xs text-foreground/80 space-y-1">
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {Object.entries(byUrgency).map(([u, n]) => (
+                <span key={u}>
+                  <strong>{n}</strong> {urgencyLabel[u] ?? u}
+                </span>
+              ))}
+            </div>
+            {topCats.length > 0 && (
+              <div className="text-muted-foreground">
+                Categorías: {topCats.map(([c, n]) => `${c} (${n})`).join(" · ")}
+              </div>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground italic">
+            Te muestro las tarjetas abajo. Toca cualquiera para ver detalles y ofrecer ayuda. 👇
+          </div>
+        </div>
+        <div className="space-y-2">
+          {results.map((r) => (
+            <NeedFicha key={String(r.id)} data={r} compact send={send} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -1143,30 +1189,46 @@ function NeedFicha({
   };
   const urg = String(data.urgency ?? "");
   const id = data.id ? String(data.id) : null;
-  const title = String(data.title ?? "esta necesidad");
-  const actionable = Boolean(send && id);
+  const title = String(data.title ?? "Necesidad");
+  const expandable = compact && Boolean(send && id);
+  const [open, setOpen] = useState(!compact);
 
-  const handleClick = () => {
+  const handleToggle = () => {
+    if (!expandable) return;
+    setOpen((v) => !v);
+  };
+
+  const handleOfferHelp = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!send || !id) return;
     send(
-      `Cuéntame más sobre la necesidad "${title}" (id ${id}) y guíame para ofrecer ayuda.`,
+      `Quiero ofrecer ayuda para la necesidad "${title}" (id ${id}). Guíame paso a paso.`,
     );
+  };
+
+  const handleMoreInfo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!send || !id) return;
+    send(`Dame más información sobre la necesidad "${title}" (id ${id}).`);
   };
 
   return (
     <div
       className={`rounded-lg border bg-card overflow-hidden transition ${
-        actionable ? "cursor-pointer hover:border-[color:var(--sunrise)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]" : ""
+        expandable
+          ? "cursor-pointer hover:border-[color:var(--sunrise)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]"
+          : ""
       }`}
-      role={actionable ? "button" : undefined}
-      tabIndex={actionable ? 0 : undefined}
-      onClick={actionable ? handleClick : undefined}
+      role={expandable ? "button" : undefined}
+      tabIndex={expandable ? 0 : undefined}
+      aria-expanded={expandable ? open : undefined}
+      onClick={expandable ? handleToggle : undefined}
       onKeyDown={
-        actionable
+        expandable
           ? (e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                handleClick();
+                handleToggle();
               }
             }
           : undefined
@@ -1184,24 +1246,54 @@ function NeedFicha({
               {urg}
             </span>
           )}
+          {expandable && (
+            <span className="ml-auto text-muted-foreground">
+              {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+            </span>
+          )}
         </div>
-        <div className="font-semibold text-sm">{String(data.title ?? "Necesidad")}</div>
+        <div className="font-semibold text-sm">{title}</div>
         <div className="text-xs text-muted-foreground space-y-0.5">
           {Boolean(data.center_name) && <div>🏥 {String(data.center_name)}</div>}
           {Boolean(data.center_address) && <div>📍 {String(data.center_address)}</div>}
           {Boolean(data.quantity) && <div>🔢 Cantidad: {String(data.quantity)}</div>}
-          {!compact && Boolean(data.contact_name) && (
-            <div>👤 Contacto: {String(data.contact_name)}{data.contact_phone ? ` · ${String(data.contact_phone)}` : ""}</div>
-          )}
         </div>
-        {!compact && Boolean(data.description) && (
-          <p className="text-xs text-foreground/80 line-clamp-4">{String(data.description)}</p>
-        )}
-        {actionable && compact && (
-          <div className="text-[11px] text-[color:var(--sunrise)] font-medium">
-            Toca para ofrecer ayuda →
+      </div>
+
+      <div
+        className={`grid transition-all duration-300 ease-out ${
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="px-3 pb-3 pt-1 space-y-2 border-t bg-muted/20">
+            {Boolean(data.description) && (
+              <p className="text-xs text-foreground/90 whitespace-pre-wrap">
+                {String(data.description)}
+              </p>
+            )}
+            {Boolean(data.contact_name) && (
+              <div className="text-xs text-muted-foreground">
+                👤 {String(data.contact_name)}
+                {data.contact_phone ? ` · ${String(data.contact_phone)}` : ""}
+              </div>
+            )}
+            {send && id && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button
+                  size="sm"
+                  className="bg-[color:var(--sunrise)] hover:bg-[color:var(--sunrise)]/90 text-white"
+                  onClick={handleOfferHelp}
+                >
+                  🧡 Ofrecer ayuda
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleMoreInfo}>
+                  Más información
+                </Button>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
