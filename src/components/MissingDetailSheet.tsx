@@ -452,7 +452,7 @@ export function MissingDetailSheet({
                 )}
 
                 <button
-                  onClick={markFound}
+                  onClick={() => setShowOutcomeDialog(true)}
                   disabled={markBusy}
                   className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/40"
                   title="Marcar como encontrada/o"
