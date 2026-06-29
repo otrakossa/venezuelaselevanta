@@ -255,6 +255,27 @@ export function RecordsExplorer() {
                         🕊️
                       </button>
                     )}
+                    {kind === "patient" && (
+                      <>
+                        <button onClick={() => setPatientStatus(r.id)} className="p-1.5 rounded hover:bg-blue-100 text-blue-600" title="Cambiar estado">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(r.id); toast.success("ID copiado"); }}
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground font-mono text-[10px]"
+                          title={`Copiar ID (${r.id.slice(0,8)}…)`}
+                        >
+                          ID
+                        </button>
+                        <button onClick={() => mergePatient(r.id, r.name)} className="p-1.5 rounded hover:bg-amber-100 text-amber-700" title="Fusionar como duplicado de…">
+                          <GitMerge className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => deletePatient(r.id, r.name)} className="p-1.5 rounded hover:bg-red-100 text-red-600" title="Eliminar paciente">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+
                   </div>
                 </td>
               </tr>
