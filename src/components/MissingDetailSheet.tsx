@@ -375,8 +375,15 @@ export function MissingDetailSheet({
             </div>
 
 
+            {outcome && (
+              <div className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full ${OUTCOME_PILL[outcome]}`}>
+                <span>{OUTCOME_EMOJI[outcome]}</span>
+                <span>{OUTCOME_LABELS[outcome]}</span>
+                {outcomeNote && <span className="font-normal opacity-90 truncate max-w-[16rem]">· {outcomeNote}</span>}
+              </div>
+            )}
 
-            {person.matched_patient_id && (
+            {person.matched_patient_id && !outcome && (
               <div className="flex items-start gap-2 text-sm rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-2.5">
                 <span className="shrink-0 text-base">✅</span>
                 <div className="min-w-0">
