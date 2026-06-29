@@ -339,7 +339,7 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
       return (
         <div className="p-3 rounded-lg border bg-green-50 border-green-200 space-y-1">
           <div className="text-sm font-semibold text-green-900">✅ Registro creado</div>
-          {o.url && (
+          {Boolean(o.url) && (
             <a
               href={String(o.url)}
               target="_blank"
@@ -380,7 +380,7 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
             <li key={i}>{s}</li>
           ))}
         </ol>
-        {o.offer_url && (
+        {Boolean(o.offer_url) && (
           <a
             href={String(o.offer_url)}
             target="_blank"
@@ -435,15 +435,15 @@ function MissingFicha({ data, compact = false }: { data: Record<string, unknown>
           </div>
           <div className="text-xs text-muted-foreground space-y-0.5">
             {data.age != null && <div>📅 {String(data.age)} años</div>}
-            {data.id_number && <div>🪪 Cédula: {String(data.id_number)}</div>}
-            {(data.state || data.municipality) && (
+            {Boolean(data.id_number) && <div>🪪 Cédula: {String(data.id_number)}</div>}
+            {Boolean(data.state || data.municipality) && (
               <div>📍 {[data.municipality, data.state].filter(Boolean).join(", ")}</div>
             )}
-            {data.last_seen_location && !compact && (
+            {Boolean(data.last_seen_location) && !compact && (
               <div className="italic">Visto en: {String(data.last_seen_location)}</div>
             )}
           </div>
-          {!compact && data.description && (
+          {!compact && Boolean(data.description) && (
             <p className="text-xs text-foreground/80 mt-1 line-clamp-4">{String(data.description)}</p>
           )}
         </div>
@@ -488,14 +488,14 @@ function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; c
         </div>
         <div className="font-semibold text-sm">{String(data.title ?? "Necesidad")}</div>
         <div className="text-xs text-muted-foreground space-y-0.5">
-          {data.center_name && <div>🏥 {String(data.center_name)}</div>}
-          {data.center_address && <div>📍 {String(data.center_address)}</div>}
-          {data.quantity && <div>🔢 Cantidad: {String(data.quantity)}</div>}
-          {!compact && data.contact_name && (
+          {Boolean(data.center_name) && <div>🏥 {String(data.center_name)}</div>}
+          {Boolean(data.center_address) && <div>📍 {String(data.center_address)}</div>}
+          {Boolean(data.quantity) && <div>🔢 Cantidad: {String(data.quantity)}</div>}
+          {!compact && Boolean(data.contact_name) && (
             <div>👤 Contacto: {String(data.contact_name)}{data.contact_phone ? ` · ${String(data.contact_phone)}` : ""}</div>
           )}
         </div>
-        {!compact && data.description && (
+        {!compact && Boolean(data.description) && (
           <p className="text-xs text-foreground/80 line-clamp-4">{String(data.description)}</p>
         )}
       </div>
