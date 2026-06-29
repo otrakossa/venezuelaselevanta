@@ -98,22 +98,84 @@ export const tsunamiTools = {
 
   suggest_patient_matches: tool({
     description:
-      "Busca coincidencias entre una persona desaparecida y pacientes atendidos en centros médicos (por cédula, nombre, etc.). Útil cuando alguien busca a un familiar.",
+      "Busca coincidencias entre una persona desaparecida y pacientes atendidos en centros médicos. Devuelve nivel de confianza (alta/media/baja) y motivos concretos por los que coincide.",
     inputSchema: z.object({ missing_person_id: z.string().uuid() }),
     execute: async ({ missing_person_id }) => {
       try {
         const data = (await supaRpc("suggest_patient_matches", {
           p_missing_id: missing_person_id,
         })) as Array<Record<string, unknown>>;
+
+        const mpRows = (await supaGet(
+          `missing_persons?select=id,name,age,id_number,state,municipality,last_seen_location&id=eq.${missing_person_id}&limit=1`,
+        )) as Array<Record<string, unknown>>;
+        const mp = mpRows[0] ?? {};
+
+        const ids = data.map((m) => String(m.patient_id ?? m.id)).filter(Boolean);
+        const detailMap: Record<string, Record<string, unknown>> = {};
+        if (ids.length) {
+          const quoted = ids.map((i) => `"${i}"`).join(",");
+          const pRows = (await supaGet(
+            `patients?select=id,name,age,id_number,sector,center_name,status&id=in.(${quoted})`,
+          )) as Array<Record<string, unknown>>;
+          for (const p of pRows) detailMap[String(p.id)] = p;
+        }
+
+        const mpTokens = normalizeNameTokens(String(mp.name ?? ""));
+        const matches = data.slice(0, 10).map((m) => {
+          const pid = String(m.patient_id ?? m.id);
+          const p = detailMap[pid] ?? {};
+          const score = Number(m.score ?? 0);
+          const reasons: string[] = [];
+
+          if (
+            mp.id_number &&
+            p.id_number &&
+            String(mp.id_number).trim() === String(p.id_number).trim()
+          ) {
+            reasons.push("Cédula idéntica");
+          }
+          const pTokens = normalizeNameTokens(String(p.name ?? m.patient_name ?? ""));
+          const shared = mpTokens.filter((t) => pTokens.includes(t));
+          if (shared.length >= 2) reasons.push(`Coinciden ${shared.length} nombres/apellidos`);
+          else if (shared.length === 1) reasons.push("Coincide 1 nombre/apellido");
+
+          if (mp.age != null && p.age != null) {
+            const diff = Math.abs(Number(mp.age) - Number(p.age));
+            if (diff === 0) reasons.push(`Misma edad (${p.age})`);
+            else if (diff <= 2) reasons.push(`Edad similar (±${diff} años)`);
+          }
+
+          if (mp.last_seen_location && p.sector) {
+            const a = String(mp.last_seen_location).toLowerCase();
+            const b = String(p.sector).toLowerCase();
+            if (a && b && (a.includes(b) || b.includes(a))) {
+              reasons.push(`Misma zona (${p.sector})`);
+            }
+          }
+
+          const hasIdMatch = reasons.some((r) => r.startsWith("Cédula"));
+          const confidence =
+            hasIdMatch ? "alta" : score >= 0.75 ? "alta" : score >= 0.55 ? "media" : "baja";
+
+          return {
+            patient_id: pid,
+            patient_name: p.name ?? m.patient_name ?? null,
+            patient_age: p.age ?? m.patient_age ?? null,
+            patient_id_number: p.id_number ?? null,
+            center_name: p.center_name ?? m.center_name ?? null,
+            status: p.status ?? m.status ?? null,
+            score,
+            confidence,
+            reasons,
+          };
+        });
+
         return {
-          count: data.length,
-          matches: data.slice(0, 10).map((m) => ({
-            patient_id: m.patient_id ?? m.id,
-            patient_name: m.patient_name ?? m.name,
-            center_name: m.center_name,
-            score: m.score ?? m.match_score,
-            reason: m.reason ?? m.match_reason,
-          })),
+          missing_person_id,
+          missing_person_name: mp.name ?? null,
+          count: matches.length,
+          matches,
         };
       } catch (e) {
         return { error: String(e instanceof Error ? e.message : e), count: 0, matches: [] };
