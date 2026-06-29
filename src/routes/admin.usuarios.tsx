@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminOnlyNotice } from "@/components/admin/AdminOnlyNotice";
 import { ShieldCheck, UserPlus, Trash2, Shield, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
