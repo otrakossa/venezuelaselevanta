@@ -47,6 +47,7 @@ import { Route as ApiHealthCentersDotgeojsonRouteImport } from './routes/api/hea
 import { Route as ApiHealthCentersDotcsvRouteImport } from './routes/api/health-centers[.]csv'
 import { Route as ApiDocsRouteImport } from './routes/api.docs'
 import { Route as ApiCategoriesDotjsonRouteImport } from './routes/api/categories[.]json'
+import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
 import { Route as AdminObservabilidadRouteImport } from './routes/admin.observabilidad'
 import { Route as AdminInteropRouteImport } from './routes/admin.interop'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
@@ -258,6 +259,11 @@ const ApiCategoriesDotjsonRoute = ApiCategoriesDotjsonRouteImport.update({
   path: '/categories.json',
   getParentRoute: () => ApiRoute,
 } as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/admin/usuarios',
+  path: '/admin/usuarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminObservabilidadRoute = AdminObservabilidadRouteImport.update({
   id: '/admin/observabilidad',
   path: '/admin/observabilidad',
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/api/categories.json': typeof ApiCategoriesDotjsonRoute
   '/api/docs': typeof ApiDocsRoute
   '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
@@ -424,6 +431,7 @@ export interface FileRoutesByTo {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/api/categories.json': typeof ApiCategoriesDotjsonRoute
   '/api/docs': typeof ApiDocsRoute
   '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
@@ -482,6 +490,7 @@ export interface FileRoutesById {
   '/unsubscribe': typeof UnsubscribeRoute
   '/admin/interop': typeof AdminInteropRoute
   '/admin/observabilidad': typeof AdminObservabilidadRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/api/categories.json': typeof ApiCategoriesDotjsonRoute
   '/api/docs': typeof ApiDocsRoute
   '/api/health-centers.csv': typeof ApiHealthCentersDotcsvRoute
@@ -541,6 +550,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
+    | '/admin/usuarios'
     | '/api/categories.json'
     | '/api/docs'
     | '/api/health-centers.csv'
@@ -598,6 +608,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
+    | '/admin/usuarios'
     | '/api/categories.json'
     | '/api/docs'
     | '/api/health-centers.csv'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/unsubscribe'
     | '/admin/interop'
     | '/admin/observabilidad'
+    | '/admin/usuarios'
     | '/api/categories.json'
     | '/api/docs'
     | '/api/health-centers.csv'
@@ -713,6 +725,7 @@ export interface RootRouteChildren {
   UnsubscribeRoute: typeof UnsubscribeRoute
   AdminInteropRoute: typeof AdminInteropRoute
   AdminObservabilidadRoute: typeof AdminObservabilidadRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ReportesIdRoute: typeof ReportesIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -990,6 +1003,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCategoriesDotjsonRouteImport
       parentRoute: typeof ApiRoute
     }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/observabilidad': {
       id: '/admin/observabilidad'
       path: '/admin/observabilidad'
@@ -1200,6 +1220,7 @@ const rootRouteChildren: RootRouteChildren = {
   UnsubscribeRoute: UnsubscribeRoute,
   AdminInteropRoute: AdminInteropRoute,
   AdminObservabilidadRoute: AdminObservabilidadRoute,
+  AdminUsuariosRoute: AdminUsuariosRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ReportesIdRoute: ReportesIdRoute,
   AdminIndexRoute: AdminIndexRoute,

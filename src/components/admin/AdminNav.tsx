@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ShieldCheck, Link2, Activity, ArrowLeft } from "lucide-react";
+import { ShieldCheck, Link2, Activity, ArrowLeft, Users } from "lucide-react";
 
 const ITEMS: { to: string; label: string; icon: typeof ShieldCheck; exact?: boolean }[] = [
   { to: "/admin", label: "Moderación", icon: ShieldCheck, exact: true },
   { to: "/admin/interop", label: "Interoperabilidad", icon: Link2 },
   { to: "/admin/observabilidad", label: "Observabilidad", icon: Activity },
+  { to: "/admin/usuarios", label: "Usuarios", icon: Users },
 ];
 
 export function AdminNav() {
