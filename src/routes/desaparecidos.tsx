@@ -418,21 +418,27 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
-          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/85 via-black/55 to-transparent" />
           <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-black/55 text-white backdrop-blur">
             Ver ficha
           </div>
           <div className="absolute bottom-2 left-3 right-3 text-white">
-            <h3 className="font-bold text-lg leading-tight drop-shadow line-clamp-1">{person.name}</h3>
-            <div className="flex items-center gap-2 text-[11px] opacity-90 mt-0.5">
+            <h3
+              className="font-bold text-lg leading-tight line-clamp-1"
+              style={{ textShadow: "0 1px 2px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6)" }}
+            >
+              {person.name}
+            </h3>
+            <div className="flex items-center gap-2 text-[11px] opacity-95 mt-0.5" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
               {person.age != null && <span>{person.age} años</span>}
-              {person.age != null && <span className="opacity-50">•</span>}
+              {person.age != null && <span className="opacity-60">•</span>}
               <span className="inline-flex items-center gap-1">
                 <CalendarDays className="h-3 w-3" />
                 {daysAgo === 0 ? "Hoy" : `Hace ${daysAgo}d`}
               </span>
             </div>
           </div>
+
         </div>
 
         {/* Body */}
