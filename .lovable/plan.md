@@ -1,79 +1,71 @@
+## Objetivo
+Llevar el chat de Tsunami de un MVP funcional a una experiencia conversacional pulida, cálida y accionable — manteniendo todo dentro del chat (sin enlaces externos) y respetando AI Elements + el contrato de chat-agent.
 
-# Plan — Agente Tsunami (interfaz oculta para pruebas)
+## Cambios propuestos (`src/routes/tsunami.tsx` salvo donde se indique)
 
-Crear un asistente conversacional llamado **Tsunami** (perrito de rescate, tono amigable y empático) accesible en una ruta oculta sin enlaces visibles, para iterar sin exponerlo al público.
+### 1. Empty state más útil y humano
+- Reemplazar el grid de 4 sugerencias planas por **2 secciones temáticas con icono y descripción corta**:
+  - "Buscar a alguien" → buscar por nombre / por cédula / ver coincidencias en hospitales.
+  - "Ayudar" → ver necesidades activas cerca / ofrecer ayuda / registrar desaparecido.
+- Cada chip envía un prompt concreto y precargado al hacer click.
+- Frase de bienvenida más cálida, con la hora del día ("Buenos días" / "Buenas tardes") y nombre del perrito en grande.
+- Agregar línea de privacidad: "Solo tú ves esta conversación en este navegador."
 
-## Acceso y privacidad
+### 2. Composer (PromptInput)
+- **Chips de acción rápida** sobre el textarea, siempre visibles (no solo en empty state): "🔎 Buscar", "📝 Registrar desaparecido", "🆘 Necesidades", "🤝 Ofrecer ayuda". Se ocultan automáticamente cuando hay más de 6 mensajes para no estorbar.
+- **Botón "Detener"** durante streaming (`status === "streaming"`) que llama `stop()` de `useChat`; reemplaza el submit deshabilitado.
+- **Contador sutil** de caracteres solo cuando supere 500.
+- **Atajo de teclado** Enter = enviar, Shift+Enter = nueva línea (verificar comportamiento actual de PromptInputTextarea; documentar en placeholder).
+- Placeholder rotativo cada cierto tiempo con ejemplos reales ("Busca a Juan Pérez", "Tengo medicinas para donar en Caracas"...).
 
-- Ruta nueva `src/routes/tsunami.tsx` — no se enlaza desde `Header`, `BottomNav`, `Footer` ni sitemap.
-- Añadir `Disallow: /tsunami` a `public/robots.txt` y `noindex, nofollow` en el `head()` de la ruta.
-- Sin auth (cualquiera con el link entra), pero invisible para la navegación normal.
+### 3. Mensajes
+- **Avatar de Tsunami** (huellita 🐾 / emoji 🐶 en círculo) junto a cada mensaje del asistente, no solo en el header. Usuario sin avatar, alineado a la derecha.
+- **Timestamp relativo** ("hace 2 min") al hacer hover/tap en el mensaje, en `text-[10px] text-muted-foreground`.
+- **Acciones por mensaje del asistente** (al hover en desktop, siempre visibles en mobile):
+  - Copiar texto (toast de confirmación).
+  - Regenerar última respuesta (`regenerate()` de useChat) — solo en el último mensaje del asistente.
+- **Mensaje del usuario**: contraste asegurado (bg-primary / text-primary-foreground) en lugar del actual `bg-secondary`, validado en ambos temas.
+- **Markdown del asistente** ya va por `MessageResponse`; añadir estilos prose acotados (links subrayados, listas con espacio, code inline legible).
 
-## Conversación
+### 4. Tool calls — más legibles
+- El accordion de Tool por defecto cerrado se mantiene, pero el **header del tool muestra un resumen humano** en español ("🔍 Buscando 'Juan Pérez'…", "🏥 Buscando coincidencias en hospitales…", "✅ Encontré 3 personas") en vez del nombre técnico del tool.
+- La ficha rica (MissingFicha, NeedFicha, MatchList) se renderiza **fuera del accordion**, directamente en el flujo del mensaje, para que el usuario no tenga que abrir nada. El accordion queda solo para "ver detalles técnicos" (input/output crudo) opcionales.
+- Loading state del tool: shimmer "Tsunami está buscando…" con icono específico por tool.
 
-- **Una sola conversación, en `localStorage`** (clave `tsunami:messages:v1`), con botón "Nueva conversación" que la limpia.
-- Mensajes tipados como `UIMessage[]` del AI SDK; render por `message.parts`.
-- Textarea con foco automático al cargar, después de enviar y tras stream completo.
+### 5. Persistencia y conversación
+- **Botón "Nueva conversación"** con confirmación (AlertDialog) antes de borrar, para evitar pérdidas accidentales.
+- Mostrar **conteo de mensajes** sutil en el header ("12 mensajes").
+- Restaurar scroll al final al volver a abrir la pestaña.
 
-## Backend (TanStack server route + AI SDK)
+### 6. Errores y estados
+- Banner inline de error con botón "Reintentar" (en lugar de solo toast) cuando falla la respuesta.
+- Detectar offline (`navigator.onLine`) y mostrar banner discreto "Sin conexión — Tsunami responderá cuando vuelvas".
+- Mensaje específico cuando el stream se corta a la mitad: "Se cortó la respuesta — toca regenerar".
 
-- Nuevo archivo `src/routes/api/tsunami.ts` con `POST` handler que usa `streamText` + `toUIMessageStreamResponse`.
-- Provider: Lovable AI Gateway helper (`src/lib/ai-gateway.server.ts` — crear si no existe).
-- Modelo por defecto: `google/gemini-3-flash-preview`.
-- System prompt: define la personalidad de Tsunami (perrito rescatista venezolano, cálido, claro, breve, usa emojis con moderación 🐾), explica que es un asistente en pruebas, nunca inventa datos de personas, siempre cita el `id` cuando muestra una ficha y enlaza a `/desaparecidos?person=<id>`, `/necesidades?need=<id>`, etc.
-- `stopWhen: stepCountIs(50)` para permitir múltiples tool calls encadenados.
+### 7. Mobile-first polish
+- Header sticky con safe-area-inset-top.
+- Composer con `pb-[max(env(safe-area-inset-bottom),12px)]`.
+- Chips horizontales con scroll-x en mobile, grid en desktop.
+- Tap targets ≥ 44px en todas las acciones.
+- Tras enviar, el textarea se limpia y mantiene foco (ya funciona, validar en iOS).
 
-## Tools del agente (todas server-side, lectura/escritura vía REST de Supabase con `fetchFromSupabase` siguiendo la regla del proyecto — sin `createClient` en server handlers)
+### 8. Branding sutil
+- Fondo del área de mensajes con gradiente muy suave de los tokens `--sunrise` y `--sky` al 3% de opacidad, sin afectar legibilidad.
+- Bordes/acentos de fichas usan `--sunrise` en lugar de amber genérico.
 
-1. **`search_missing_persons`** — input `{ query?: string, id_number?: string, limit?: number }`. Consulta `missing_persons` filtrando por `id_number` exacto o por `or(full_name.ilike,*)` escapado; devuelve hasta 10 fichas con id, nombre, edad, estado/municipio, status, foto y URL canónica.
-2. **`get_missing_person`** — input `{ id }`. Devuelve la ficha completa para que el modelo la resuma.
-3. **`suggest_patient_matches`** — input `{ missing_person_id }`. Llama el RPC ya existente y devuelve coincidencias resumidas.
-4. **`register_missing_person`** — input validado con Zod (`full_name` requerido, `id_number?`, `age?`, `state?`, `municipality?`, `parish?`, `last_seen_description?`, `reporter_name?`, `reporter_phone?`). Marca `needsApproval: true` para que la UI muestre confirmación antes de insertar en `missing_persons`. Tras insertar devuelve `{ id, url }`.
-5. **`list_needs`** — input `{ category?, state?, urgency?, limit? }`. Lee `needs` activas, devuelve resumen + link `/necesidades?need=<id>`.
-6. **`get_need`** — input `{ id }`. Detalle de una necesidad para guiar a quien quiere ayudar.
-7. **`guide_offer_help`** — sin DB write; devuelve estructura sugerida de oferta (categoría, descripción, contacto) y el deep-link `/ofertas?need=<id>` para abrir el wizard pre-rellenado. La creación real de la oferta se hace en la UI existente — Tsunami solo orienta.
+## Fuera de alcance
+- No se cambian las tools del servidor ni el system prompt.
+- No se cambia la persistencia (sigue siendo una conversación en localStorage; ya validado por el usuario).
+- No se agrega historial multi-thread.
+- No se cambia el modelo ni el gateway.
 
-Cada tool tiene `description` clara, `inputSchema` Zod, y resultados compactos (sin PII innecesaria — nunca expone `reporter_phone`/`reporter_cedula` de terceros; sí los acepta como input al registrar).
+## Archivos afectados
+- `src/routes/tsunami.tsx` — refactor principal del UI.
+- Posible nuevo componente `src/components/tsunami/QuickChips.tsx` para mantener el archivo legible.
+- Posible nuevo componente `src/components/tsunami/MessageActions.tsx`.
 
-## UI (`src/routes/tsunami.tsx`)
-
-- Componentes AI Elements: instalar `conversation message prompt-input shimmer tool` con `bun x ai-elements@latest add ...`.
-- Layout: header compacto con avatar de Tsunami (emoji 🐶 + nombre + badge "Beta privada"), `Conversation` ocupa el alto disponible (`dvh`), `PromptInput` sticky abajo con `safe-area-inset-bottom`.
-- Mensajes assistant sin fondo (render markdown con `MessageResponse`); user con bubble `primary`/`primary-foreground`.
-- Tool calls colapsados por defecto (`<Tool defaultOpen={false}>`) mostrando nombre + estado.
-- Para `register_missing_person` con `needsApproval`: render una tarjeta de confirmación con los datos extraídos y botones "Registrar" / "Editar" / "Cancelar".
-- Render de resultados de búsqueda como tarjetas pequeñas con foto + nombre + link a la ficha (usa `Link to="/desaparecidos" search={{ person: id }}`).
-- Estado vacío inicial: avatar grande de Tsunami + 4 chips de sugerencias ("Buscar a un familiar", "Registrar un desaparecido", "Ver necesidades cerca", "Quiero ayudar").
-- Manejo de errores 402/429 del gateway con toast.
-
-## Persistencia local
-
-- Hook `useTsunamiHistory()` lee/escribe `localStorage` guardado por `typeof window !== "undefined"`, con efecto que persiste `messages` cuando cambian (deps completos, sin loops).
-- Botón "Nueva conversación" limpia el array y vuelve a enfocar el textarea.
-
-## Archivos a crear/editar
-
-```
-src/routes/tsunami.tsx                 (nuevo — UI del chat)
-src/routes/api/tsunami.ts              (nuevo — streaming endpoint + tools)
-src/lib/ai-gateway.server.ts           (nuevo si no existe — provider helper)
-src/lib/tsunami-tools.server.ts        (nuevo — definiciones de tools + acceso REST a Supabase)
-src/components/ai-elements/*           (instalado por CLI)
-public/robots.txt                      (añadir Disallow: /tsunami)
-```
-
-No se modifican `Header`, `BottomNav`, `Footer`, sitemap, ni rutas existentes.
-
-## Detalles técnicos clave
-
-- `process.env.LOVABLE_API_KEY` se lee dentro del handler `POST`, nunca a nivel de módulo.
-- Acceso a Supabase desde el server route: `fetch` directo con `apikey` + `Authorization: Bearer` usando `process.env.SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` (lectura). Para `register_missing_person` se usa también la publishable key (las policies de `missing_persons` ya permiten INSERT público).
-- `inputValidator`/schemas en Zod, tools con outputs serializables y pequeños.
-- SSR off en la ruta (`ssr: false`) para evitar prerender sin sesión local.
-- Sin tracking ni analítica en esta ruta mientras esté en beta.
-
-## Fuera de alcance (siguientes iteraciones)
-
-- Voz / audio, multi-thread, persistencia en BD, login, métricas.
-- Creación directa de ofertas desde el chat (por ahora solo guía + deep-link al wizard).
-- Integración con WhatsApp / Telegram.
+## Validación
+- Typecheck (`tsgo`).
+- Probar en `/tsunami` flujos: empty state → buscar persona → coincidencias → confirmar/descartar → registrar nuevo → ofrecer ayuda.
+- Verificar en viewport mobile (375px) y desktop.
+- Verificar contraste de bubbles user/assistant.

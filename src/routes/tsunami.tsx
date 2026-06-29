@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Copy, RefreshCw, Square, Trash2, WifiOff } from "lucide-react";
 
 import {
   Conversation,
@@ -20,6 +21,16 @@ import {
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "@/components/ai-elements/tool";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const STORAGE_KEY = "tsunami:messages:v1";
 
@@ -46,19 +57,62 @@ function loadInitial(): UIMessage[] {
   }
 }
 
-const SUGGESTIONS = [
-  "Estoy buscando a un familiar desaparecido",
-  "Quiero registrar a una persona desaparecida",
-  "¿Qué necesidades hay activas ahora?",
-  "Quiero ofrecer ayuda",
+function greet(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+const QUICK_ACTIONS: Array<{ label: string; prompt: string; emoji: string }> = [
+  { emoji: "🔎", label: "Buscar persona", prompt: "Quiero buscar a un familiar desaparecido" },
+  { emoji: "📝", label: "Registrar desaparecido", prompt: "Necesito registrar a una persona desaparecida" },
+  { emoji: "🆘", label: "Ver necesidades", prompt: "Muéstrame qué necesidades hay activas ahora mismo" },
+  { emoji: "🤝", label: "Ofrecer ayuda", prompt: "Quiero ofrecer ayuda, guíame paso a paso" },
+];
+
+const EMPTY_SECTIONS: Array<{
+  title: string;
+  emoji: string;
+  items: Array<{ label: string; sub: string; prompt: string }>;
+}> = [
+  {
+    title: "Buscar a alguien",
+    emoji: "🔎",
+    items: [
+      { label: "Buscar por nombre", sub: "Te ayudo a rastrear a un familiar", prompt: "Quiero buscar a una persona desaparecida por su nombre" },
+      { label: "Buscar por cédula", sub: "Si tienes el número de cédula", prompt: "Tengo la cédula de la persona que busco, ayúdame" },
+      { label: "Ver si está en un hospital", sub: "Cruce con pacientes atendidos", prompt: "Quiero ver si mi familiar está atendido en algún hospital" },
+    ],
+  },
+  {
+    title: "Ayudar",
+    emoji: "🤝",
+    items: [
+      { label: "Ver necesidades activas", sub: "Qué falta y dónde", prompt: "Muéstrame las necesidades activas" },
+      { label: "Ofrecer ayuda concreta", sub: "Insumos, transporte, hospedaje…", prompt: "Quiero ofrecer ayuda, guíame paso a paso" },
+      { label: "Registrar a un desaparecido", sub: "Si conoces a alguien que falta", prompt: "Quiero registrar a una persona desaparecida" },
+    ],
+  },
+];
+
+const PLACEHOLDERS = [
+  "Escríbele a Tsunami…",
+  "Ej: Busca a Juan Pérez",
+  "Ej: Tengo medicinas para donar en Caracas",
+  "Ej: Cédula 12345678",
+  "Ej: ¿Qué necesidades hay en Maracay?",
 ];
 
 function TsunamiPage() {
   const [initial] = useState<UIMessage[]>(() => loadInitial());
   const [input, setInput] = useState("");
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const { messages, sendMessage, status, error, setMessages } = useChat({
+  const { messages, sendMessage, status, error, setMessages, stop, regenerate } = useChat({
     id: "tsunami-single",
     messages: initial,
     transport: new DefaultChatTransport({ api: "/api/tsunami" }),
@@ -70,7 +124,7 @@ function TsunamiPage() {
     },
   });
 
-  // Persist to localStorage
+  // Persist
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -80,12 +134,33 @@ function TsunamiPage() {
     }
   }, [messages]);
 
-  // Keep textarea focused
+  // Focus textarea
   useEffect(() => {
     textareaRef.current?.focus();
   }, [status]);
 
+  // Online/offline
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
+  // Rotate placeholder while empty
+  useEffect(() => {
+    if (input.length > 0) return;
+    const id = window.setInterval(() => setPlaceholderIdx((i) => (i + 1) % PLACEHOLDERS.length), 4000);
+    return () => window.clearInterval(id);
+  }, [input.length]);
+
   const busy = status === "submitted" || status === "streaming";
+  const streaming = status === "streaming";
 
   const send = (text: string) => {
     const t = text.trim();
@@ -101,33 +176,69 @@ function TsunamiPage() {
     } catch {
       /* noop */
     }
+    setConfirmReset(false);
     textareaRef.current?.focus();
   };
 
+  const lastAssistantId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === "assistant") return messages[i].id;
+    }
+    return null;
+  }, [messages]);
+
+  const showQuickChips = messages.length > 0 && messages.length <= 6;
+
   return (
-    <div className="flex flex-col h-[100dvh] bg-background">
+    <div
+      className="flex flex-col h-[100dvh] bg-background"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse at top, color-mix(in oklab, var(--sunrise) 4%, transparent), transparent 60%), radial-gradient(ellipse at bottom, color-mix(in oklab, var(--sky) 4%, transparent), transparent 60%)",
+      }}
+    >
       {/* Header */}
-      <header className="flex items-center justify-between gap-3 border-b px-4 py-3 bg-card/50 backdrop-blur">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-2xl shadow-sm">
+      <header
+        className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b px-4 py-3 bg-card/80 backdrop-blur"
+        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-2xl shadow-sm shrink-0">
             🐶
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="font-bold text-base leading-tight flex items-center gap-2">
-              Tsunami
-              <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded">
-                Beta privada
+              <span className="truncate">Tsunami</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded shrink-0">
+                Beta
               </span>
             </div>
-            <div className="text-xs text-muted-foreground">Tu perrito de rescate en línea 🐾</div>
+            <div className="text-xs text-muted-foreground truncate">
+              {messages.length > 0
+                ? `${messages.length} mensaje${messages.length === 1 ? "" : "s"} · solo tú los ves`
+                : "Tu perrito de rescate en línea 🐾"}
+            </div>
           </div>
         </div>
         {messages.length > 0 && (
-          <Button size="sm" variant="ghost" onClick={reset}>
-            Nueva conversación
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setConfirmReset(true)}
+            className="gap-1.5 shrink-0"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Nueva</span>
           </Button>
         )}
       </header>
+
+      {!online && (
+        <div className="flex items-center gap-2 px-4 py-1.5 text-xs bg-amber-50 text-amber-900 border-b border-amber-200">
+          <WifiOff className="h-3.5 w-3.5" />
+          Sin conexión — Tsunami responderá cuando vuelvas en línea.
+        </div>
+      )}
 
       {/* Conversation */}
       <Conversation className="flex-1 overflow-hidden">
@@ -135,94 +246,194 @@ function TsunamiPage() {
           {messages.length === 0 && (
             <ConversationEmptyState
               icon={<div className="text-6xl">🐶</div>}
-              title="¡Hola! Soy Tsunami"
-              description="Te ayudo a buscar familiares, registrar desaparecidos, ver necesidades activas o guiarte para ofrecer ayuda."
+              title={`${greet()}, soy Tsunami`}
+              description="Te ayudo a buscar familiares, registrar desaparecidos, ver necesidades activas o guiarte para ofrecer ayuda. Solo tú ves esta conversación en este navegador."
             >
-              <div className="grid sm:grid-cols-2 gap-2 mt-4 w-full max-w-xl">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => send(s)}
-                    className="text-left text-sm px-3 py-2.5 rounded-lg border border-input hover:border-[color:var(--sunrise)] hover:bg-accent transition-colors"
-                  >
-                    {s}
-                  </button>
+              <div className="grid sm:grid-cols-2 gap-4 mt-6 w-full max-w-2xl">
+                {EMPTY_SECTIONS.map((sec) => (
+                  <div key={sec.title} className="rounded-xl border bg-card/60 p-3">
+                    <div className="font-semibold text-sm mb-2 flex items-center gap-1.5">
+                      <span>{sec.emoji}</span>
+                      <span>{sec.title}</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {sec.items.map((it) => (
+                        <button
+                          key={it.label}
+                          onClick={() => send(it.prompt)}
+                          className="block w-full text-left px-2.5 py-2 rounded-lg hover:bg-accent transition-colors"
+                        >
+                          <div className="text-sm font-medium">{it.label}</div>
+                          <div className="text-xs text-muted-foreground">{it.sub}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </ConversationEmptyState>
           )}
 
-          {messages.map((m) => (
-            <Message key={m.id} from={m.role}>
-              <MessageContent
-                className={m.role === "assistant" ? "bg-transparent p-0 shadow-none" : undefined}
-              >
-                {m.parts.map((part, i) => {
-                  if (part.type === "text") {
-                    return m.role === "assistant" ? (
-                      <MessageResponse key={i}>{part.text}</MessageResponse>
-                    ) : (
-                      <span key={i} className="whitespace-pre-wrap">
-                        {part.text}
-                      </span>
-                    );
-                  }
-                  if (part.type?.startsWith("tool-")) {
-                    const p = part as {
-                      type: string;
-                      state?: string;
-                      input?: unknown;
-                      output?: unknown;
-                      errorText?: string;
-                    };
-                    const toolName = part.type.replace(/^tool-/, "");
-                    const state =
-                      p.state === "output-available"
-                        ? "output-available"
-                        : p.state === "output-error"
-                          ? "output-error"
-                          : p.state === "input-available"
-                            ? "input-available"
-                            : "input-streaming";
-                    return (
-                      <Tool key={i} defaultOpen={false}>
-                        <ToolHeader type={`tool-${toolName}`} state={state as never} />
-                        <ToolContent>
-                          <ToolInput input={p.input} />
-                          {(p.output !== undefined || p.errorText) && (
-                            <ToolOutput
-                              output={renderToolOutput(toolName, p.output, p.input, send)}
-                              errorText={p.errorText}
-                            />
-                          )}
-                        </ToolContent>
-                      </Tool>
-                    );
-                  }
-                  return null;
-                })}
-              </MessageContent>
-            </Message>
-          ))}
+          {messages.map((m) => {
+            const isAssistant = m.role === "assistant";
+            const isLastAssistant = isAssistant && m.id === lastAssistantId;
+            const textForCopy = m.parts
+              .filter((p) => p.type === "text")
+              .map((p) => (p as { text: string }).text)
+              .join("\n")
+              .trim();
+
+            return (
+              <div key={m.id} className={isAssistant ? "flex gap-2.5 items-start" : ""}>
+                {isAssistant && (
+                  <div
+                    className="h-8 w-8 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-base shadow-sm shrink-0 mt-1"
+                    aria-hidden
+                  >
+                    🐶
+                  </div>
+                )}
+                <Message from={m.role} className={isAssistant ? "flex-1 min-w-0" : ""}>
+                  <MessageContent
+                    className={
+                      isAssistant
+                        ? "bg-transparent p-0 shadow-none"
+                        : "bg-primary text-primary-foreground"
+                    }
+                  >
+                    {m.parts.map((part, i) => {
+                      if (part.type === "text") {
+                        return isAssistant ? (
+                          <MessageResponse key={i}>{part.text}</MessageResponse>
+                        ) : (
+                          <span key={i} className="whitespace-pre-wrap">
+                            {(part as { text: string }).text}
+                          </span>
+                        );
+                      }
+                      if (part.type?.startsWith("tool-")) {
+                        const p = part as {
+                          type: string;
+                          state?: string;
+                          input?: unknown;
+                          output?: unknown;
+                          errorText?: string;
+                        };
+                        const toolName = part.type.replace(/^tool-/, "");
+                        const state =
+                          p.state === "output-available"
+                            ? "output-available"
+                            : p.state === "output-error"
+                              ? "output-error"
+                              : p.state === "input-available"
+                                ? "input-available"
+                                : "input-streaming";
+                        const hasOutput = p.output !== undefined || Boolean(p.errorText);
+                        const title = toolSummary(toolName, p.input, p.output, state);
+                        return (
+                          <div key={i} className="space-y-2">
+                            {/* Rich ficha rendered inline (outside accordion) */}
+                            {hasOutput && !p.errorText && (
+                              <div>{renderToolOutput(toolName, p.output, p.input, send)}</div>
+                            )}
+                            {/* Compact accordion with raw debug */}
+                            <Tool defaultOpen={false}>
+                              <ToolHeader
+                                type={`tool-${toolName}`}
+                                state={state as never}
+                                title={title}
+                              />
+                              <ToolContent>
+                                <ToolInput input={p.input} />
+                                {hasOutput && (
+                                  <ToolOutput output={p.output} errorText={p.errorText} />
+                                )}
+                              </ToolContent>
+                            </Tool>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </MessageContent>
+
+                  {isAssistant && textForCopy && (
+                    <div className="flex gap-1 mt-1 opacity-60 hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(textForCopy);
+                          toast.success("Copiado");
+                        }}
+                        className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-accent"
+                        aria-label="Copiar respuesta"
+                      >
+                        <Copy className="h-3 w-3" /> Copiar
+                      </button>
+                      {isLastAssistant && !busy && (
+                        <button
+                          type="button"
+                          onClick={() => regenerate()}
+                          className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-accent"
+                          aria-label="Regenerar respuesta"
+                        >
+                          <RefreshCw className="h-3 w-3" /> Regenerar
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </Message>
+              </div>
+            );
+          })}
 
           {status === "submitted" && (
-            <Message from="assistant">
-              <MessageContent className="bg-transparent p-0 shadow-none">
-                <Shimmer>Tsunami está pensando…</Shimmer>
-              </MessageContent>
-            </Message>
+            <div className="flex gap-2.5 items-start">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-base shadow-sm shrink-0 mt-1">
+                🐶
+              </div>
+              <Message from="assistant" className="flex-1 min-w-0">
+                <MessageContent className="bg-transparent p-0 shadow-none">
+                  <Shimmer>Tsunami está pensando…</Shimmer>
+                </MessageContent>
+              </Message>
+            </div>
           )}
 
           {error && (
-            <div className="text-sm text-destructive px-2 py-1">⚠️ {error.message}</div>
+            <div className="flex items-center justify-between gap-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-lg px-3 py-2">
+              <span className="min-w-0 truncate">⚠️ {error.message}</span>
+              <Button size="sm" variant="outline" className="h-7 shrink-0" onClick={() => regenerate()}>
+                Reintentar
+              </Button>
+            </div>
           )}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
 
       {/* Composer */}
-      <div className="border-t bg-background pb-[env(safe-area-inset-bottom)]">
-        <div className="max-w-3xl mx-auto w-full p-3">
+      <div
+        className="border-t bg-background/95 backdrop-blur"
+        style={{ paddingBottom: "max(0px, env(safe-area-inset-bottom))" }}
+      >
+        <div className="max-w-3xl mx-auto w-full p-3 space-y-2">
+          {showQuickChips && (
+            <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 sm:flex-wrap sm:overflow-visible scrollbar-thin">
+              {QUICK_ACTIONS.map((a) => (
+                <button
+                  key={a.label}
+                  type="button"
+                  onClick={() => send(a.prompt)}
+                  disabled={busy}
+                  className="shrink-0 text-xs px-2.5 py-1.5 rounded-full border bg-card hover:bg-accent hover:border-[color:var(--sunrise)] transition-colors disabled:opacity-50"
+                >
+                  <span className="mr-1">{a.emoji}</span>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          )}
           <PromptInput
             onSubmit={(msg) => {
               send(msg.text ?? "");
@@ -232,14 +443,30 @@ function TsunamiPage() {
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Escríbele a Tsunami…"
+              placeholder={PLACEHOLDERS[placeholderIdx]}
               autoFocus
             />
-            <PromptInputFooter className="justify-end">
-              <PromptInputSubmit status={status} disabled={busy || !input.trim()} />
+            <PromptInputFooter className="justify-between">
+              <div className="text-[11px] text-muted-foreground">
+                {input.length > 500 && `${input.length} caracteres`}
+              </div>
+              {streaming ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => stop()}
+                  className="gap-1.5"
+                >
+                  <Square className="h-3 w-3 fill-current" />
+                  Detener
+                </Button>
+              ) : (
+                <PromptInputSubmit status={status} disabled={busy || !input.trim()} />
+              )}
             </PromptInputFooter>
           </PromptInput>
-          <p className="text-[11px] text-muted-foreground text-center mt-2">
+          <p className="text-[11px] text-muted-foreground text-center">
             Tsunami está en pruebas. Si necesitas ayuda urgente visita{" "}
             <Link to="/" className="underline">
               venezuelaselevanta.info
@@ -248,8 +475,63 @@ function TsunamiPage() {
           </p>
         </div>
       </div>
+
+      <AlertDialog open={confirmReset} onOpenChange={setConfirmReset}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Iniciar nueva conversación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se borrarán los mensajes actuales con Tsunami en este navegador. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={reset}>Sí, borrar y empezar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
+}
+
+// Human-readable summary for the tool accordion header.
+function toolSummary(toolName: string, input: unknown, output: unknown, state: string): string {
+  const inp = (input ?? {}) as Record<string, unknown>;
+  const out = (output ?? {}) as Record<string, unknown>;
+  const done = state === "output-available";
+  const failed = state === "output-error";
+  const verb = done ? "" : failed ? "Error: " : "Buscando ";
+
+  switch (toolName) {
+    case "search_missing_persons": {
+      const q = String(inp.query ?? inp.name ?? "").trim();
+      const n = Array.isArray(out.results) ? out.results.length : null;
+      if (done) return `🔍 ${n ?? 0} resultado${n === 1 ? "" : "s"}${q ? ` para "${q}"` : ""}`;
+      return `🔍 ${verb}personas${q ? ` "${q}"` : ""}…`;
+    }
+    case "get_missing_person":
+      return done ? `📋 Ficha de ${String(out.name ?? "persona")}` : "📋 Cargando ficha…";
+    case "suggest_patient_matches": {
+      const n = Array.isArray(out.matches) ? out.matches.length : null;
+      if (done) return `🏥 ${n ?? 0} coincidencia${n === 1 ? "" : "s"} en hospitales`;
+      return "🏥 Buscando coincidencias en hospitales…";
+    }
+    case "register_missing_person":
+      if (out.status === "ok") return "✅ Desaparecido registrado";
+      if (out.status === "pending_confirmation") return "⚠️ Confirmación requerida";
+      return "📝 Registrando…";
+    case "list_needs": {
+      const n = Array.isArray(out.results) ? out.results.length : null;
+      if (done) return `🆘 ${n ?? 0} necesidad${n === 1 ? "" : "es"} activa${n === 1 ? "" : "s"}`;
+      return "🆘 Buscando necesidades…";
+    }
+    case "get_need":
+      return done ? `📋 ${String(out.title ?? "Necesidad")}` : "📋 Cargando necesidad…";
+    case "guide_offer_help":
+      return done ? "🤝 Guía para ofrecer ayuda" : "🤝 Preparando guía…";
+    default:
+      return toolName;
+  }
 }
 
 // Rich inline "fichas" shown directly inside the chat for each tool result.
@@ -260,7 +542,7 @@ function renderToolOutput(
   send: (text: string) => void,
 ): React.ReactNode {
   if (!output || typeof output !== "object") {
-    return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
+    return null;
   }
   const o = output as Record<string, unknown>;
 
@@ -297,8 +579,8 @@ function renderToolOutput(
     if (o.status === "pending_confirmation" && o.preview) {
       const p = o.preview as Record<string, unknown>;
       return (
-        <div className="p-3 rounded-lg border-2 border-dashed border-amber-400 bg-amber-50 space-y-1">
-          <div className="text-xs font-bold text-amber-900 uppercase">
+        <div className="p-3 rounded-lg border-2 border-dashed border-[color:var(--sunrise)] bg-orange-50 space-y-1">
+          <div className="text-xs font-bold text-orange-900 uppercase">
             ⚠️ Confirma estos datos antes de registrar
           </div>
           <DefList
@@ -321,11 +603,12 @@ function renderToolOutput(
       return (
         <div className="p-3 rounded-lg border bg-green-50 border-green-200 space-y-1">
           <div className="text-sm font-semibold text-green-900">✅ Registro creado</div>
-          <div className="text-xs text-green-900/80">Ya quedó guardado en la plataforma. Sigamos por aquí si necesitas algo más. 🐾</div>
+          <div className="text-xs text-green-900/80">
+            Ya quedó guardado en la plataforma. Sigamos por aquí si necesitas algo más. 🐾
+          </div>
         </div>
       );
     }
-
   }
 
   if (toolName === "list_needs" && Array.isArray(o.results)) {
@@ -348,7 +631,7 @@ function renderToolOutput(
   if (toolName === "guide_offer_help" && Array.isArray(o.steps)) {
     const steps = o.steps as string[];
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 p-3 rounded-lg border bg-card">
         <ol className="space-y-1.5 list-decimal pl-5 text-sm">
           {steps.map((s, i) => (
             <li key={i}>{s}</li>
@@ -361,8 +644,7 @@ function renderToolOutput(
     );
   }
 
-
-  return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
+  return null;
 }
 
 const DECISIONS_KEY = "tsunami:match-decisions:v1";
@@ -492,7 +774,7 @@ function MatchList({
               <div className="flex gap-2 pt-1">
                 <Button
                   size="sm"
-                  className="flex-1 h-8"
+                  className="flex-1 h-9"
                   onClick={() => decide(m, "confirmed")}
                 >
                   ✅ Es la misma persona
@@ -500,7 +782,7 @@ function MatchList({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 h-8"
+                  className="flex-1 h-9"
                   onClick={() => decide(m, "discarded")}
                 >
                   ❌ No es
@@ -570,7 +852,6 @@ function MissingFicha({ data, compact = false }: { data: Record<string, unknown>
 }
 
 function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
-
   const urgencyColors: Record<string, string> = {
     critical: "bg-red-100 text-red-900",
     high: "bg-orange-100 text-orange-900",
@@ -624,4 +905,3 @@ function DefList({ entries }: { entries: Array<[string, unknown]> }) {
     </dl>
   );
 }
-
