@@ -78,11 +78,11 @@ BEGIN
       RAISE EXCEPTION 'missing_person not found';
     END IF;
 
-    UPDATE public.missing_persons
-       SET found_marks = COALESCE(found_marks, 0) + 1,
+    UPDATE public.missing_persons AS mp
+       SET found_marks = COALESCE(mp.found_marks, 0) + 1,
            status      = 'found',
-           found_date  = COALESCE(found_date, now())
-     WHERE id = _person_id;
+           found_date  = COALESCE(mp.found_date, now())
+     WHERE mp.id = _person_id;
 
     IF prev_status <> 'found' THEN
       INSERT INTO public.missing_status_log (missing_id, prev_status, new_status, changed_by, note)
