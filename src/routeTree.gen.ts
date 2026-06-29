@@ -62,6 +62,7 @@ import { Route as ApiPublicPushManageRouteImport } from './routes/api/public/pus
 import { Route as ApiPublicPushBroadcastRouteImport } from './routes/api/public/push/broadcast'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as ApiPublicHooksIngestUsgsRouteImport } from './routes/api/public/hooks/ingest-usgs'
+import { Route as ApiPublicAdminUsersRouteImport } from './routes/api/public/admin/users'
 import { Route as ApiPublicAdminHealthRouteImport } from './routes/api/public/admin/health'
 
 const UnsubscribeRoute = UnsubscribeRouteImport.update({
@@ -337,6 +338,11 @@ const ApiPublicHooksIngestUsgsRoute =
     path: '/public/hooks/ingest-usgs',
     getParentRoute: () => ApiRoute,
   } as any)
+const ApiPublicAdminUsersRoute = ApiPublicAdminUsersRouteImport.update({
+  id: '/public/admin/users',
+  path: '/public/admin/users',
+  getParentRoute: () => ApiRoute,
+} as any)
 const ApiPublicAdminHealthRoute = ApiPublicAdminHealthRouteImport.update({
   id: '/public/admin/health',
   path: '/public/admin/health',
@@ -390,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/health': typeof ApiPublicAdminHealthRoute
+  '/api/public/admin/users': typeof ApiPublicAdminUsersRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -446,6 +453,7 @@ export interface FileRoutesByTo {
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/health': typeof ApiPublicAdminHealthRoute
+  '/api/public/admin/users': typeof ApiPublicAdminUsersRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -503,6 +511,7 @@ export interface FileRoutesById {
   '/api/public/reports': typeof ApiPublicReportsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/api/public/admin/health': typeof ApiPublicAdminHealthRoute
+  '/api/public/admin/users': typeof ApiPublicAdminUsersRoute
   '/api/public/hooks/ingest-usgs': typeof ApiPublicHooksIngestUsgsRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/api/public/push/broadcast': typeof ApiPublicPushBroadcastRoute
@@ -561,6 +570,7 @@ export interface FileRouteTypes {
     | '/api/public/reports'
     | '/lovable/email/suppression'
     | '/api/public/admin/health'
+    | '/api/public/admin/users'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/api/public/reports'
     | '/lovable/email/suppression'
     | '/api/public/admin/health'
+    | '/api/public/admin/users'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -673,6 +684,7 @@ export interface FileRouteTypes {
     | '/api/public/reports'
     | '/lovable/email/suppression'
     | '/api/public/admin/health'
+    | '/api/public/admin/users'
     | '/api/public/hooks/ingest-usgs'
     | '/api/public/media/$'
     | '/api/public/push/broadcast'
@@ -1083,6 +1095,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHooksIngestUsgsRouteImport
       parentRoute: typeof ApiRoute
     }
+    '/api/public/admin/users': {
+      id: '/api/public/admin/users'
+      path: '/public/admin/users'
+      fullPath: '/api/public/admin/users'
+      preLoaderRoute: typeof ApiPublicAdminUsersRouteImport
+      parentRoute: typeof ApiRoute
+    }
     '/api/public/admin/health': {
       id: '/api/public/admin/health'
       path: '/public/admin/health'
@@ -1119,6 +1138,7 @@ interface ApiRouteChildren {
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicReportsRoute: typeof ApiPublicReportsRoute
   ApiPublicAdminHealthRoute: typeof ApiPublicAdminHealthRoute
+  ApiPublicAdminUsersRoute: typeof ApiPublicAdminUsersRoute
   ApiPublicHooksIngestUsgsRoute: typeof ApiPublicHooksIngestUsgsRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   ApiPublicPushBroadcastRoute: typeof ApiPublicPushBroadcastRoute
@@ -1152,6 +1172,7 @@ const ApiRouteChildren: ApiRouteChildren = {
   ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicReportsRoute: ApiPublicReportsRoute,
   ApiPublicAdminHealthRoute: ApiPublicAdminHealthRoute,
+  ApiPublicAdminUsersRoute: ApiPublicAdminUsersRoute,
   ApiPublicHooksIngestUsgsRoute: ApiPublicHooksIngestUsgsRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   ApiPublicPushBroadcastRoute: ApiPublicPushBroadcastRoute,
@@ -1190,13 +1211,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
