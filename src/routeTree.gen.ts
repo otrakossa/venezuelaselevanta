@@ -26,6 +26,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ReportesIdRouteImport } from './routes/reportes.$id'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as ApiTsunamiRouteImport } from './routes/api/tsunami'
 import { Route as ApiReportsDotgeojsonRouteImport } from './routes/api/reports[.]geojson'
 import { Route as ApiReportsDotcsvRouteImport } from './routes/api/reports[.]csv'
 import { Route as ApiPatientsDotjsonRouteImport } from './routes/api/patients[.]json'
@@ -146,6 +147,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTsunamiRoute = ApiTsunamiRouteImport.update({
+  id: '/tsunami',
+  path: '/tsunami',
+  getParentRoute: () => ApiRoute,
 } as any)
 const ApiReportsDotgeojsonRoute = ApiReportsDotgeojsonRouteImport.update({
   id: '/reports.geojson',
@@ -367,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/api/tsunami': typeof ApiTsunamiRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -421,6 +428,7 @@ export interface FileRoutesByTo {
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/api/tsunami': typeof ApiTsunamiRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin': typeof AdminIndexRoute
@@ -476,6 +484,7 @@ export interface FileRoutesById {
   '/api/patients.json': typeof ApiPatientsDotjsonRoute
   '/api/reports.csv': typeof ApiReportsDotcsvRoute
   '/api/reports.geojson': typeof ApiReportsDotgeojsonRoute
+  '/api/tsunami': typeof ApiTsunamiRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/reportes/$id': typeof ReportesIdRoute
   '/admin/': typeof AdminIndexRoute
@@ -532,6 +541,7 @@ export interface FileRouteTypes {
     | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/api/tsunami'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/api/tsunami'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/api/patients.json'
     | '/api/reports.csv'
     | '/api/reports.geojson'
+    | '/api/tsunami'
     | '/email/unsubscribe'
     | '/reportes/$id'
     | '/admin/'
@@ -805,6 +817,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/tsunami': {
+      id: '/api/tsunami'
+      path: '/tsunami'
+      fullPath: '/api/tsunami'
+      preLoaderRoute: typeof ApiTsunamiRouteImport
+      parentRoute: typeof ApiRoute
     }
     '/api/reports.geojson': {
       id: '/api/reports.geojson'
@@ -1074,6 +1093,7 @@ interface ApiRouteChildren {
   ApiPatientsDotjsonRoute: typeof ApiPatientsDotjsonRoute
   ApiReportsDotcsvRoute: typeof ApiReportsDotcsvRoute
   ApiReportsDotgeojsonRoute: typeof ApiReportsDotgeojsonRoute
+  ApiTsunamiRoute: typeof ApiTsunamiRoute
   ApiPublicContactRoute: typeof ApiPublicContactRoute
   ApiPublicGeocodeRoute: typeof ApiPublicGeocodeRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -1106,6 +1126,7 @@ const ApiRouteChildren: ApiRouteChildren = {
   ApiPatientsDotjsonRoute: ApiPatientsDotjsonRoute,
   ApiReportsDotcsvRoute: ApiReportsDotcsvRoute,
   ApiReportsDotgeojsonRoute: ApiReportsDotgeojsonRoute,
+  ApiTsunamiRoute: ApiTsunamiRoute,
   ApiPublicContactRoute: ApiPublicContactRoute,
   ApiPublicGeocodeRoute: ApiPublicGeocodeRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,
