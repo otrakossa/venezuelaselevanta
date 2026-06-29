@@ -326,8 +326,8 @@ export function MissingDetailSheet({
         {/* Body */}
         <div ref={scrollerRef} className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
-            {/* Hero photo (mirrors card) */}
-            <div className="relative h-56 sm:h-64 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ring-border">
+            {/* Hero photo */}
+            <div className="relative h-72 sm:h-80 rounded-xl overflow-hidden bg-neutral-900 ring-2 ring-inset ring-border">
               <div className="absolute inset-0 grid place-items-center">
                 <div className="h-24 w-24 rounded-full bg-card border-2 border-border grid place-items-center text-3xl font-black text-muted-foreground">
                   {initials(person.name) || <User className="h-10 w-10" />}
@@ -339,7 +339,7 @@ export function MissingDetailSheet({
                   alt={person.name}
                   referrerPolicy="no-referrer"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="absolute inset-0 w-full h-full object-contain"
                 />
               )}
               {!(localPhoto || person.photo_url) && (
@@ -362,24 +362,8 @@ export function MissingDetailSheet({
                   />
                 </label>
               )}
-              <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
-              <div className="absolute bottom-3 left-3 right-3 text-white">
-                <h3 className="font-bold text-xl leading-tight drop-shadow line-clamp-2">{person.name}</h3>
-                <div className="flex items-center gap-2 text-xs opacity-95 mt-1 flex-wrap">
-                  {person.age != null && <><span>{person.age} años</span><span className="opacity-50">•</span></>}
-                  {person.id_number && (
-                    <>
-                      <span className="inline-flex items-center gap-1 font-mono">CI {person.id_number}</span>
-                      <span className="opacity-50">•</span>
-                    </>
-                  )}
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarDays className="h-3 w-3" />
-                    {daysAgo === 0 ? "Reportado hoy" : `Hace ${daysAgo} día${daysAgo === 1 ? "" : "s"}`}
-                  </span>
-                </div>
-              </div>
             </div>
+
 
             {person.matched_patient_id && (
               <div className="flex items-start gap-2 text-sm rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-2.5">
