@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminOnlyNotice } from "@/components/admin/AdminOnlyNotice";
 import type { SystemHealth } from "@/lib/system-health.types";
 import {
   Activity, AlertTriangle, CheckCircle2, Cpu, HardDrive, Database,
