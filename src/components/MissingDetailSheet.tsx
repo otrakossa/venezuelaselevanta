@@ -129,7 +129,7 @@ export function MissingDetailSheet({
   };
 
 
-  const markFound = async () => {
+  const markFound = async (chosenOutcome?: MissingOutcome | null, note?: string | null) => {
     if (!person || markBusy) return;
     setMarkBusy(true);
     try {
@@ -137,16 +137,22 @@ export function MissingDetailSheet({
       const { data, error } = await (supabase as any).rpc("mark_missing_person_found", {
         _person_id: person.id,
         _device_id: getDeviceId(),
+        _outcome: chosenOutcome ?? null,
+        _note: note ?? null,
       });
       if (error) { toast.error(error.message); return; }
       const row = Array.isArray(data) ? data[0] : data;
       const n = row?.found_marks ?? (foundMarks ?? 0) + 1;
       setFoundMarks(n);
+      if (row?.outcome) setOutcome(row.outcome as MissingOutcome);
+      if (row?.outcome_note) setOutcomeNote(row.outcome_note);
+      setShowOutcomeDialog(false);
       toast.success(`Marcada como encontrada ❤️ (${n} confirmación${n === 1 ? "" : "es"})`);
     } finally {
       setMarkBusy(false);
     }
   };
+
 
   // Load comments + realtime
   useEffect(() => {
