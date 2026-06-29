@@ -333,15 +333,20 @@ export function MissingDetailSheet({
                   />
                 </label>
               )}
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 text-white">
-                <h3 className="font-black text-2xl leading-tight drop-shadow line-clamp-2">{person.name}</h3>
-                <div className="flex items-center gap-2 text-xs opacity-95 mt-1 flex-wrap">
-                  {person.age != null && <><span>{person.age} años</span><span className="opacity-50">•</span></>}
+                <h3
+                  className="font-black text-2xl leading-tight line-clamp-2"
+                  style={{ textShadow: "0 1px 3px rgba(0,0,0,0.95), 0 0 10px rgba(0,0,0,0.7)" }}
+                >
+                  {person.name}
+                </h3>
+                <div className="flex items-center gap-2 text-xs opacity-95 mt-1 flex-wrap" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.85)" }}>
+                  {person.age != null && <><span>{person.age} años</span><span className="opacity-60">•</span></>}
                   {person.id_number && (
                     <>
                       <span className="inline-flex items-center gap-1 font-mono">CI {person.id_number}</span>
-                      <span className="opacity-50">•</span>
+                      <span className="opacity-60">•</span>
                     </>
                   )}
                   <span className="inline-flex items-center gap-1">
@@ -350,6 +355,7 @@ export function MissingDetailSheet({
                   </span>
                 </div>
               </div>
+
             </div>
 
 
