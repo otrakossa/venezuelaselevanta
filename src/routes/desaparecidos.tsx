@@ -387,7 +387,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
 
 
   return (
-    <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200">
+    <article className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col h-full">
       {/* Status ribbon */}
       <div className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full shadow-md ${s.pill}`}>
         <span className="h-1.5 w-1.5 rounded-full bg-white/90 animate-pulse" />
