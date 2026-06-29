@@ -299,10 +299,10 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
                 </span>
               )}
             </div>
-            {m.center_name && (
+            {Boolean(m.center_name) && (
               <div className="text-xs text-muted-foreground">📍 {String(m.center_name)}</div>
             )}
-            {m.reason && (
+            {Boolean(m.reason) && (
               <div className="text-xs text-muted-foreground italic">{String(m.reason)}</div>
             )}
           </div>
@@ -475,12 +475,12 @@ function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; c
     <div className="rounded-lg border bg-card overflow-hidden">
       <div className="p-3 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
-          {data.category && (
+          {Boolean(data.category) && (
             <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
               {String(data.category)}
             </span>
           )}
-          {urg && (
+          {Boolean(urg) && (
             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${urgencyColors[urg] ?? "bg-muted"}`}>
               {urg}
             </span>
