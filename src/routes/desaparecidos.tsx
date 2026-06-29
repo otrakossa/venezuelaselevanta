@@ -398,7 +398,7 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
       <button
         type="button"
         onClick={onOpen}
-        className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
+        className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-primary/40 flex-1"
         title="Ver ficha completa"
       >
         {/* Photo / avatar */}
