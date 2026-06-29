@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminOnlyNotice } from "@/components/admin/AdminOnlyNotice";
 import { ShieldCheck, UserPlus, Trash2, Shield, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -130,13 +131,7 @@ function UsersPage() {
   }
   if (roleLoading) return <div className="p-10 text-center text-sm text-muted-foreground">Verificando permisos...</div>;
   if (!isAdmin) {
-    return (
-      <div className="max-w-md mx-auto py-16 px-4 text-center">
-        <ShieldCheck className="h-12 w-12 text-[color:var(--sunrise)] mx-auto mb-3" />
-        <h1 className="text-xl font-bold mb-2">Sin permisos</h1>
-        <p className="text-sm text-muted-foreground">Necesitas rol admin.</p>
-      </div>
-    );
+    return <AdminOnlyNotice section="Usuarios y roles" />;
   }
 
   return (
