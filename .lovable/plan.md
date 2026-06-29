@@ -1,71 +1,85 @@
-## Objetivo
-Llevar el chat de Tsunami de un MVP funcional a una experiencia conversacional pulida, cálida y accionable — manteniendo todo dentro del chat (sin enlaces externos) y respetando AI Elements + el contrato de chat-agent.
 
-## Cambios propuestos (`src/routes/tsunami.tsx` salvo donde se indique)
+# Sub-estados para personas "encontradas"
 
-### 1. Empty state más útil y humano
-- Reemplazar el grid de 4 sugerencias planas por **2 secciones temáticas con icono y descripción corta**:
-  - "Buscar a alguien" → buscar por nombre / por cédula / ver coincidencias en hospitales.
-  - "Ayudar" → ver necesidades activas cerca / ofrecer ayuda / registrar desaparecido.
-- Cada chip envía un prompt concreto y precargado al hacer click.
-- Frase de bienvenida más cálida, con la hora del día ("Buenos días" / "Buenas tardes") y nombre del perrito en grande.
-- Agregar línea de privacidad: "Solo tú ves esta conversación en este navegador."
+Hoy `missing_persons.status` solo distingue `missing | found | deceased`. Esto no captura la diferencia entre "apareció vivo en un hospital", "está con su familia" o "falleció". Propongo ampliar la taxonomía sin romper lo existente.
 
-### 2. Composer (PromptInput)
-- **Chips de acción rápida** sobre el textarea, siempre visibles (no solo en empty state): "🔎 Buscar", "📝 Registrar desaparecido", "🆘 Necesidades", "🤝 Ofrecer ayuda". Se ocultan automáticamente cuando hay más de 6 mensajes para no estorbar.
-- **Botón "Detener"** durante streaming (`status === "streaming"`) que llama `stop()` de `useChat`; reemplaza el submit deshabilitado.
-- **Contador sutil** de caracteres solo cuando supere 500.
-- **Atajo de teclado** Enter = enviar, Shift+Enter = nueva línea (verificar comportamiento actual de PromptInputTextarea; documentar en placeholder).
-- Placeholder rotativo cada cierto tiempo con ejemplos reales ("Busca a Juan Pérez", "Tengo medicinas para donar en Caracas"...).
+## 1. Nuevo modelo de estado
 
-### 3. Mensajes
-- **Avatar de Tsunami** (huellita 🐾 / emoji 🐶 en círculo) junto a cada mensaje del asistente, no solo en el header. Usuario sin avatar, alineado a la derecha.
-- **Timestamp relativo** ("hace 2 min") al hacer hover/tap en el mensaje, en `text-[10px] text-muted-foreground`.
-- **Acciones por mensaje del asistente** (al hover en desktop, siempre visibles en mobile):
-  - Copiar texto (toast de confirmación).
-  - Regenerar última respuesta (`regenerate()` de useChat) — solo en el último mensaje del asistente.
-- **Mensaje del usuario**: contraste asegurado (bg-primary / text-primary-foreground) en lugar del actual `bg-secondary`, validado en ambos temas.
-- **Markdown del asistente** ya va por `MessageResponse`; añadir estilos prose acotados (links subrayados, listas con espacio, code inline legible).
+Mantener `status` como estado de alto nivel (lo que ve la gente y filtra la app) y agregar un `outcome` opcional con el detalle cuando `status = 'found'`.
 
-### 4. Tool calls — más legibles
-- El accordion de Tool por defecto cerrado se mantiene, pero el **header del tool muestra un resumen humano** en español ("🔍 Buscando 'Juan Pérez'…", "🏥 Buscando coincidencias en hospitales…", "✅ Encontré 3 personas") en vez del nombre técnico del tool.
-- La ficha rica (MissingFicha, NeedFicha, MatchList) se renderiza **fuera del accordion**, directamente en el flujo del mensaje, para que el usuario no tenga que abrir nada. El accordion queda solo para "ver detalles técnicos" (input/output crudo) opcionales.
-- Loading state del tool: shimmer "Tsunami está buscando…" con icono específico por tool.
+- `status`: `missing | found | deceased` (igual que hoy)
+- `outcome` (nuevo, nullable):
+  - `at_health_center` — atendido en centro de salud
+  - `with_family` — reunido con su familia / en casa
+  - `relocated` — en albergue o ubicación segura distinta
+  - `deceased` — fallecido (también sube `status` a `deceased`)
+  - `other` — texto libre en `outcome_note`
+- `outcome_note` (texto corto, opcional): detalle libre (ej. "Hospital Universitario de Caracas", "Albergue La Vega").
+- `outcome_set_at`, `outcome_set_by`: trazabilidad.
 
-### 5. Persistencia y conversación
-- **Botón "Nueva conversación"** con confirmación (AlertDialog) antes de borrar, para evitar pérdidas accidentales.
-- Mostrar **conteo de mensajes** sutil en el header ("12 mensajes").
-- Restaurar scroll al final al volver a abrir la pestaña.
+Ventajas: no rompe los filtros actuales (`status='found'` sigue funcionando), agrega granularidad, y `deceased` se modela tanto como `status` como `outcome` para reportes consistentes.
 
-### 6. Errores y estados
-- Banner inline de error con botón "Reintentar" (en lugar de solo toast) cuando falla la respuesta.
-- Detectar offline (`navigator.onLine`) y mostrar banner discreto "Sin conexión — Tsunami responderá cuando vuelvas".
-- Mensaje específico cuando el stream se corta a la mitad: "Se cortó la respuesta — toca regenerar".
+## 2. Flujos que setean el outcome
 
-### 7. Mobile-first polish
-- Header sticky con safe-area-inset-top.
-- Composer con `pb-[max(env(safe-area-inset-bottom),12px)]`.
-- Chips horizontales con scroll-x en mobile, grid en desktop.
-- Tap targets ≥ 44px en todas las acciones.
-- Tras enviar, el textarea se limpia y mantiene foco (ya funciona, validar en iOS).
+Los tres caminos ya unificados en `missing_status_log` se extienden:
 
-### 8. Branding sutil
-- Fondo del área de mensajes con gradiente muy suave de los tokens `--sunrise` y `--sky` al 3% de opacidad, sin afectar legibilidad.
-- Bordes/acentos de fichas usan `--sunrise` en lugar de amber genérico.
+1. **Match con paciente** (`link_missing_to_patient`): setea `outcome = 'at_health_center'` y `outcome_note = patients.center_name` automáticamente.
+2. **Voto público "Marcar como encontrado"**: sigue marcando `found`, pero abre un mini-selector opcional ("¿Sabes dónde está?") con las 4 opciones. Si el usuario no elige, queda `outcome = NULL` (genérico "encontrado").
+3. **Acción de moderador/admin** (`mark_missing_found`): el panel admin recibe selector obligatorio de `outcome` + nota.
+4. **Nuevo botón "Marcar como fallecido"** en la ficha (solo admin/mod): sube `status='deceased'`, `outcome='deceased'`.
 
-## Fuera de alcance
-- No se cambian las tools del servidor ni el system prompt.
-- No se cambia la persistencia (sigue siendo una conversación en localStorage; ya validado por el usuario).
-- No se agrega historial multi-thread.
-- No se cambia el modelo ni el gateway.
+Toda transición de `outcome` se registra en `missing_status_log` (columna nueva `new_outcome`).
 
-## Archivos afectados
-- `src/routes/tsunami.tsx` — refactor principal del UI.
-- Posible nuevo componente `src/components/tsunami/QuickChips.tsx` para mantener el archivo legible.
-- Posible nuevo componente `src/components/tsunami/MessageActions.tsx`.
+## 3. Cambios en BD (migración nueva)
 
-## Validación
-- Typecheck (`tsgo`).
-- Probar en `/tsunami` flujos: empty state → buscar persona → coincidencias → confirmar/descartar → registrar nuevo → ofrecer ayuda.
-- Verificar en viewport mobile (375px) y desktop.
-- Verificar contraste de bubbles user/assistant.
+```sql
+ALTER TABLE missing_persons
+  ADD COLUMN outcome text CHECK (outcome IN
+    ('at_health_center','with_family','relocated','deceased','other')),
+  ADD COLUMN outcome_note text,
+  ADD COLUMN outcome_set_at timestamptz,
+  ADD COLUMN outcome_set_by uuid REFERENCES auth.users(id);
+
+ALTER TABLE missing_status_log
+  ADD COLUMN prev_outcome text,
+  ADD COLUMN new_outcome text;
+```
+
+RPCs a actualizar:
+- `mark_missing_person_found(_person_id, _device_id, _outcome text DEFAULT NULL, _note text DEFAULT NULL)`
+- `link_missing_to_patient` — setea outcome automáticamente.
+- `mark_missing_found` (admin) — recibe outcome + nota.
+- Nuevo `mark_missing_deceased(p_id, p_note)`.
+
+Backfill: registros con `matched_patient_id IS NOT NULL` → `outcome='at_health_center'`. Registros con `status='deceased'` → `outcome='deceased'`.
+
+## 4. Cambios en UI
+
+- **Badge en tarjetas y ficha** (`desaparecidos.tsx`, `MissingDetailSheet.tsx`, popup del mapa):
+  - "✅ Encontrado" (sin outcome)
+  - "🏥 Atendido en centro de salud" + nota
+  - "🏠 Con su familia"
+  - "🛟 En albergue"
+  - "🕊️ Fallecido" (gris/oscuro)
+- **Filtros** en `/desaparecidos`: agregar chips por outcome.
+- **Acción "Marcar como encontrado"**: tras votar abre un Dialog opcional para elegir dónde está. "Saltar" lo deja genérico.
+- **Admin (`/admin/interop`)**: en la fila del desaparecido, dropdown con las 5 opciones de outcome + textarea nota.
+- **Estadísticas** (`/estadisticas`): nueva sección "Cómo se encontraron" con conteos por outcome.
+- **API pública** (`/api/missing-persons.json`, CSV, GeoJSON): agregar `outcome` y `outcome_note` a `SAFE_COLS`.
+
+## 5. Tsunami (agente IA)
+
+Actualizar `tsunami-tools.server.ts` para que al sugerir matches y al describir fichas mencione el outcome ("Esta persona fue encontrada y está atendida en X").
+
+## Detalles técnicos
+
+- `src/lib/types.ts`: ampliar `MissingStatus` y agregar `MissingOutcome`.
+- `MissingDetailSheet.tsx`: nuevo sub-componente `OutcomePicker`.
+- Trigger `auto_link_missing_to_patient` ya escribe el match; agregar set de outcome ahí mismo.
+- Migración SQL nueva en `sql/2026-06-29_missing_outcome.sql`, aplicada con `psql "$NEW_SUPABASE_DB_URL" -f ...` (producción = proyecto nuevo).
+
+## Decisiones que necesito confirmar
+
+1. ¿Estás de acuerdo con las 5 opciones de outcome (`at_health_center`, `with_family`, `relocated`, `deceased`, `other`) o quieres ajustar la lista?
+2. Para el voto público, ¿el selector de outcome debe ser opcional (mi propuesta) u obligatorio para que el voto cuente?
+3. ¿Quieres que un voto popular pueda marcar "fallecido", o ese estado lo reserva solo admin/mod (mi propuesta)?
