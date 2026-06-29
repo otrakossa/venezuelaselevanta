@@ -796,8 +796,17 @@ function MatchList({
   );
 }
 
-function MissingFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
-  const photo = data.photo_url ? String(data.photo_url) : null;
+function MissingFicha({
+  data,
+  compact = false,
+  send,
+}: {
+  data: Record<string, unknown>;
+  compact?: boolean;
+  send?: (text: string) => void;
+}) {
+  const [imgFailed, setImgFailed] = useState(false);
+  const photo = data.photo_url && !imgFailed ? String(data.photo_url) : null;
 
   const status = data.status ? String(data.status) : null;
   const statusColor =
@@ -807,13 +816,43 @@ function MissingFicha({ data, compact = false }: { data: Record<string, unknown>
         ? "bg-gray-200 text-gray-900"
         : "bg-amber-100 text-amber-900";
 
+  const name = String(data.name ?? "esta persona");
+  const id = data.id ? String(data.id) : null;
+  const actionable = Boolean(send && id);
+
+  const handleClick = () => {
+    if (!send || !id) return;
+    send(
+      `Muéstrame la ficha completa de ${name} (id ${id}) y busca posibles coincidencias en hospitales.`,
+    );
+  };
+
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
+    <div
+      className={`rounded-lg border bg-card overflow-hidden transition ${
+        actionable ? "cursor-pointer hover:border-[color:var(--sunrise)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]" : ""
+      }`}
+      role={actionable ? "button" : undefined}
+      tabIndex={actionable ? 0 : undefined}
+      onClick={actionable ? handleClick : undefined}
+      onKeyDown={
+        actionable
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleClick();
+              }
+            }
+          : undefined
+      }
+    >
       <div className="flex gap-3 p-3">
         {photo ? (
           <img
             src={photo}
             alt=""
+            loading="lazy"
+            onError={() => setImgFailed(true)}
             className={`${compact ? "h-16 w-16" : "h-24 w-24"} rounded object-cover bg-muted shrink-0`}
           />
         ) : (
@@ -844,6 +883,11 @@ function MissingFicha({ data, compact = false }: { data: Record<string, unknown>
           </div>
           {!compact && Boolean(data.description) && (
             <p className="text-xs text-foreground/80 mt-1 line-clamp-4">{String(data.description)}</p>
+          )}
+          {actionable && compact && (
+            <div className="text-[11px] text-[color:var(--sunrise)] font-medium pt-0.5">
+              Toca para ver ficha completa →
+            </div>
           )}
         </div>
       </div>
