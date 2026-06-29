@@ -15,7 +15,7 @@ import {
 } from "@/lib/api-public";
 
 const SAFE_COLS =
-  "id,name,age,description,last_seen_location,last_seen_lat,last_seen_lng,photo_url,contact_name,status,created_at,updated_at,report_date,found_date,source_url,source_label,state,municipality,parish";
+  "id,name,age,description,last_seen_location,last_seen_lat,last_seen_lng,photo_url,contact_name,status,outcome,outcome_note,outcome_set_at,created_at,updated_at,report_date,found_date,source_url,source_label,state,municipality,parish";
 
 export const Route = createFileRoute("/api/missing-persons.json")({
   server: {
