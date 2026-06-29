@@ -603,5 +603,27 @@ export function MissingDetailSheet({
         </form>
       </div>
     </div>
+
+    <PatientDetailModal
+      patientId={selectedPatientId}
+      open={!!selectedPatientId}
+      onClose={() => setSelectedPatientId(null)}
+      missingPersonName={person?.name}
+      onConfirmMatch={async (patient) => {
+        if (!person) return;
+        toast.info("Confirmación enviada para validación por coordinadores.");
+        setSelectedPatientId(null);
+        // Optimistic comment so quede registro visible
+        await (supabase as any).from("missing_person_comments").insert({
+          missing_person_id: person.id,
+          author_name: "Coincidencia ciudadana",
+          content: `Una persona indica que ${person.name} podría ser el/la paciente "${patient.name}"${patient.center_name ? ` en ${patient.center_name}` : ""}. Pendiente verificación por un coordinador.`,
+        });
+      }}
+      onDismissMatch={() => {
+        toast.success("Marcado como no coincidente");
+      }}
+    />
+    </>
   );
 }
