@@ -282,52 +282,76 @@ export function MissingDetailSheet({
           <X className="h-6 w-6" strokeWidth={3} />
         </button>
 
-        {/* Header */}
-        <div className="relative shrink-0 border-b border-border bg-card">
-          <div className="flex items-start gap-3 p-4 pr-12">
-            <div className="relative h-16 w-16 shrink-0 rounded-full bg-muted border-2 border-border grid place-items-center text-xl font-black text-muted-foreground overflow-hidden">
-              {(localPhoto || person.photo_url) ? (
-                <img
-                  src={localPhoto || person.photo_url!}
-                  alt={person.name}
-                  className="absolute inset-0 h-full w-full object-cover"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                />
-              ) : null}
-              <span>{initials(person.name) || <User className="h-6 w-6" />}</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${STATUS_PILL[person.status]}`}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-white/90 animate-pulse" />
-                  {STATUS_LABEL[person.status]}
-                </span>
-                {person.matched_patient_id && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700">
-                    <ShieldCheck className="h-3 w-3" /> Localizado
-                  </span>
-                )}
-              </div>
-              <h2 className="text-xl font-black leading-tight mt-1 line-clamp-2">{person.name}</h2>
-              <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-                {person.age != null && <span>{person.age} años</span>}
-                {person.id_number && <span className="font-mono">CI {person.id_number}</span>}
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="h-3 w-3" />
-                  {daysAgo === 0 ? "Reportado hoy" : `Hace ${daysAgo} día${daysAgo === 1 ? "" : "s"}`}
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
         {/* Body */}
         <div ref={scrollerRef} className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {/* Hero photo (mirrors card) */}
-            <div className="relative h-56 sm:h-64 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ring-border">
+            <div className="relative h-64 sm:h-72 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted/40 ring-2 ring-inset ring-border">
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="h-24 w-24 rounded-full bg-card border-2 border-border grid place-items-center text-3xl font-black text-muted-foreground">
+                  {initials(person.name) || <User className="h-10 w-10" />}
+                </div>
+              </div>
+              {(localPhoto || person.photo_url) && (
+                <img
+                  src={localPhoto || person.photo_url!}
+                  alt={person.name}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )}
+              {/* Status badges over photo (top-left, X is top-right) */}
+              <div className="absolute top-3 left-3 flex items-center gap-2 flex-wrap pr-16">
+                <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-full shadow-lg ${STATUS_PILL[person.status]}`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/90 animate-pulse" />
+                  {STATUS_LABEL[person.status]}
+                </span>
+                {person.matched_patient_id && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-500 text-white shadow-lg">
+                    <ShieldCheck className="h-3 w-3" /> Localizado
+                  </span>
+                )}
+              </div>
+              {!(localPhoto || person.photo_url) && (
+                <label
+                  className={`absolute bottom-20 right-3 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-full bg-sky-600 text-white shadow-lg hover:bg-sky-700 cursor-pointer ${photoBusy ? "opacity-70 pointer-events-none" : ""}`}
+                  title="Sube una foto si conoces a esta persona"
+                >
+                  {photoBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                  {photoBusy ? "Subiendo…" : "Subir foto"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (f) uploadPhoto(f);
+                    }}
+                    disabled={photoBusy}
+                  />
+                </label>
+              )}
+              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/80 to-transparent" />
+              <div className="absolute bottom-3 left-3 right-3 text-white">
+                <h3 className="font-black text-2xl leading-tight drop-shadow line-clamp-2">{person.name}</h3>
+                <div className="flex items-center gap-2 text-xs opacity-95 mt-1 flex-wrap">
+                  {person.age != null && <><span>{person.age} años</span><span className="opacity-50">•</span></>}
+                  {person.id_number && (
+                    <>
+                      <span className="inline-flex items-center gap-1 font-mono">CI {person.id_number}</span>
+                      <span className="opacity-50">•</span>
+                    </>
+                  )}
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarDays className="h-3 w-3" />
+                    {daysAgo === 0 ? "Reportado hoy" : `Hace ${daysAgo} día${daysAgo === 1 ? "" : "s"}`}
+                  </span>
+                </div>
+              </div>
+            </div>
+
               <div className="absolute inset-0 grid place-items-center">
                 <div className="h-24 w-24 rounded-full bg-card border-2 border-border grid place-items-center text-3xl font-black text-muted-foreground">
                   {initials(person.name) || <User className="h-10 w-10" />}
