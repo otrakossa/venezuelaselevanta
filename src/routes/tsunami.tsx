@@ -253,7 +253,12 @@ function TsunamiPage() {
 }
 
 // Rich inline "fichas" shown directly inside the chat for each tool result.
-function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
+function renderToolOutput(
+  toolName: string,
+  output: unknown,
+  _input: unknown,
+  send: (text: string) => void,
+): React.ReactNode {
   if (!output || typeof output !== "object") {
     return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
   }
@@ -281,37 +286,11 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
 
   if (toolName === "suggest_patient_matches" && Array.isArray(o.matches)) {
     const matches = o.matches as Array<Record<string, unknown>>;
+    const mpId = (o.missing_person_id as string) ?? "";
+    const mpName = (o.missing_person_name as string) ?? "la persona buscada";
     if (matches.length === 0)
       return <p className="text-sm text-muted-foreground">Sin coincidencias en centros de salud.</p>;
-    return (
-      <div className="space-y-2">
-        <p className="text-xs text-muted-foreground">
-          {matches.length} posible{matches.length === 1 ? "" : "s"} coincidencia
-          {matches.length === 1 ? "" : "s"} — revisa cada ficha:
-        </p>
-        {matches.map((m, i) => (
-          <div
-            key={String(m.patient_id ?? i)}
-            className="p-3 rounded-lg border bg-card space-y-1"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="font-semibold text-sm">🏥 {String(m.patient_name ?? "Sin nombre")}</div>
-              {typeof m.score === "number" && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
-                  {Math.round(Number(m.score) * 100)}%
-                </span>
-              )}
-            </div>
-            {Boolean(m.center_name) && (
-              <div className="text-xs text-muted-foreground">📍 {String(m.center_name)}</div>
-            )}
-            {Boolean(m.reason) && (
-              <div className="text-xs text-muted-foreground italic">{String(m.reason)}</div>
-            )}
-          </div>
-        ))}
-      </div>
-    );
+    return <MatchList matches={matches} missingId={mpId} missingName={mpName} send={send} />;
   }
 
   if (toolName === "register_missing_person") {
