@@ -443,19 +443,45 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
 
         {/* Body */}
         <div className="p-4 space-y-2.5">
-          {person.matched_patient_id && (
-            <div className="flex items-start gap-1.5 text-xs rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-2">
-              <span className="shrink-0">✅</span>
-              <div className="min-w-0">
-                <div className="font-bold text-emerald-700 dark:text-emerald-400 leading-tight">Localizado</div>
-                {person.matched_patient?.center_name && (
-                  <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5 line-clamp-2">
-                    🏥 {person.matched_patient.center_name}
+          {(() => {
+            const o = (person as any).outcome as "at_health_center"|"with_family"|"relocated"|"deceased"|"other"|null|undefined;
+            const note = (person as any).outcome_note as string | null | undefined;
+            const map: Record<string, { emoji: string; label: string; cls: string }> = {
+              at_health_center: { emoji: "🏥", label: "Atendido en centro de salud", cls: "bg-sky-500/10 border-sky-500/30 text-sky-700" },
+              with_family:      { emoji: "🏠", label: "Con su familia",              cls: "bg-emerald-500/10 border-emerald-500/30 text-emerald-700" },
+              relocated:        { emoji: "🛟", label: "En albergue o lugar seguro",   cls: "bg-amber-500/10 border-amber-500/30 text-amber-700" },
+              deceased:         { emoji: "🕊️", label: "Fallecido",                   cls: "bg-neutral-500/10 border-neutral-500/40 text-neutral-700" },
+              other:            { emoji: "ℹ️", label: "Otro",                        cls: "bg-slate-500/10 border-slate-500/30 text-slate-700" },
+            };
+            if (o && map[o]) {
+              const m = map[o];
+              return (
+                <div className={`flex items-start gap-1.5 text-xs rounded-lg border px-2.5 py-2 ${m.cls}`}>
+                  <span className="shrink-0">{m.emoji}</span>
+                  <div className="min-w-0">
+                    <div className="font-bold leading-tight">{m.label}</div>
+                    {note && <div className="text-[11px] opacity-80 mt-0.5 line-clamp-2">{note}</div>}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
+                </div>
+              );
+            }
+            if (person.matched_patient_id) {
+              return (
+                <div className="flex items-start gap-1.5 text-xs rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-2">
+                  <span className="shrink-0">✅</span>
+                  <div className="min-w-0">
+                    <div className="font-bold text-emerald-700 dark:text-emerald-400 leading-tight">Localizado</div>
+                    {person.matched_patient?.center_name && (
+                      <div className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5 line-clamp-2">
+                        🏥 {person.matched_patient.center_name}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
           {person.last_seen_location && (
             <div className="flex items-start gap-1.5 text-xs">
               <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
