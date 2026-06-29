@@ -259,6 +259,7 @@ export function MissingDetailSheet({
   };
 
   return (
+    <>
     <div className={`fixed inset-0 z-[1200] ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
       {/* Overlay */}
       <div
