@@ -7,6 +7,7 @@ import {
 import { uploadOne } from "@/lib/media-upload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { PatientDetailModal } from "@/components/PatientDetailModal";
 import type { MissingPerson, MissingStatus } from "@/lib/types";
 
 type Comment = {
