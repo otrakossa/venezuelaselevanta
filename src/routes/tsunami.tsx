@@ -249,12 +249,16 @@ function TsunamiPage() {
   );
 }
 
-// Render a friendlier card for known tool outputs.
+// Rich inline "fichas" shown directly inside the chat for each tool result.
 function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
   if (!output || typeof output !== "object") {
     return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
   }
   const o = output as Record<string, unknown>;
+
+  if (o.error && !o.results && !o.matches) {
+    return <p className="text-sm text-destructive">⚠️ {String(o.error)}</p>;
+  }
 
   if (toolName === "search_missing_persons" && Array.isArray(o.results)) {
     const results = o.results as Array<Record<string, unknown>>;
@@ -262,34 +266,92 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
     return (
       <div className="space-y-2">
         {results.map((r) => (
-          <a
-            key={String(r.id)}
-            href={String(r.url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-2 rounded-lg border hover:border-[color:var(--sunrise)] hover:bg-accent transition-colors"
-          >
-            {r.photo_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={String(r.photo_url)}
-                alt=""
-                className="h-12 w-12 rounded object-cover bg-muted"
-              />
-            ) : (
-              <div className="h-12 w-12 rounded bg-muted flex items-center justify-center text-xl">🧑</div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm truncate">{String(r.name)}</div>
-              <div className="text-xs text-muted-foreground truncate">
-                {[r.age && `${r.age} años`, r.state, r.municipality].filter(Boolean).join(" · ")}
-              </div>
-            </div>
-            <span className="text-xs text-[color:var(--sunrise)] font-semibold">Ver ficha →</span>
-          </a>
+          <MissingFicha key={String(r.id)} data={r} compact />
         ))}
       </div>
     );
+  }
+
+  if (toolName === "get_missing_person" && o.id) {
+    return <MissingFicha data={o} />;
+  }
+
+  if (toolName === "suggest_patient_matches" && Array.isArray(o.matches)) {
+    const matches = o.matches as Array<Record<string, unknown>>;
+    if (matches.length === 0)
+      return <p className="text-sm text-muted-foreground">Sin coincidencias en centros de salud.</p>;
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">
+          {matches.length} posible{matches.length === 1 ? "" : "s"} coincidencia
+          {matches.length === 1 ? "" : "s"} — revisa cada ficha:
+        </p>
+        {matches.map((m, i) => (
+          <div
+            key={String(m.patient_id ?? i)}
+            className="p-3 rounded-lg border bg-card space-y-1"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-semibold text-sm">🏥 {String(m.patient_name ?? "Sin nombre")}</div>
+              {typeof m.score === "number" && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
+                  {Math.round(Number(m.score) * 100)}%
+                </span>
+              )}
+            </div>
+            {m.center_name && (
+              <div className="text-xs text-muted-foreground">📍 {String(m.center_name)}</div>
+            )}
+            {m.reason && (
+              <div className="text-xs text-muted-foreground italic">{String(m.reason)}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (toolName === "register_missing_person") {
+    if (o.status === "pending_confirmation" && o.preview) {
+      const p = o.preview as Record<string, unknown>;
+      return (
+        <div className="p-3 rounded-lg border-2 border-dashed border-amber-400 bg-amber-50 space-y-1">
+          <div className="text-xs font-bold text-amber-900 uppercase">
+            ⚠️ Confirma estos datos antes de registrar
+          </div>
+          <DefList
+            entries={[
+              ["Nombre", p.full_name],
+              ["Cédula", p.id_number],
+              ["Edad", p.age],
+              ["Estado", p.state],
+              ["Municipio", p.municipality],
+              ["Última ubicación", p.last_seen_location],
+              ["Descripción", p.description],
+              ["Contacto", p.contact_name],
+              ["Teléfono", p.contact_phone],
+            ]}
+          />
+        </div>
+      );
+    }
+    if (o.status === "ok") {
+      return (
+        <div className="p-3 rounded-lg border bg-green-50 border-green-200 space-y-1">
+          <div className="text-sm font-semibold text-green-900">✅ Registro creado</div>
+          {o.url && (
+            <a
+              href={String(o.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[color:var(--sunrise)] font-semibold underline"
+            >
+              Abrir ficha completa →
+            </a>
+          )}
+        </div>
+      );
+    }
   }
 
   if (toolName === "list_needs" && Array.isArray(o.results)) {
@@ -299,26 +361,170 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
     return (
       <div className="space-y-2">
         {results.map((r) => (
+          <NeedFicha key={String(r.id)} data={r} compact />
+        ))}
+      </div>
+    );
+  }
+
+  if (toolName === "get_need" && o.id) {
+    return <NeedFicha data={o} />;
+  }
+
+  if (toolName === "guide_offer_help" && Array.isArray(o.steps)) {
+    const steps = o.steps as string[];
+    return (
+      <div className="space-y-2">
+        <ol className="space-y-1.5 list-decimal pl-5 text-sm">
+          {steps.map((s, i) => (
+            <li key={i}>{s}</li>
+          ))}
+        </ol>
+        {o.offer_url && (
           <a
-            key={String(r.id)}
-            href={String(r.url)}
+            href={String(o.offer_url)}
             target="_blank"
             rel="noopener noreferrer"
-            className="block p-2 rounded-lg border hover:border-[color:var(--sunrise)] hover:bg-accent transition-colors"
+            className="inline-block text-xs font-semibold px-3 py-1.5 rounded-md bg-[color:var(--sunrise)] text-white"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-xs uppercase font-semibold text-muted-foreground">{String(r.category)}</span>
-              <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
-                {String(r.urgency)}
-              </span>
-            </div>
-            <div className="font-semibold text-sm">{String(r.title)}</div>
-            <div className="text-xs text-muted-foreground">{String(r.center_name ?? "")}</div>
+            Ofrecer ayuda →
           </a>
-        ))}
+        )}
       </div>
     );
   }
 
   return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
 }
+
+function MissingFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
+  const url = data.url ? String(data.url) : undefined;
+  const photo = data.photo_url ? String(data.photo_url) : null;
+  const status = data.status ? String(data.status) : null;
+  const statusColor =
+    status === "found"
+      ? "bg-green-100 text-green-900"
+      : status === "deceased"
+        ? "bg-gray-200 text-gray-900"
+        : "bg-amber-100 text-amber-900";
+
+  return (
+    <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="flex gap-3 p-3">
+        {photo ? (
+          <img
+            src={photo}
+            alt=""
+            className={`${compact ? "h-16 w-16" : "h-24 w-24"} rounded object-cover bg-muted shrink-0`}
+          />
+        ) : (
+          <div
+            className={`${compact ? "h-16 w-16 text-2xl" : "h-24 w-24 text-4xl"} rounded bg-muted flex items-center justify-center shrink-0`}
+          >
+            🧑
+          </div>
+        )}
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="font-semibold text-sm">{String(data.name ?? "Sin nombre")}</div>
+            {status && (
+              <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${statusColor}`}>
+                {status === "missing" ? "Desaparecido" : status === "found" ? "Encontrado" : status}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground space-y-0.5">
+            {data.age != null && <div>📅 {String(data.age)} años</div>}
+            {data.id_number && <div>🪪 Cédula: {String(data.id_number)}</div>}
+            {(data.state || data.municipality) && (
+              <div>📍 {[data.municipality, data.state].filter(Boolean).join(", ")}</div>
+            )}
+            {data.last_seen_location && !compact && (
+              <div className="italic">Visto en: {String(data.last_seen_location)}</div>
+            )}
+          </div>
+          {!compact && data.description && (
+            <p className="text-xs text-foreground/80 mt-1 line-clamp-4">{String(data.description)}</p>
+          )}
+        </div>
+      </div>
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block px-3 py-2 text-xs font-semibold text-[color:var(--sunrise)] border-t hover:bg-accent text-center"
+        >
+          Abrir ficha completa →
+        </a>
+      )}
+    </div>
+  );
+}
+
+function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
+  const offerUrl = data.offer_url ? String(data.offer_url) : data.url ? String(data.url) : undefined;
+  const urgencyColors: Record<string, string> = {
+    critical: "bg-red-100 text-red-900",
+    high: "bg-orange-100 text-orange-900",
+    medium: "bg-amber-100 text-amber-900",
+    low: "bg-blue-100 text-blue-900",
+  };
+  const urg = String(data.urgency ?? "");
+  return (
+    <div className="rounded-lg border bg-card overflow-hidden">
+      <div className="p-3 space-y-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          {data.category && (
+            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+              {String(data.category)}
+            </span>
+          )}
+          {urg && (
+            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${urgencyColors[urg] ?? "bg-muted"}`}>
+              {urg}
+            </span>
+          )}
+        </div>
+        <div className="font-semibold text-sm">{String(data.title ?? "Necesidad")}</div>
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          {data.center_name && <div>🏥 {String(data.center_name)}</div>}
+          {data.center_address && <div>📍 {String(data.center_address)}</div>}
+          {data.quantity && <div>🔢 Cantidad: {String(data.quantity)}</div>}
+          {!compact && data.contact_name && (
+            <div>👤 Contacto: {String(data.contact_name)}{data.contact_phone ? ` · ${String(data.contact_phone)}` : ""}</div>
+          )}
+        </div>
+        {!compact && data.description && (
+          <p className="text-xs text-foreground/80 line-clamp-4">{String(data.description)}</p>
+        )}
+      </div>
+      {offerUrl && (
+        <a
+          href={offerUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block px-3 py-2 text-xs font-semibold text-white bg-[color:var(--sunrise)] hover:opacity-90 text-center"
+        >
+          Ofrecer ayuda →
+        </a>
+      )}
+    </div>
+  );
+}
+
+function DefList({ entries }: { entries: Array<[string, unknown]> }) {
+  const rows = entries.filter(([, v]) => v !== null && v !== undefined && v !== "");
+  if (rows.length === 0) return null;
+  return (
+    <dl className="text-xs grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
+      {rows.map(([k, v]) => (
+        <div key={k} className="contents">
+          <dt className="font-semibold text-muted-foreground">{k}</dt>
+          <dd className="text-foreground">{String(v)}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
