@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from "ai";
+import { convertToModelMessages, smoothStream, stepCountIs, streamText, type UIMessage } from "ai";
 import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { tsunamiTools } from "@/lib/tsunami-tools.server";
 
@@ -50,6 +50,10 @@ export const Route = createFileRoute("/api/tsunami")({
             messages: await convertToModelMessages(body.messages),
             tools: tsunamiTools,
             stopWhen: stepCountIs(50),
+            experimental_transform: smoothStream({
+              delayInMs: 18,
+              chunking: "word",
+            }),
           });
 
           return result.toUIMessageStreamResponse({ originalMessages: body.messages });
