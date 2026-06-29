@@ -494,24 +494,37 @@ export function MissingDetailSheet({
                   ) : (
                     <ul className="space-y-1.5 pt-1">
                       {matches.map((m) => (
-                        <li key={m.patient_id} className="rounded-lg border border-border bg-card p-2.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="text-sm font-bold truncate">{m.patient_name}</div>
-                              <div className="text-[11px] text-muted-foreground truncate">
-                                {m.patient_age != null ? `${m.patient_age} años` : "Edad N/D"}
-                                {m.center_name ? ` · 🏥 ${m.center_name}` : ""}
-                                {m.status ? ` · ${m.status}` : ""}
+                        <li key={m.patient_id}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPatientId(m.patient_id)}
+                            className="w-full text-left rounded-lg border border-border bg-card p-2.5 hover:border-sky-500 hover:bg-sky-500/5 transition group"
+                            title="Ver detalle del paciente"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="text-sm font-bold truncate group-hover:text-sky-700">{m.patient_name}</div>
+                                <div className="text-[11px] text-muted-foreground truncate">
+                                  {m.patient_age != null ? `${m.patient_age} años` : "Edad N/D"}
+                                  {m.center_name ? ` · 🏥 ${m.center_name}` : ""}
+                                  {m.status ? ` · ${m.status}` : ""}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-600/15 text-sky-700">
+                                  {Math.round(m.score * 100)}%
+                                </span>
+                                <span className="text-sky-600 text-lg leading-none">›</span>
                               </div>
                             </div>
-                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-600/15 text-sky-700 shrink-0">
-                              {Math.round(m.score * 100)}%
-                            </span>
-                          </div>
+                            <div className="text-[10px] text-sky-700 font-bold mt-1.5 opacity-0 group-hover:opacity-100 transition">
+                              Toca para revisar el detalle →
+                            </div>
+                          </button>
                         </li>
                       ))}
-                      <li className="text-[10px] text-muted-foreground italic pt-1">
-                        Estas coincidencias son sugerencias automáticas; un coordinador puede confirmar la vinculación.
+                      <li className="text-[10px] text-muted-foreground italic pt-1 text-center">
+                        Toca cada resultado para revisar si es la misma persona. Las coincidencias son sugerencias automáticas.
                       </li>
                     </ul>
                   )
