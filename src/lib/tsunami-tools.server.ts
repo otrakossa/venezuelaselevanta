@@ -40,6 +40,15 @@ function esc(v: string) {
   return v.replace(/[(),]/g, " ").trim();
 }
 
+function normalizeNameTokens(s: string): string[] {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+}
+
 const PUBLIC_COLS =
   "id,name,age,id_number,description,last_seen_location,state,municipality,parish,photo_url,status,report_date";
 
