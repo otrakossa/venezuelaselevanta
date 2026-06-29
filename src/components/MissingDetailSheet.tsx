@@ -101,6 +101,9 @@ export function MissingDetailSheet({
     setMatchLoading(false);
     setMatchError(null);
     setFoundMarks((person as any)?.found_marks ?? null);
+    setOutcome(getOutcome(person ?? ({} as MissingPerson)));
+    setOutcomeNote((person as any)?.outcome_note ?? null);
+    setShowOutcomeDialog(false);
     setLocalPhoto(null);
   }, [person?.id]);
 
