@@ -339,19 +339,11 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
       return (
         <div className="p-3 rounded-lg border bg-green-50 border-green-200 space-y-1">
           <div className="text-sm font-semibold text-green-900">✅ Registro creado</div>
-          {Boolean(o.url) && (
-            <a
-              href={String(o.url)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-[color:var(--sunrise)] font-semibold underline"
-            >
-              Abrir ficha completa →
-            </a>
-          )}
+          <div className="text-xs text-green-900/80">Ya quedó guardado en la plataforma. Sigamos por aquí si necesitas algo más. 🐾</div>
         </div>
       );
     }
+
   }
 
   if (toolName === "list_needs" && Array.isArray(o.results)) {
@@ -380,26 +372,20 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
             <li key={i}>{s}</li>
           ))}
         </ol>
-        {Boolean(o.offer_url) && (
-          <a
-            href={String(o.offer_url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-xs font-semibold px-3 py-1.5 rounded-md bg-[color:var(--sunrise)] text-white"
-          >
-            Ofrecer ayuda →
-          </a>
-        )}
+        <p className="text-xs text-muted-foreground">
+          Cuéntame qué quieres ofrecer (categoría, cantidad, ciudad y tu contacto) y lo registramos aquí mismo. 🐾
+        </p>
       </div>
     );
   }
+
 
   return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
 }
 
 function MissingFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
-  const url = data.url ? String(data.url) : undefined;
   const photo = data.photo_url ? String(data.photo_url) : null;
+
   const status = data.status ? String(data.status) : null;
   const statusColor =
     status === "found"
@@ -448,22 +434,12 @@ function MissingFicha({ data, compact = false }: { data: Record<string, unknown>
           )}
         </div>
       </div>
-      {url && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block px-3 py-2 text-xs font-semibold text-[color:var(--sunrise)] border-t hover:bg-accent text-center"
-        >
-          Abrir ficha completa →
-        </a>
-      )}
     </div>
   );
 }
 
 function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; compact?: boolean }) {
-  const offerUrl = data.offer_url ? String(data.offer_url) : data.url ? String(data.url) : undefined;
+
   const urgencyColors: Record<string, string> = {
     critical: "bg-red-100 text-red-900",
     high: "bg-orange-100 text-orange-900",
@@ -499,16 +475,6 @@ function NeedFicha({ data, compact = false }: { data: Record<string, unknown>; c
           <p className="text-xs text-foreground/80 line-clamp-4">{String(data.description)}</p>
         )}
       </div>
-      {offerUrl && (
-        <a
-          href={offerUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block px-3 py-2 text-xs font-semibold text-white bg-[color:var(--sunrise)] hover:opacity-90 text-center"
-        >
-          Ofrecer ayuda →
-        </a>
-      )}
     </div>
   );
 }
