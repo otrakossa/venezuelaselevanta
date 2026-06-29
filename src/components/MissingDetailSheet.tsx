@@ -73,6 +73,9 @@ export function MissingDetailSheet({
   const [matchLoading, setMatchLoading] = useState(false);
   const [matchError, setMatchError] = useState<string | null>(null);
   const [foundMarks, setFoundMarks] = useState<number | null>(null);
+  const [outcome, setOutcome] = useState<MissingOutcome | null>(null);
+  const [outcomeNote, setOutcomeNote] = useState<string | null>(null);
+  const [showOutcomeDialog, setShowOutcomeDialog] = useState(false);
 
   const [markBusy, setMarkBusy] = useState(false);
   const [localPhoto, setLocalPhoto] = useState<string | null>(null);
