@@ -8,6 +8,7 @@ import { uploadOne } from "@/lib/media-upload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PatientDetailModal } from "@/components/PatientDetailModal";
+import { OUTCOME_LABELS, OUTCOME_EMOJI, OUTCOME_PILL, PUBLIC_OUTCOMES, getOutcome, type MissingOutcome } from "@/lib/missing-outcome";
 import type { MissingPerson, MissingStatus } from "@/lib/types";
 
 type Comment = {
