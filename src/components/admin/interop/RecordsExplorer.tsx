@@ -95,11 +95,25 @@ export function RecordsExplorer() {
   }, [kind, debounced, source, status, matched, hasPhoto, hasCoords, page]);
 
   const markFound = async (id: string) => {
-    if (!confirm("¿Marcar como encontrada?")) return;
+    const outcome = prompt(
+      "¿Outcome? Escribe una opción exacta o deja en blanco:\n- at_health_center\n- with_family\n- relocated\n- other",
+    ) ?? "";
     const note = prompt("Nota opcional:") ?? null;
-    const { error } = await sbx.rpc("mark_missing_found", { p_id: id, p_note: note });
+    const { error } = await sbx.rpc("mark_missing_found", {
+      p_id: id,
+      p_outcome: outcome.trim() || null,
+      p_note: note,
+    });
     if (error) toast.error(error.message);
     else { toast.success("Marcada como encontrada"); setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: "found" } : r)); }
+  };
+
+  const markDeceased = async (id: string) => {
+    if (!confirm("¿Marcar como fallecida/o? Esta acción es sensible.")) return;
+    const note = prompt("Nota opcional:") ?? null;
+    const { error } = await sbx.rpc("mark_missing_deceased", { p_id: id, p_note: note });
+    if (error) toast.error(error.message);
+    else { toast.success("Marcado como fallecido"); setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: "deceased" } : r)); }
   };
 
   const select = "px-2 py-1.5 rounded-md border border-input bg-background text-xs";
