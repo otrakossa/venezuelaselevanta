@@ -980,6 +980,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      delete_missing_person: { Args: { p_id: string }; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -1029,6 +1030,10 @@ export type Database = {
       }
       set_missing_person_photo: {
         Args: { p_person_id: string; p_photo_url: string }
+        Returns: undefined
+      }
+      set_missing_status: {
+        Args: { p_id: string; p_note?: string; p_status: string }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
