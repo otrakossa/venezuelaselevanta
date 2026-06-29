@@ -504,18 +504,21 @@ function NeedDetailModal({
               )}
             </div>
 
-            <div className="p-4 border-t border-border bg-card flex flex-wrap items-center gap-2">
+            <div
+              className="p-4 border-t border-border bg-card flex flex-wrap items-center gap-2 sticky bottom-0 shadow-[0_-4px_12px_-6px_rgba(0,0,0,0.15)]"
+              style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+            >
               {need.status !== "fulfilled" && (
                 <button
                   onClick={onOffer}
-                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 transition"
+                  className="flex-1 min-w-[140px] inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/30 transition"
                 >
                   <PackageOpen className="h-4 w-4" /> Ofrecer ayuda
                 </button>
               )}
               <button
                 onClick={share}
-                className="inline-flex items-center justify-center gap-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 text-sm font-bold py-2.5 px-4 rounded-xl transition"
+                className="inline-flex items-center justify-center gap-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-400 text-sm font-bold py-3 px-4 rounded-xl transition"
               >
                 <Share2 className="h-4 w-4" /> Difundir
               </button>
@@ -524,7 +527,7 @@ function NeedDetailModal({
                   const url = `${window.location.origin}/necesidades?need=${need.id}`;
                   navigator.clipboard.writeText(url).then(() => toast.success("Enlace copiado"));
                 }}
-                className="inline-flex items-center justify-center gap-1.5 bg-muted hover:bg-muted/70 text-foreground text-sm font-bold py-2.5 px-4 rounded-xl transition"
+                className="inline-flex items-center justify-center gap-1.5 bg-muted hover:bg-muted/70 text-foreground text-sm font-bold py-3 px-4 rounded-xl transition"
               >
                 Copiar
               </button>
