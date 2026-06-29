@@ -797,6 +797,109 @@ function MatchList({
   );
 }
 
+const FULL_COLS =
+  "id,name,age,id_number,description,last_seen_location,state,municipality,parish,photo_url,status,report_date,contact_name,contact_phone";
+
+const fichaCache = new Map<string, Record<string, unknown>>();
+const matchesCache = new Map<string, Array<Record<string, unknown>>>();
+
+function normalizeTokens(s: string): string[] {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
+}
+
+function enrichMatches(
+  rawMatches: Array<Record<string, unknown>>,
+  patients: Array<Record<string, unknown>>,
+  mp: Record<string, unknown>,
+): Array<Record<string, unknown>> {
+  const detailMap: Record<string, Record<string, unknown>> = {};
+  for (const p of patients) detailMap[String(p.id)] = p;
+  const mpTokens = normalizeTokens(String(mp.name ?? ""));
+  return rawMatches.slice(0, 10).map((m) => {
+    const pid = String(m.patient_id ?? m.id);
+    const p = detailMap[pid] ?? {};
+    const score = Number(m.score ?? 0);
+    const reasons: string[] = [];
+    if (mp.id_number && p.id_number && String(mp.id_number).trim() === String(p.id_number).trim()) {
+      reasons.push("Cédula idéntica");
+    }
+    const pTokens = normalizeTokens(String(p.name ?? m.patient_name ?? ""));
+    const shared = mpTokens.filter((t) => pTokens.includes(t));
+    if (shared.length >= 2) reasons.push(`Coinciden ${shared.length} nombres/apellidos`);
+    else if (shared.length === 1) reasons.push("Coincide 1 nombre/apellido");
+    if (mp.age != null && p.age != null) {
+      const diff = Math.abs(Number(mp.age) - Number(p.age));
+      if (diff === 0) reasons.push(`Misma edad (${p.age})`);
+      else if (diff <= 2) reasons.push(`Edad similar (±${diff} años)`);
+    }
+    const hasId = reasons.some((r) => r.startsWith("Cédula"));
+    const confidence = hasId ? "alta" : score >= 0.75 ? "alta" : score >= 0.55 ? "media" : "baja";
+    return {
+      patient_id: pid,
+      patient_name: p.name ?? m.patient_name ?? null,
+      patient_age: p.age ?? m.patient_age ?? null,
+      patient_id_number: p.id_number ?? null,
+      center_name: p.center_name ?? m.center_name ?? null,
+      status: p.status ?? m.status ?? null,
+      score,
+      confidence,
+      reasons,
+    };
+  });
+}
+
+async function loadFullMissing(id: string): Promise<Record<string, unknown> | null> {
+  if (fichaCache.has(id)) return fichaCache.get(id)!;
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/missing_persons?select=${FULL_COLS}&id=eq.${id}&limit=1`,
+    { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` } },
+  );
+  if (!res.ok) return null;
+  const rows = (await res.json()) as Array<Record<string, unknown>>;
+  const row = rows[0] ?? null;
+  if (row) fichaCache.set(id, row);
+  return row;
+}
+
+async function loadMatches(
+  missing: Record<string, unknown>,
+): Promise<Array<Record<string, unknown>>> {
+  const id = String(missing.id);
+  if (matchesCache.has(id)) return matchesCache.get(id)!;
+  const rpc = await fetch(`${SUPA_URL}/rest/v1/rpc/suggest_patient_matches`, {
+    method: "POST",
+    headers: {
+      apikey: SUPA_ANON,
+      Authorization: `Bearer ${SUPA_ANON}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ p_missing_id: id }),
+  });
+  if (!rpc.ok) {
+    matchesCache.set(id, []);
+    return [];
+  }
+  const raw = (await rpc.json()) as Array<Record<string, unknown>>;
+  const ids = raw.map((m) => String(m.patient_id ?? m.id)).filter(Boolean);
+  let patients: Array<Record<string, unknown>> = [];
+  if (ids.length) {
+    const quoted = ids.map((i) => `"${i}"`).join(",");
+    const pr = await fetch(
+      `${SUPA_URL}/rest/v1/patients?select=id,name,age,id_number,sector,center_name,status&id=in.(${quoted})`,
+      { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` } },
+    );
+    if (pr.ok) patients = (await pr.json()) as Array<Record<string, unknown>>;
+  }
+  const enriched = enrichMatches(raw, patients, missing);
+  matchesCache.set(id, enriched);
+  return enriched;
+}
+
 function MissingFicha({
   data,
   compact = false,
@@ -807,9 +910,15 @@ function MissingFicha({
   send?: (text: string) => void;
 }) {
   const [imgFailed, setImgFailed] = useState(false);
-  const photo = data.photo_url && !imgFailed ? String(data.photo_url) : null;
+  const [expanded, setExpanded] = useState(!compact);
+  const [full, setFull] = useState<Record<string, unknown>>(data);
+  const [matches, setMatches] = useState<Array<Record<string, unknown>> | null>(null);
+  const [loadingFull, setLoadingFull] = useState(false);
+  const [loadingMatches, setLoadingMatches] = useState(false);
 
-  const status = data.status ? String(data.status) : null;
+  const id = data.id ? String(data.id) : null;
+  const photoUrl = full.photo_url && !imgFailed ? String(full.photo_url) : null;
+  const status = full.status ? String(full.status) : null;
   const statusColor =
     status === "found"
       ? "bg-green-100 text-green-900"
@@ -817,55 +926,69 @@ function MissingFicha({
         ? "bg-gray-200 text-gray-900"
         : "bg-amber-100 text-amber-900";
 
-  const name = String(data.name ?? "esta persona");
-  const id = data.id ? String(data.id) : null;
-  const actionable = Boolean(send && id);
-
-  const handleClick = () => {
-    if (!send || !id) return;
-    send(
-      `Muéstrame la ficha completa de ${name} (id ${id}) y busca posibles coincidencias en hospitales.`,
-    );
+  const toggle = async () => {
+    if (!id) return;
+    const next = !expanded;
+    setExpanded(next);
+    if (!next) return;
+    // Lazy load full record if we're missing description/contact fields
+    if (!full.description && !full.contact_name && !loadingFull) {
+      setLoadingFull(true);
+      const row = await loadFullMissing(id);
+      if (row) setFull({ ...full, ...row });
+      setLoadingFull(false);
+    }
+    if (matches === null && !loadingMatches) {
+      setLoadingMatches(true);
+      const m = await loadMatches({ ...data, ...full });
+      setMatches(m);
+      setLoadingMatches(false);
+    }
   };
 
+  const actionable = compact && Boolean(id);
+
   return (
-    <div
-      className={`rounded-lg border bg-card overflow-hidden transition ${
-        actionable ? "cursor-pointer hover:border-[color:var(--sunrise)] hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]" : ""
-      }`}
-      role={actionable ? "button" : undefined}
-      tabIndex={actionable ? 0 : undefined}
-      onClick={actionable ? handleClick : undefined}
-      onKeyDown={
-        actionable
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleClick();
+    <div className="rounded-lg border bg-card overflow-hidden">
+      <div
+        className={`flex gap-3 p-3 transition ${
+          actionable
+            ? "cursor-pointer hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--sunrise)]"
+            : ""
+        }`}
+        role={actionable ? "button" : undefined}
+        tabIndex={actionable ? 0 : undefined}
+        aria-expanded={actionable ? expanded : undefined}
+        onClick={actionable ? toggle : undefined}
+        onKeyDown={
+          actionable
+            ? (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  void toggle();
+                }
               }
-            }
-          : undefined
-      }
-    >
-      <div className="flex gap-3 p-3">
-        {photo ? (
+            : undefined
+        }
+      >
+        {photoUrl ? (
           <img
-            src={photo}
+            src={photoUrl}
             alt=""
             loading="lazy"
             onError={() => setImgFailed(true)}
-            className={`${compact ? "h-16 w-16" : "h-24 w-24"} rounded object-cover bg-muted shrink-0`}
+            className={`${compact && !expanded ? "h-16 w-16" : "h-24 w-24"} rounded object-cover bg-muted shrink-0`}
           />
         ) : (
           <div
-            className={`${compact ? "h-16 w-16 text-2xl" : "h-24 w-24 text-4xl"} rounded bg-muted flex items-center justify-center shrink-0`}
+            className={`${compact && !expanded ? "h-16 w-16 text-2xl" : "h-24 w-24 text-4xl"} rounded bg-muted flex items-center justify-center shrink-0`}
           >
             🧑
           </div>
         )}
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="font-semibold text-sm">{String(data.name ?? "Sin nombre")}</div>
+            <div className="font-semibold text-sm">{String(full.name ?? "Sin nombre")}</div>
             {status && (
               <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${statusColor}`}>
                 {status === "missing" ? "Desaparecido" : status === "found" ? "Encontrado" : status}
@@ -873,25 +996,71 @@ function MissingFicha({
             )}
           </div>
           <div className="text-xs text-muted-foreground space-y-0.5">
-            {data.age != null && <div>📅 {String(data.age)} años</div>}
-            {Boolean(data.id_number) && <div>🪪 Cédula: {String(data.id_number)}</div>}
-            {Boolean(data.state || data.municipality) && (
-              <div>📍 {[data.municipality, data.state].filter(Boolean).join(", ")}</div>
-            )}
-            {Boolean(data.last_seen_location) && !compact && (
-              <div className="italic">Visto en: {String(data.last_seen_location)}</div>
+            {full.age != null && <div>📅 {String(full.age)} años</div>}
+            {Boolean(full.id_number) && <div>🪪 Cédula: {String(full.id_number)}</div>}
+            {Boolean(full.state || full.municipality || full.parish) && (
+              <div>📍 {[full.parish, full.municipality, full.state].filter(Boolean).join(", ")}</div>
             )}
           </div>
-          {!compact && Boolean(data.description) && (
-            <p className="text-xs text-foreground/80 mt-1 line-clamp-4">{String(data.description)}</p>
-          )}
-          {actionable && compact && (
-            <div className="text-[11px] text-[color:var(--sunrise)] font-medium pt-0.5">
-              Toca para ver ficha completa →
+        </div>
+        {actionable && (
+          <div className="shrink-0 self-start text-muted-foreground">
+            {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+          </div>
+        )}
+      </div>
+
+      {expanded && (
+        <div className="border-t bg-muted/20 p-3 space-y-2 text-xs">
+          {loadingFull && <div className="text-muted-foreground">Cargando ficha…</div>}
+          {Boolean(full.last_seen_location) && (
+            <div>
+              <span className="font-semibold text-muted-foreground">Última ubicación: </span>
+              <span className="italic">{String(full.last_seen_location)}</span>
             </div>
           )}
+          {Boolean(full.description) && (
+            <div>
+              <div className="font-semibold text-muted-foreground mb-0.5">Descripción</div>
+              <p className="text-foreground/90 whitespace-pre-wrap">{String(full.description)}</p>
+            </div>
+          )}
+          {Boolean(full.contact_name || full.contact_phone) && (
+            <div>
+              <span className="font-semibold text-muted-foreground">Contacto: </span>
+              <span>
+                {String(full.contact_name ?? "")}
+                {full.contact_phone ? ` · ${String(full.contact_phone)}` : ""}
+              </span>
+            </div>
+          )}
+          {Boolean(full.report_date) && (
+            <div className="text-muted-foreground">
+              Reportado: {new Date(String(full.report_date)).toLocaleDateString("es-VE")}
+            </div>
+          )}
+
+          <div className="pt-2 border-t">
+            <div className="font-semibold text-muted-foreground mb-1.5">
+              🏥 Coincidencias en centros de salud
+            </div>
+            {loadingMatches && (
+              <div className="text-muted-foreground">Buscando coincidencias…</div>
+            )}
+            {!loadingMatches && matches && matches.length === 0 && (
+              <div className="text-muted-foreground">Sin coincidencias por ahora.</div>
+            )}
+            {!loadingMatches && matches && matches.length > 0 && send && id && (
+              <MatchList
+                matches={matches}
+                missingId={id}
+                missingName={String(full.name ?? "")}
+                send={send}
+              />
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
