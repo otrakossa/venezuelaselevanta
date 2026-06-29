@@ -117,6 +117,40 @@ export function RecordsExplorer() {
     else { toast.success("Marcado como fallecido"); setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: "deceased" } : r)); }
   };
 
+  const setMissingStatus = async (id: string) => {
+    const next = prompt("Nuevo estado del desaparecido:\n- missing\n- found\n- deceased")?.trim();
+    if (!next) return;
+    const note = prompt("Nota opcional (se agrega a la descripción):") ?? null;
+    const { error } = await sbx.rpc("set_missing_status", { p_id: id, p_status: next, p_note: note });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Estado actualizado");
+    setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: next } : r));
+  };
+
+  const deleteMissing = async (id: string, name: string) => {
+    if (!confirm(`¿Eliminar definitivamente el registro de "${name}"?\nEsta acción no se puede deshacer.`)) return;
+    const { error } = await sbx.rpc("delete_missing_person", { p_id: id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Registro eliminado");
+    setRows((rs) => rs.filter((r) => r.id !== id));
+    setCount((c) => Math.max(0, c - 1));
+  };
+
+  const mergeMissing = async (duplicateId: string, name: string) => {
+    const canonical = prompt(
+      `Fusionar "${name}" como DUPLICADO en otro desaparecido.\n\nPega el ID (uuid) del registro CANÓNICO (el que se conserva):`,
+    )?.trim();
+    if (!canonical) return;
+    if (canonical === duplicateId) { toast.error("El ID canónico debe ser distinto"); return; }
+    if (!/^[0-9a-f-]{36}$/i.test(canonical)) { toast.error("UUID inválido"); return; }
+    if (!confirm(`Se eliminará "${name}" y sus datos se consolidarán en ${canonical.slice(0,8)}…\n¿Continuar?`)) return;
+    const { error } = await sbx.rpc("merge_missing_persons", { p_canonical_id: canonical, p_duplicate_id: duplicateId, p_auto: false });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Registros fusionados");
+    setRows((rs) => rs.filter((r) => r.id !== duplicateId));
+    setCount((c) => Math.max(0, c - 1));
+  };
+
   const setPatientStatus = async (id: string) => {
     const next = prompt(
       "Nuevo estado del paciente. Opciones comunes:\n- stable\n- admitted\n- discharged\n- reunited\n- deceased",
