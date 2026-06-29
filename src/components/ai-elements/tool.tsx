@@ -45,14 +45,15 @@ export type ToolHeaderProps = {
 );
 
 const statusLabels: Record<ToolPart["state"], string> = {
-  "approval-requested": "Awaiting Approval",
-  "approval-responded": "Responded",
-  "input-available": "Running",
-  "input-streaming": "Pending",
-  "output-available": "Completed",
-  "output-denied": "Denied",
+  "approval-requested": "Esperando aprobación",
+  "approval-responded": "Respondido",
+  "input-available": "Ejecutando",
+  "input-streaming": "Pendiente",
+  "output-available": "Completado",
+  "output-denied": "Denegado",
   "output-error": "Error",
 };
+
 
 const statusIcons: Record<ToolPart["state"], ReactNode> = {
   "approval-requested": <ClockIcon className="size-4 text-yellow-600" />,
