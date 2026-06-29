@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { sbx } from "./_client";
-import { Loader2, Search, ExternalLink, CheckCircle2, MapPin, Image as ImageIcon } from "lucide-react";
+import { Loader2, Search, ExternalLink, CheckCircle2, MapPin, Image as ImageIcon, Trash2, GitMerge, Pencil } from "lucide-react";
 import { toast } from "sonner";
+
 
 type Kind = "missing" | "patient";
 type Row = {
