@@ -616,11 +616,57 @@ function renderToolOutput(
     const results = o.results as Array<Record<string, unknown>>;
     if (results.length === 0)
       return <p className="text-sm text-muted-foreground">No hay necesidades abiertas.</p>;
+
+    const byUrgency = results.reduce<Record<string, number>>((acc, r) => {
+      const u = String(r.urgency ?? "sin urgencia");
+      acc[u] = (acc[u] ?? 0) + 1;
+      return acc;
+    }, {});
+    const byCategory = results.reduce<Record<string, number>>((acc, r) => {
+      const c = String(r.category ?? "otros");
+      acc[c] = (acc[c] ?? 0) + 1;
+      return acc;
+    }, {});
+    const urgencyLabel: Record<string, string> = {
+      critical: "🔴 críticas",
+      high: "🟠 altas",
+      medium: "🟡 medias",
+      low: "🔵 bajas",
+    };
+    const topCats = Object.entries(byCategory)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
+
     return (
-      <div className="space-y-2">
-        {results.map((r) => (
-          <NeedFicha key={String(r.id)} data={r} compact send={send} />
-        ))}
+      <div className="space-y-3">
+        <div className="rounded-lg border bg-gradient-to-br from-[color:var(--cream)]/40 to-transparent p-3 space-y-2">
+          <div className="text-sm font-semibold">
+            🐾 Encontré <span className="text-[color:var(--sunrise)]">{results.length}</span>{" "}
+            {results.length === 1 ? "necesidad activa" : "necesidades activas"}
+          </div>
+          <div className="text-xs text-foreground/80 space-y-1">
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {Object.entries(byUrgency).map(([u, n]) => (
+                <span key={u}>
+                  <strong>{n}</strong> {urgencyLabel[u] ?? u}
+                </span>
+              ))}
+            </div>
+            {topCats.length > 0 && (
+              <div className="text-muted-foreground">
+                Categorías: {topCats.map(([c, n]) => `${c} (${n})`).join(" · ")}
+              </div>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground italic">
+            Te muestro las tarjetas abajo. Toca cualquiera para ver detalles y ofrecer ayuda. 👇
+          </div>
+        </div>
+        <div className="space-y-2">
+          {results.map((r) => (
+            <NeedFicha key={String(r.id)} data={r} compact send={send} />
+          ))}
+        </div>
       </div>
     );
   }
