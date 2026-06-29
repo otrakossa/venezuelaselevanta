@@ -3,7 +3,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Copy, RefreshCw, Square, Trash2, WifiOff } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, RefreshCw, Square, Trash2, WifiOff } from "lucide-react";
+import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 import {
   Conversation,
