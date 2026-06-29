@@ -50,6 +50,10 @@ export const Route = createFileRoute("/api/tsunami")({
             messages: await convertToModelMessages(body.messages),
             tools: tsunamiTools,
             stopWhen: stepCountIs(50),
+            experimental_transform: smoothStream({
+              delayInMs: 18,
+              chunking: "word",
+            }),
           });
 
           return result.toUIMessageStreamResponse({ originalMessages: body.messages });
