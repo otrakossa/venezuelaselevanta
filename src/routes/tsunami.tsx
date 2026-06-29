@@ -556,14 +556,14 @@ function renderToolOutput(
     return (
       <div className="space-y-2">
         {results.map((r) => (
-          <MissingFicha key={String(r.id)} data={r} compact />
+          <MissingFicha key={String(r.id)} data={r} compact send={send} />
         ))}
       </div>
     );
   }
 
   if (toolName === "get_missing_person" && o.id) {
-    return <MissingFicha data={o} />;
+    return <MissingFicha data={o} send={send} />;
   }
 
   if (toolName === "suggest_patient_matches" && Array.isArray(o.matches)) {
