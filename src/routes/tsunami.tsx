@@ -918,7 +918,9 @@ function MissingFicha({
 
   const id = data.id ? String(data.id) : null;
   // Stable identifier for refs/keys across re-renders (survives data merges).
-  const stableKey = id ?? useMemo(() => `mf-${Math.random().toString(36).slice(2)}`, []);
+  const fallbackKey = useMemo(() => `mf-${Math.random().toString(36).slice(2)}`, []);
+  const stableKey = id ?? fallbackKey;
+
 
   const cardRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
