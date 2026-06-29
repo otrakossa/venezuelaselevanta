@@ -372,19 +372,13 @@ function renderToolOutput(toolName: string, output: unknown): React.ReactNode {
             <li key={i}>{s}</li>
           ))}
         </ol>
-        {Boolean(o.offer_url) && (
-          <a
-            href={String(o.offer_url)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-xs font-semibold px-3 py-1.5 rounded-md bg-[color:var(--sunrise)] text-white"
-          >
-            Ofrecer ayuda →
-          </a>
-        )}
+        <p className="text-xs text-muted-foreground">
+          Cuéntame qué quieres ofrecer (categoría, cantidad, ciudad y tu contacto) y lo registramos aquí mismo. 🐾
+        </p>
       </div>
     );
   }
+
 
   return <pre className="text-xs whitespace-pre-wrap">{JSON.stringify(output, null, 2)}</pre>;
 }
