@@ -432,13 +432,13 @@ function NeedDetailModal({
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4" onClick={onClose}>
       <div
-        className="relative bg-card w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
+        className="relative bg-card w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl shadow-2xl overflow-hidden flex flex-col max-h-[100dvh] sm:max-h-[92dvh]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
           aria-label="Cerrar"
-          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-background/90 border border-border shadow hover:bg-muted transition"
+          className="absolute top-3 right-3 z-20 p-2 rounded-full bg-background/90 border border-border shadow hover:bg-muted transition"
         >
           <X className="h-4 w-4" />
         </button>
