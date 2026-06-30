@@ -1,52 +1,35 @@
-## Objetivo
-Tener `LOVABLE_API_KEY` válida en `/var/www/venezuelaselevanta/.env` para que Tsunami funcione en producción vía el Lovable AI Gateway.
+Respuesta corta: no hay una forma segura/soportada de “ver” o copiar el valor de `LOVABLE_API_KEY` desde Lovable para pegarlo en el VPS. Es una clave administrada por Lovable; se puede crear o rotar, pero el valor no se expone al agente ni al usuario después. El endpoint temporal `_reveal-key` fue un intento de puente, pero no es confiable ni recomendable: en preview puede quedar detrás de auth-bridge y además supone exponer un secreto que no debería salir del runtime de Lovable.
 
-## Paso 1 — Provisionar la key en Lovable (lo hago yo)
+Plan recomendado para resolverlo sin exponer la clave:
 
-Al aprobar el plan, ejecuto en build mode:
+1. Eliminar el endpoint temporal inseguro
+   - Borrar `src/routes/api/public/_reveal-key.ts`.
+   - No volver a intentar revelar `LOVABLE_API_KEY` por HTTP.
 
-- `ai_gateway--create` → asegura que el proyecto tenga `LOVABLE_API_KEY`. Si ya existe, no la cambia.
-- (Opcional, recomendado si sospechas que se filtró en logs previos) `ai_gateway--rotate_lovable_api_key` → genera una nueva y revoca la anterior.
+2. Mantener `LOVABLE_API_KEY` solo dentro de Lovable
+   - La llamada real al Lovable AI Gateway debe ejecutarse en un handler alojado por Lovable, donde esa variable sí existe.
+   - El VPS no necesita tener `LOVABLE_API_KEY` en su `.env`.
 
-Luego uso `secrets--fetch_secrets` para mostrarte el **valor** de `LOVABLE_API_KEY` una sola vez en el chat. Cópialo de inmediato — no lo vuelvo a imprimir.
+3. Hacer que producción use una de estas dos rutas
 
-> Nota: en Lovable Cloud esta key se auto-provisiona y se cobra contra los créditos del workspace. No hay un panel público "copiar API key"; la única vía es a través de estas herramientas del agente.
+   Opción A, recomendada si quieres seguir usando Lovable AI Gateway:
+   - Crear/ajustar un endpoint proxy de Tsunami en Lovable que llame al AI Gateway internamente.
+   - Configurar el frontend/VPS para que `/api/tsunami` reenvíe la petición a ese endpoint Lovable.
+   - Añadir protección mínima: token interno, validación de origen y manejo claro de 429/402/errores.
+   - Resultado: Tsunami funciona en `venezuelaselevanta.info` sin copiar `LOVABLE_API_KEY` al VPS.
 
-## Paso 2 — Pegarla en el `.env` del VPS (lo haces tú por SSH)
+   Opción B, inmediata y más simple porque ya tienes `GEMINI_API_KEY` en el VPS:
+   - Cambiar `/api/tsunami` para usar Lovable AI Gateway cuando `LOVABLE_API_KEY` exista.
+   - Si no existe, usar Gemini directo con `GEMINI_API_KEY` como fallback.
+   - Resultado: Tsunami funciona hoy en el VPS, pero las llamadas de producción no pasarían por Lovable Gateway.
 
-Sustituye `PEGA_AQUI_LA_KEY` por el valor que te muestro:
+4. Mi recomendación práctica
+   - Para resolver rápido: implementar fallback con `GEMINI_API_KEY`.
+   - Para mantener Lovable AI Gateway a largo plazo: usar proxy alojado en Lovable, no intentar extraer la clave.
 
-```bash
-ssh tu-user@tu-vps
-cd /var/www/venezuelaselevanta
+5. Comandos que NO recomiendo usar
+   - No recomiendo seguir con `curl https://.../_reveal-key?...`.
+   - No recomiendo guardar tokens revelados por endpoints temporales.
+   - No recomiendo rotar de nuevo `LOVABLE_API_KEY`, porque rotarla tampoco mostrará el valor.
 
-# Si ya existe la línea, la reemplaza; si no, la agrega
-grep -q '^LOVABLE_API_KEY=' .env \
-  && sed -i 's|^LOVABLE_API_KEY=.*|LOVABLE_API_KEY=PEGA_AQUI_LA_KEY|' .env \
-  || echo 'LOVABLE_API_KEY=PEGA_AQUI_LA_KEY' >> .env
-
-# Recargar PM2 con el nuevo entorno
-pm2 restart venezuela-levanta --update-env
-pm2 save
-```
-
-`ecosystem.config.cjs` ya parsea `.env` y lo inyecta como `process.env.*`, así que con esto `src/routes/api/tsunami.ts` deja de devolver `LOVABLE_API_KEY missing`.
-
-## Paso 3 — Verificar
-
-```bash
-# En el VPS
-pm2 logs venezuela-levanta --lines 30 --nostream
-
-# Desde tu navegador
-# Abre https://venezuelaselevanta.info/tsunami y haz una búsqueda por nombre.
-# Debe responder normal; si falla, los logs mostrarán el error real del gateway.
-```
-
-## Decisión que necesito de ti antes de ejecutar
-
-1. **¿Solo crear (si falta) o rotar?**
-   - **Crear** → más rápido, no invalida nada. Recomendado si nunca expusiste la key.
-   - **Rotar** → recomendado si la key pudo haberse filtrado (p. ej. apareció en logs/capturas). Invalida la anterior en ≤1h.
-
-Responde "crear" o "rotar" y ejecuto el Paso 1; tú haces el Paso 2 con el valor que te paso.
+Si quieres, implemento la Opción B ahora para que Tsunami deje de fallar inmediatamente en el VPS, y después dejamos la Opción A como mejora de arquitectura.
