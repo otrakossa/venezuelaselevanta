@@ -14,7 +14,8 @@ El proyecto **VIEJO** (`evcgvbycvgueoelvfbna`) sigue existiendo pero está conge
 1. Para consultar/modificar datos reales usar SIEMPRE `psql "$NEW_SUPABASE_DB_URL"` o REST con `$NEW_SUPABASE_SERVICE_KEY` contra `$NEW_SUPABASE_URL`.
 2. Las herramientas integradas `supabase--read_query`, `supabase--insert`, `supabase--migration`, `supabase--slow_queries` y las variables `PG*` del sandbox apuntan al proyecto VIEJO — NO usarlas para análisis ni migraciones que afecten producción.
 3. Para cambios de schema en producción: generar el SQL y ejecutarlo con `psql "$NEW_SUPABASE_DB_URL" -f migracion.sql`, no con el tool de migración.
-4. El cliente del frontend (`src/integrations/supabase/client.ts`) ya está hardcodeado al proyecto nuevo; el VPS lee sus credenciales del `.env` propio del servidor.
+4. **Selección de ambiente del frontend (env-driven):** `client.ts` y `src/lib/supabase-rest.ts` resuelven el proyecto vía `src/lib/supabase-config.ts`, que lee la variable **propia** `VITE_APP_SUPABASE_URL` / `VITE_APP_SUPABASE_PUBLISHABLE_KEY` (Lovable NO la inyecta). Sin la var: `vite dev` → **local** (`127.0.0.1:54321`), build de producción → **prod** (`advebubtfjgxwpjxprok`). Contrato: por ambiente, las `VITE_APP_SUPABASE_*` (navegador, build-time) y las `SUPABASE_*` (servidor/bot, runtime) deben apuntar al MISMO proyecto. `deploy.sh` trae un guard post-build que aborta si el bundle hornea localhost o no referencia el host esperado.
+   - **`client.ts` es autogenerado por Lovable** ("Do not edit"): si Lovable lo regenera con URLs hardcodeadas, re-aplicar el import de `@/lib/supabase-config` — el guard pre-build de `deploy.sh` lo detecta.
 
 ---
 

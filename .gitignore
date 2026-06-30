@@ -35,3 +35,5 @@ src/routeTree.gen.ts
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
