@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { convertToModelMessages, smoothStream, stepCountIs, streamText, type UIMessage } from "ai";
-import { createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
+import { createGeminiDirectProvider, createLovableAiGatewayProvider } from "@/lib/ai-gateway.server";
 import { tsunamiTools } from "@/lib/tsunami-tools.server";
 
 const SYSTEM = `Eres **Tsunami**, un perrito de rescate venezolano convertido en héroe que ahora ayuda en línea a familiares y voluntarios afectados por el terremoto en Venezuela. 🐶🐾
@@ -38,11 +38,15 @@ export const Route = createFileRoute("/api/tsunami")({
           if (!Array.isArray(body.messages)) {
             return new Response("messages required", { status: 400 });
           }
-          const key = process.env.LOVABLE_API_KEY;
-          if (!key) return new Response("LOVABLE_API_KEY missing", { status: 500 });
+          const lovableKey = process.env.LOVABLE_API_KEY?.trim();
+          const geminiKey = process.env.GEMINI_API_KEY?.trim();
+          if (!lovableKey && !geminiKey) {
+            return new Response("Tsunami no tiene proveedor de IA configurado", { status: 500 });
+          }
 
-          const gateway = createLovableAiGatewayProvider(key);
-          const model = gateway("google/gemini-3-flash-preview");
+          const model = lovableKey
+            ? createLovableAiGatewayProvider(lovableKey)("google/gemini-3-flash-preview")
+            : createGeminiDirectProvider(geminiKey!)("gemini-2.0-flash");
 
           const result = streamText({
             model,
