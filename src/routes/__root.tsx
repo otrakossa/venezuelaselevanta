@@ -19,6 +19,7 @@ import { Footer } from "@/components/Footer";
 import { DeadQueueBanner } from "@/components/DeadQueueBanner";
 import { LiveStatusBanner } from "@/components/LiveStatusBanner";
 import { RouteProgress } from "@/components/RouteProgress";
+import { ReportsProvider } from "@/hooks/useReports";
 
 
 function NotFoundComponent() {
@@ -117,20 +118,22 @@ function RootComponent() {
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background flex flex-col">
-        <RouteProgress />
-        <Header />
-        
-        <DeadQueueBanner />
-        <OfflineBanner />
-        <main className="flex-1">
-          <Outlet />
-        </main>
-        <Footer />
-        <BottomNav />
-        <PWAInstallBanner />
-      </div>
-      <Toaster />
+      <ReportsProvider>
+        <div className="min-h-screen supports-[height:100dvh]:min-h-dvh bg-background flex flex-col">
+          <RouteProgress />
+          <Header />
+
+          <DeadQueueBanner />
+          <OfflineBanner />
+          <main className="flex-1">
+            <Outlet />
+          </main>
+          <Footer />
+          <BottomNav />
+          <PWAInstallBanner />
+        </div>
+        <Toaster />
+      </ReportsProvider>
     </QueryClientProvider>
   );
 }

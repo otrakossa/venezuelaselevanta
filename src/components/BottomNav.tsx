@@ -19,8 +19,9 @@ export function BottomNav() {
 
   return (
     <>
-      {/* Spacer so page content never sits under the bar */}
-      <div className="h-20 lg:hidden" aria-hidden />
+      {/* Spacer so page content never sits under the bar (includes the safe-area
+          inset so content clears the bar on notched devices). */}
+      <div className="lg:hidden" aria-hidden style={{ height: "calc(5rem + env(safe-area-inset-bottom))" }} />
 
       <nav
         className="lg:hidden fixed bottom-0 inset-x-0 z-[1100] bg-card/95 backdrop-blur border-t border-border"

@@ -1,9 +1,36 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Report, MissingPerson } from "@/lib/types";
 
-export function useReports(opts: { includeHidden?: boolean } = {}) {
-  const includeHidden = opts.includeHidden ?? false;
+type ReportsContextValue = {
+  /** Lista cruda (incluye ocultos); cada consumidor filtra según necesite. */
+  reports: Report[];
+  loading: boolean;
+  refetch: () => Promise<void>;
+};
+
+const ReportsContext = createContext<ReportsContextValue | null>(null);
+
+/**
+ * Fuente única de verdad para `reports`: UNA sola descarga + UN solo canal
+ * realtime para toda la app.
+ *
+ * Antes, cada componente que llamaba `useReports()` (Header, banner de estado,
+ * y cada ruta) abría su propia copia del estado y su propia suscripción. Las
+ * copias podían divergir —p.ej. el banner mostrando "0 activos" en /reportar y
+ * "6 activos" en el resto del sitio— además de multiplicar las llamadas a
+ * Supabase. Al centralizar aquí, todos los contadores leen el mismo dato.
+ */
+export function ReportsProvider({ children }: { children: ReactNode }) {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -12,12 +39,9 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
       .from("reports")
       .select("*")
       .order("created_at", { ascending: false });
-    if (data) {
-      const rows = data as unknown as Report[];
-      setReports(includeHidden ? rows : rows.filter((r) => !r.hidden));
-    }
+    if (data) setReports(data as unknown as Report[]);
     setLoading(false);
-  }, [includeHidden]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -26,10 +50,8 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
       .select("*")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (mounted && data) {
-          const rows = data as unknown as Report[];
-          setReports(includeHidden ? rows : rows.filter((r) => !r.hidden));
-        }
+        if (!mounted) return;
+        if (data) setReports(data as unknown as Report[]);
         setLoading(false);
       });
 
@@ -37,7 +59,11 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
       .channel(`reports-rt-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, (payload) => {
         setReports((prev) => {
-          if (payload.eventType === "INSERT") return [payload.new as Report, ...prev];
+          if (payload.eventType === "INSERT") {
+            const row = payload.new as Report;
+            // Evita duplicar si la fila ya llegó en la descarga inicial.
+            return prev.some((r) => r.id === row.id) ? prev : [row, ...prev];
+          }
           if (payload.eventType === "UPDATE")
             return prev.map((r) => (r.id === (payload.new as Report).id ? (payload.new as Report) : r));
           if (payload.eventType === "DELETE")
@@ -50,9 +76,24 @@ export function useReports(opts: { includeHidden?: boolean } = {}) {
       mounted = false;
       supabase.removeChannel(ch);
     };
-  }, [includeHidden]);
+  }, []);
 
-  return { reports, loading, refetch };
+  const value = useMemo<ReportsContextValue>(
+    () => ({ reports, loading, refetch }),
+    [reports, loading, refetch],
+  );
+  return <ReportsContext.Provider value={value}>{children}</ReportsContext.Provider>;
+}
+
+export function useReports(opts: { includeHidden?: boolean } = {}) {
+  const includeHidden = opts.includeHidden ?? false;
+  const ctx = useContext(ReportsContext);
+  if (!ctx) throw new Error("useReports debe usarse dentro de <ReportsProvider>");
+  const reports = useMemo(
+    () => (includeHidden ? ctx.reports : ctx.reports.filter((r) => !r.hidden)),
+    [ctx.reports, includeHidden],
+  );
+  return { reports, loading: ctx.loading, refetch: ctx.refetch };
 }
 
 export type MissingCounts = { all: number; missing: number; found: number; deceased: number };
