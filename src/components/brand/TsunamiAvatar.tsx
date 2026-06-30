@@ -59,17 +59,11 @@ export function TsunamiAvatar({ size = 40, mood = "idle", className, halo = fals
           src={tsunamiAsset.url}
           alt="Tsunami, asistente de rescate"
           className={cn(
-            "absolute left-1/2 top-1/2 drop-shadow-[0_4px_10px_rgba(255,107,53,0.25)]",
+            "absolute inset-0 w-full h-full object-cover drop-shadow-[0_4px_10px_rgba(255,107,53,0.25)]",
             mood === "idle" && "animate-tsunami-float",
             mood === "thinking" && "animate-tsunami-sniff",
             mood === "hero" && "animate-tsunami-float-lg",
           )}
-          style={{
-            width: size * 2.5,
-            height: size * 2.5,
-            transform: "translate(-50%, -20%)",
-            objectFit: "contain",
-          }}
         />
       </span>
     </span>
