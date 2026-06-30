@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { render } from 'react-email'
-import { createClient } from '@supabase/supabase-js'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
 import { TEMPLATES } from '@/lib/email-templates/registry'
@@ -51,6 +50,28 @@ function generateToken(): string {
   return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+// ---- Direct REST helpers (no @supabase/supabase-js — Node 20 has no native WebSocket) ----
+function getEnv() {
+  const url = process.env.SUPABASE_URL ?? process.env.NEW_SUPABASE_URL
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEW_SUPABASE_SERVICE_KEY
+  return { url, serviceKey }
+}
+
+async function restRequest(
+  path: string,
+  init: RequestInit & { serviceKey: string; url: string },
+) {
+  const { serviceKey, url, headers, ...rest } = init
+  const finalHeaders = new Headers(headers)
+  finalHeaders.set('apikey', serviceKey)
+  finalHeaders.set('Authorization', `Bearer ${serviceKey}`)
+  if (!finalHeaders.has('Content-Type') && rest.body) {
+    finalHeaders.set('Content-Type', 'application/json')
+  }
+  return fetch(`${url}/rest/v1/${path}`, { ...rest, headers: finalHeaders })
+}
+
 export const Route = createFileRoute('/api/public/contact')({
   server: {
     handlers: {
@@ -80,9 +101,7 @@ export const Route = createFileRoute('/api/public/contact')({
         }
         const data = parsed.data
 
-        const supabaseUrl = process.env.SUPABASE_URL ?? process.env.NEW_SUPABASE_URL
-        const serviceKey =
-          process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEW_SUPABASE_SERVICE_KEY
+        const { url: supabaseUrl, serviceKey } = getEnv()
         if (!supabaseUrl || !serviceKey) {
           console.error('Missing Supabase server env')
           return Response.json(
@@ -90,17 +109,23 @@ export const Route = createFileRoute('/api/public/contact')({
             { status: 500, headers: CORS },
           )
         }
-        const supabase = createClient(supabaseUrl, serviceKey)
 
         // 1. Store the message
-        const { error: insertErr } = await supabase.from('contact_messages').insert({
-          name: data.name,
-          email: data.email,
-          subject: data.subject || null,
-          message: data.message,
+        const insertRes = await restRequest('contact_messages', {
+          url: supabaseUrl,
+          serviceKey,
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            name: data.name,
+            email: data.email,
+            subject: data.subject || null,
+            message: data.message,
+          }),
         })
-        if (insertErr) {
-          console.error('contact_messages insert failed', insertErr)
+        if (!insertRes.ok) {
+          const errText = await insertRes.text().catch(() => '')
+          console.error('contact_messages insert failed', insertRes.status, errText)
           return Response.json(
             { error: 'No se pudo guardar el mensaje' },
             { status: 500, headers: CORS },
@@ -109,7 +134,7 @@ export const Route = createFileRoute('/api/public/contact')({
 
         // 2. Send notification email — non-blocking from the user's perspective.
         try {
-          await sendContactNotification(supabase, data)
+          await sendContactNotification({ url: supabaseUrl, serviceKey }, data)
         } catch (err) {
           console.error('contact notification email failed', err)
           // Still return success — the message is stored.
@@ -122,7 +147,7 @@ export const Route = createFileRoute('/api/public/contact')({
 })
 
 async function sendContactNotification(
-  supabase: any,
+  env: { url: string; serviceKey: string },
   data: { name: string; email: string; subject?: string | null; message: string },
 ) {
   const template = TEMPLATES['contact-notification']
@@ -139,45 +164,61 @@ async function sendContactNotification(
   }
 
   // Suppression check
-  const { data: suppressed } = await supabase
-    .from('suppressed_emails')
-    .select('id')
-    .eq('email', recipient)
-    .maybeSingle()
-  if (suppressed) {
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: 'contact-notification',
-      recipient_email: recipient,
-      status: 'suppressed',
-    })
-    return
+  const supRes = await restRequest(
+    `suppressed_emails?select=id&email=eq.${encodeURIComponent(recipient)}&limit=1`,
+    { ...env, method: 'GET' },
+  )
+  if (supRes.ok) {
+    const rows = (await supRes.json().catch(() => [])) as unknown[]
+    if (Array.isArray(rows) && rows.length > 0) {
+      await restRequest('email_send_log', {
+        ...env,
+        method: 'POST',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          message_id: messageId,
+          template_name: 'contact-notification',
+          recipient_email: recipient,
+          status: 'suppressed',
+        }),
+      })
+      return
+    }
   }
 
   // Unsubscribe token (reuse-or-create)
-  let unsubscribeToken: string
-  const { data: existing } = await supabase
-    .from('email_unsubscribe_tokens')
-    .select('token, used_at')
-    .eq('email', recipient)
-    .maybeSingle()
-
-  if (existing && !existing.used_at) {
-    unsubscribeToken = existing.token as string
-  } else {
+  let unsubscribeToken: string | null = null
+  const existingRes = await restRequest(
+    `email_unsubscribe_tokens?select=token,used_at&email=eq.${encodeURIComponent(recipient)}&limit=1`,
+    { ...env, method: 'GET' },
+  )
+  if (existingRes.ok) {
+    const rows = (await existingRes.json().catch(() => [])) as Array<{
+      token: string
+      used_at: string | null
+    }>
+    if (rows[0] && !rows[0].used_at) {
+      unsubscribeToken = rows[0].token
+    }
+  }
+  if (!unsubscribeToken) {
     unsubscribeToken = generateToken()
-    await supabase
-      .from('email_unsubscribe_tokens')
-      .upsert(
-        { token: unsubscribeToken, email: recipient },
-        { onConflict: 'email', ignoreDuplicates: true },
-      )
-    const { data: stored } = await supabase
-      .from('email_unsubscribe_tokens')
-      .select('token')
-      .eq('email', recipient)
-      .maybeSingle()
-    if (stored?.token) unsubscribeToken = stored.token as string
+    await restRequest('email_unsubscribe_tokens', {
+      ...env,
+      method: 'POST',
+      headers: {
+        Prefer: 'resolution=ignore-duplicates,return=minimal',
+      },
+      body: JSON.stringify({ token: unsubscribeToken, email: recipient }),
+    })
+    const storedRes = await restRequest(
+      `email_unsubscribe_tokens?select=token&email=eq.${encodeURIComponent(recipient)}&limit=1`,
+      { ...env, method: 'GET' },
+    )
+    if (storedRes.ok) {
+      const rows = (await storedRes.json().catch(() => [])) as Array<{ token: string }>
+      if (rows[0]?.token) unsubscribeToken = rows[0].token
+    }
   }
 
   // Render
@@ -190,40 +231,55 @@ async function sendContactNotification(
       : template.subject
 
   // Log pending
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: 'contact-notification',
-    recipient_email: recipient,
-    status: 'pending',
-  })
-
-  // Enqueue
-  const { error: enqueueErr } = await supabase.rpc('enqueue_email', {
-    queue_name: 'transactional_emails',
-    payload: {
-      message_id: messageId,
-      to: recipient,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
-      subject,
-      html,
-      text,
-      purpose: 'transactional',
-      label: 'contact-notification',
-      idempotency_key: messageId,
-      unsubscribe_token: unsubscribeToken,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueErr) {
-    console.error('enqueue_email failed', enqueueErr)
-    await supabase.from('email_send_log').insert({
+  await restRequest('email_send_log', {
+    ...env,
+    method: 'POST',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({
       message_id: messageId,
       template_name: 'contact-notification',
       recipient_email: recipient,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
+      status: 'pending',
+    }),
+  })
+
+  // Enqueue via RPC
+  const rpcRes = await restRequest('rpc/enqueue_email', {
+    ...env,
+    method: 'POST',
+    body: JSON.stringify({
+      queue_name: 'transactional_emails',
+      payload: {
+        message_id: messageId,
+        to: recipient,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject,
+        html,
+        text,
+        purpose: 'transactional',
+        label: 'contact-notification',
+        idempotency_key: messageId,
+        unsubscribe_token: unsubscribeToken,
+        queued_at: new Date().toISOString(),
+      },
+    }),
+  })
+
+  if (!rpcRes.ok) {
+    const errText = await rpcRes.text().catch(() => '')
+    console.error('enqueue_email failed', rpcRes.status, errText)
+    await restRequest('email_send_log', {
+      ...env,
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        message_id: messageId,
+        template_name: 'contact-notification',
+        recipient_email: recipient,
+        status: 'failed',
+        error_message: 'Failed to enqueue email',
+      }),
     })
   }
 }
