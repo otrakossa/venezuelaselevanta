@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-const tsunamiAsset = { url: "/tsunami.svg" };
+const tsunamiAsset = { url: "/tsunami.png" };
 
 type Mood = "idle" | "thinking" | "hero" | "static";
 
