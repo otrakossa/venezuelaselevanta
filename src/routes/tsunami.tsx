@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Copy, RefreshCw, Square, Trash2, WifiOff } from "lucide-react";
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
+import { TsunamiAvatar } from "@/components/brand/TsunamiAvatar";
 
 import {
   Conversation,
@@ -204,9 +205,8 @@ function TsunamiPage() {
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-2xl shadow-sm shrink-0">
-            🐶
-          </div>
+          <TsunamiAvatar size={40} mood={busy ? "thinking" : "idle"} halo />
+
           <div className="min-w-0">
             <div className="font-bold text-base leading-tight flex items-center gap-2">
               <span className="truncate">Tsunami</span>
@@ -246,7 +246,7 @@ function TsunamiPage() {
         <ConversationContent className="max-w-3xl mx-auto w-full px-3 py-4">
           {messages.length === 0 && (
             <ConversationEmptyState
-              icon={<div className="text-6xl">🐶</div>}
+              icon={<TsunamiAvatar size={120} mood="hero" />}
               title={`${greet()}, soy Tsunami`}
               description="Te ayudo a buscar familiares, registrar desaparecidos, ver necesidades activas o guiarte para ofrecer ayuda. Solo tú ves esta conversación en este navegador."
             >
@@ -287,12 +287,11 @@ function TsunamiPage() {
             return (
               <div key={m.id} className={isAssistant ? "flex gap-2.5 items-start" : ""}>
                 {isAssistant && (
-                  <div
-                    className="h-8 w-8 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-base shadow-sm shrink-0 mt-1"
-                    aria-hidden
-                  >
-                    🐶
-                  </div>
+                  <TsunamiAvatar
+                    size={32}
+                    mood={isLastAssistant && streaming ? "thinking" : "idle"}
+                    className="mt-1"
+                  />
                 )}
                 <Message from={m.role} className={isAssistant ? "flex-1 min-w-0" : ""}>
                   <MessageContent
@@ -390,12 +389,10 @@ function TsunamiPage() {
 
           {status === "submitted" && (
             <div className="flex gap-2.5 items-start">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[color:var(--sunrise)] to-amber-400 flex items-center justify-center text-base shadow-sm shrink-0 mt-1">
-                🐶
-              </div>
+              <TsunamiAvatar size={32} mood="thinking" halo className="mt-1" />
               <Message from="assistant" className="flex-1 min-w-0">
                 <MessageContent className="bg-transparent p-0 shadow-none">
-                  <Shimmer>Tsunami está pensando…</Shimmer>
+                  <Shimmer>Tsunami está olfateando pistas…</Shimmer>
                 </MessageContent>
               </Message>
             </div>
