@@ -16,6 +16,7 @@ import { geocodeAddress } from "@/lib/geocode";
 import { MissingGridSkeleton } from "@/components/skeletons";
 import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PeopleTabs } from "@/components/PeopleTabs";
 import { LocationSelect } from "@/components/LocationSelect";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
 import { MissingDetailSheet } from "@/components/MissingDetailSheet";
@@ -156,6 +157,7 @@ function MissingPage() {
           )}
         </div>
       )}
+      <PeopleTabs />
       {/* Hero */}
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />

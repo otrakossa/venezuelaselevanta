@@ -35,7 +35,7 @@ export function getCredibility(r: Pick<Report, "verified" | "confirm_count" | "d
     return {
       level: "new",
       label: "Sin valoraciones aún",
-      short: "Sin valorar",
+      short: "Por confirmar",
       color: "#94a3b8",
       bg: "#e2e8f0",
       fg: "#334155",

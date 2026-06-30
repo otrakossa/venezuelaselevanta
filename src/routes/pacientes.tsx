@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { MatchSuggestions } from "@/components/MatchSuggestions";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
+import { PeopleTabs } from "@/components/PeopleTabs";
 import { Wizard } from "@/components/wizard/Wizard";
 
 
@@ -231,6 +232,7 @@ function AtendidosPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative overflow-x-hidden">
+      <PeopleTabs />
       <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 sm:p-7 mb-5">
         <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
         <div className="relative grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 sm:flex sm:items-end sm:justify-between">
