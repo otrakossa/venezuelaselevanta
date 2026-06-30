@@ -44,9 +44,12 @@ export const Route = createFileRoute("/api/tsunami")({
             return new Response("Tsunami no tiene proveedor de IA configurado", { status: 500 });
           }
 
-          const model = lovableKey
-            ? createLovableAiGatewayProvider(lovableKey)("google/gemini-3-flash-preview")
-            : createGeminiDirectProvider(geminiKey!)("gemini-2.0-flash");
+          // Preferir Gemini directo cuando está disponible: la LOVABLE_API_KEY
+          // en VPS puede quedar desactualizada tras rotaciones y no podemos
+          // re-sincronizarla automáticamente.
+          const model = geminiKey
+            ? createGeminiDirectProvider(geminiKey)("gemini-2.0-flash")
+            : createLovableAiGatewayProvider(lovableKey!)("google/gemini-3-flash-preview");
 
           const result = streamText({
             model,
@@ -58,9 +61,20 @@ export const Route = createFileRoute("/api/tsunami")({
               delayInMs: 18,
               chunking: "word",
             }),
+            onError: ({ error }) => {
+              const msg = error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ""}` : String(error);
+              console.error("[tsunami] streamText error:", msg);
+            },
           });
 
-          return result.toUIMessageStreamResponse({ originalMessages: body.messages });
+          return result.toUIMessageStreamResponse({
+            originalMessages: body.messages,
+            onError: (error) => {
+              const msg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+              console.error("[tsunami] stream response error:", msg);
+              return msg;
+            },
+          });
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
           return new Response(`Tsunami error: ${msg}`, { status: 500 });
