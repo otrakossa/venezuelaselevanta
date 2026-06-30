@@ -1,0 +1,24 @@
+# ── CI de tests — workflow APARTE y NO bloqueante ──────────────────────────
+# No toca deploy.yml (deploy por SSH a la VPS). Aquí solo corre la suite del
+# núcleo del bot (Vitest + MSW, sin Docker). Sin e2e ni db en esta rama.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main, "feature/**"]
+
+jobs:
+  core:
+    name: Núcleo del bot (Vitest + MSW)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      # `bun run test` ejecuta el binario de vitest vía su shebang de node
+      # (no el runtime de Bun), que es donde MSW intercepta fetch de forma
+      # fiable. Node ya viene en los runners de ubuntu.
+      - run: bun run test
