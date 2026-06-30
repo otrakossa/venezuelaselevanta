@@ -5,6 +5,7 @@ import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { LocationPickerInline } from "@/components/LocationPickerInline";
 import { Wizard } from "@/components/wizard/Wizard";
 import { reverseGeocode } from "@/lib/geocode";
+import { isValidCedula, isValidVePhone, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
 
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
@@ -763,7 +764,9 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     if (!f.center_name.trim())     { toast.error("El nombre del centro es requerido"); return; }
     if (!f.contact_name.trim())    { toast.error("Tu nombre es obligatorio"); return; }
     if (!f.reporter_cedula.trim()) { toast.error("Tu cédula es obligatoria"); return; }
+    if (!isValidCedula(f.reporter_cedula)) { toast.error(CEDULA_ERROR); return; }
     if (!f.contact_phone.trim())   { toast.error("Tu teléfono es obligatorio"); return; }
+    if (!isValidVePhone(f.contact_phone))  { toast.error(PHONE_ERROR); return; }
 
 
     setBusy(true);

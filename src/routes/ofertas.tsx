@@ -32,6 +32,7 @@ export const Route = createFileRoute("/ofertas")({
 });
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
+import { isValidVePhone, PHONE_ERROR } from "@/lib/validators";
 
 type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type OfferStatus = "available" | "matched" | "delivered" | "cancelled";
@@ -111,6 +112,29 @@ async function fetchOffers(tab: "available" | "matched" | "delivered", category:
   return res.json();
 }
 
+async function fetchCount(statusQ: string, category: Category | "all"): Promise<number> {
+  const catQ = category !== "all" ? `&category=eq.${category}` : "";
+  const res = await fetch(`${SUPA_URL}/rest/v1/offers?${statusQ}${catQ}`, {
+    method: "HEAD",
+    headers: { ...HEADERS, Prefer: "count=exact" },
+  });
+  if (!res.ok) return 0;
+  const total = res.headers.get("content-range")?.split("/")[1];
+  return total && total !== "*" ? parseInt(total, 10) || 0 : 0;
+}
+
+// Conteos globales por status (independientes del tab activo) para los KPIs.
+async function fetchOfferCounts(
+  category: Category | "all",
+): Promise<{ available: number; matched: number; delivered: number }> {
+  const [available, matched, delivered] = await Promise.all([
+    fetchCount("status=in.(open,available)", category),
+    fetchCount("status=eq.matched", category),
+    fetchCount("status=eq.delivered", category),
+  ]);
+  return { available, matched, delivered };
+}
+
 async function fetchNeed(id: string): Promise<NeedLite | null> {
   const res = await fetch(
     `${SUPA_URL}/rest/v1/needs?id=eq.${id}&select=id,title,category,center_name,status&limit=1`,
@@ -147,6 +171,11 @@ function OfertasPage() {
   const [showForm, setShowForm] = useState(false);
   const [matchTarget, setMatchTarget] = useState<Offer | null>(null);
   const [prefilledNeed, setPrefilledNeed] = useState<NeedLite | null>(null);
+  const [counts, setCounts] = useState<{ available: number; matched: number; delivered: number }>({
+    available: 0,
+    matched: 0,
+    delivered: 0,
+  });
 
   // Resolve ?need=<uuid> into a need + open form
   useEffect(() => {
@@ -163,8 +192,12 @@ function OfertasPage() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const data = await fetchOffers(tab, category);
+      const [data, c] = await Promise.all([
+        fetchOffers(tab, category),
+        fetchOfferCounts(category),
+      ]);
       setOffers(data);
+      setCounts(c);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Error cargando ofertas");
     } finally {
@@ -185,15 +218,6 @@ function OfertasPage() {
       (o.location_desc ?? "").toLowerCase().includes(n),
     );
   }, [offers, q]);
-
-  const counts = useMemo(() => {
-    const c = { available: 0, matched: 0, delivered: 0 };
-    for (const o of offers) {
-      const s = normalizeStatus(o.status);
-      c[s]++;
-    }
-    return c;
-  }, [offers]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
@@ -252,10 +276,15 @@ function OfertasPage() {
         <OfferForm
           prefilledNeed={prefilledNeed}
           onDone={() => {
+            const wasLinked = !!prefilledNeed;
             setShowForm(false);
             setPrefilledNeed(null);
             if (prefilledNeedId) navigate({ search: {} });
-            load(true);
+            // Si se creó vinculada a una necesidad (status='matched'), saltar al tab
+            // "Vinculadas" para que la oferta sea visible. El cambio de tab dispara la
+            // recarga vía el efecto [tab, category]; si no, recargamos el tab actual.
+            if (wasLinked && tab !== "matched") setTab("matched");
+            else load(true);
           }}
         />
       )}
@@ -684,6 +713,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     if (!f.city.trim()) { toast.error("Indica la ciudad o municipio"); return; }
     if (!f.address.trim()) { toast.error("Indica la dirección de entrega"); return; }
     if (!f.contact_name.trim()) { toast.error("Tu nombre es requerido"); return; }
+    if (f.contact_phone.trim() && !isValidVePhone(f.contact_phone)) { toast.error(PHONE_ERROR); return; }
     setBusy(true);
     try {
       const body: Record<string, unknown> = {

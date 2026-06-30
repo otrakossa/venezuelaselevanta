@@ -30,6 +30,7 @@ export const Route = createFileRoute("/pacientes")({
 });
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
+import { isValidCedula, isValidVePhone, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
 
 type PatientStatus = "stable" | "critical" | "recovering" | "discharged" | "admitted";
 type Filter = "all" | "active" | "discharged";
@@ -642,6 +643,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
   const submit = async () => {
     if (!f.name.trim())        { toast.error("El nombre es requerido"); return; }
     if (!f.center_name.trim()) { toast.error("El nombre del centro es requerido"); return; }
+    if (f.id_number.trim() && !isValidCedula(f.id_number)) { toast.error(CEDULA_ERROR); return; }
+    if (f.phone.trim() && !isValidVePhone(f.phone)) { toast.error(PHONE_ERROR); return; }
 
     setBusy(true);
     try {
