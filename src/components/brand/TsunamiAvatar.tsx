@@ -65,9 +65,9 @@ export function TsunamiAvatar({ size = 40, mood = "idle", className, halo = fals
             mood === "hero" && "animate-tsunami-float-lg",
           )}
           style={{
-            width: size * 1.9,
-            height: size * 1.9,
-            transform: "translate(-50%, -42%)",
+            width: size * 2.5,
+            height: size * 2.5,
+            transform: "translate(-50%, -20%)",
             objectFit: "contain",
           }}
         />
