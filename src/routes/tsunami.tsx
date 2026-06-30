@@ -245,32 +245,85 @@ function TsunamiPage() {
       <Conversation className="flex-1 overflow-hidden">
         <ConversationContent className="max-w-3xl mx-auto w-full px-3 py-4">
           {messages.length === 0 && (
-            <ConversationEmptyState
-              icon={<TsunamiAvatar size={120} mood="hero" />}
-              title={`${greet()}, soy Tsunami`}
-              description="Te ayudo a buscar familiares, registrar desaparecidos, ver necesidades activas o guiarte para ofrecer ayuda. Solo tú ves esta conversación en este navegador."
-            >
-              <div className="grid sm:grid-cols-2 gap-4 mt-6 w-full max-w-2xl">
-                {EMPTY_SECTIONS.map((sec) => (
-                  <div key={sec.title} className="rounded-xl border bg-card/60 p-3">
-                    <div className="font-semibold text-sm mb-2 flex items-center gap-1.5">
-                      <span>{sec.emoji}</span>
-                      <span>{sec.title}</span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {sec.items.map((it) => (
-                        <button
-                          key={it.label}
-                          onClick={() => send(it.prompt)}
-                          className="block w-full text-left px-2.5 py-2 rounded-lg hover:bg-accent transition-colors"
+            <ConversationEmptyState className="!p-0 !gap-0">
+              <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center pt-6 pb-2">
+                {/* Hero: Tsunami grande */}
+                <div className="relative mb-5">
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 -m-10 rounded-full blur-3xl opacity-70"
+                    style={{
+                      background:
+                        "radial-gradient(circle at center, color-mix(in oklab, var(--sunrise) 35%, transparent) 0%, color-mix(in oklab, var(--gold) 18%, transparent) 45%, transparent 75%)",
+                    }}
+                  />
+                  <TsunamiAvatar size={180} mood="hero" />
+                </div>
+
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider mb-3"
+                  style={{
+                    background: "color-mix(in oklab, var(--sunrise) 12%, transparent)",
+                    color: "var(--midnight)",
+                  }}
+                >
+                  <span className="size-1.5 rounded-full bg-[color:var(--sunrise)] animate-pulse" />
+                  Beta privada · Asistente de rescate
+                </div>
+
+                <h1
+                  className="text-3xl sm:text-4xl font-black tracking-tight"
+                  style={{ fontFamily: '"Archivo Black", system-ui, sans-serif', color: "var(--midnight)" }}
+                >
+                  {greet()}, soy <span style={{ color: "var(--sunrise)" }}>Tsunami</span> 🐾
+                </h1>
+                <p className="mt-2 text-sm sm:text-base text-muted-foreground max-w-xl">
+                  Te ayudo a buscar familiares, registrar desaparecidos, ver necesidades activas o guiarte para ofrecer ayuda.
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground/80">
+                  🔒 Solo tú ves esta conversación en este navegador.
+                </p>
+
+                {/* Acciones */}
+                <div className="grid sm:grid-cols-2 gap-4 mt-8 w-full">
+                  {EMPTY_SECTIONS.map((sec) => (
+                    <div
+                      key={sec.title}
+                      className="group rounded-2xl border border-border/60 bg-card/80 backdrop-blur p-4 text-left shadow-sm hover:shadow-md hover:border-[color:var(--sunrise)]/40 transition-all"
+                    >
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/50">
+                        <span
+                          className="size-8 grid place-items-center rounded-lg text-base"
+                          style={{
+                            background: "color-mix(in oklab, var(--sunrise) 14%, transparent)",
+                          }}
                         >
-                          <div className="text-sm font-medium">{it.label}</div>
-                          <div className="text-xs text-muted-foreground">{it.sub}</div>
-                        </button>
-                      ))}
+                          {sec.emoji}
+                        </span>
+                        <span className="font-bold text-sm" style={{ color: "var(--midnight)" }}>
+                          {sec.title}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        {sec.items.map((it) => (
+                          <button
+                            key={it.label}
+                            onClick={() => send(it.prompt)}
+                            className="group/btn flex items-start gap-2 w-full text-left px-2.5 py-2 rounded-lg hover:bg-[color:var(--sunrise)]/8 transition-colors"
+                          >
+                            <span className="mt-0.5 text-[color:var(--sunrise)] opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all">
+                              →
+                            </span>
+                            <span className="flex-1 -ml-4 group-hover/btn:ml-0 transition-all">
+                              <span className="block text-sm font-semibold text-foreground">{it.label}</span>
+                              <span className="block text-xs text-muted-foreground">{it.sub}</span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </ConversationEmptyState>
           )}
