@@ -72,6 +72,10 @@ export interface MissingPerson {
   found_date: string | null;
   found_marks?: number | null;
 
+  outcome?: "at_health_center" | "with_family" | "relocated" | "deceased" | "other" | null;
+  outcome_note?: string | null;
+  outcome_set_at?: string | null;
+
   matched_patient_id?: string | null;
   matched_patient?: { center_name: string | null; status?: string | null } | null;
   created_at: string;

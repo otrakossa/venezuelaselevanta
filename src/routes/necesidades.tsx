@@ -421,7 +421,7 @@ function NeedDetailModal({
       (need.contact_phone ? ` · ${need.contact_phone}` : "") +
       `\n\n¿Puedes ayudar? Ofrece tu apoyo aquí:\n${url}`;
     if (navigator.share) {
-      navigator.share({ title: need.title, text, url }).catch(() => {
+      navigator.share({ text }).catch(() => {
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
       });
     } else {
@@ -670,7 +670,7 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
                 (n.contact_phone ? ` · ${n.contact_phone}` : "") +
                 `\n\n¿Puedes ayudar? Ofrece tu apoyo aquí:\n${url}`;
               if (navigator.share) {
-                navigator.share({ title: n.title, text, url }).catch(() => {
+                navigator.share({ text }).catch(() => {
                   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
                 });
               } else {

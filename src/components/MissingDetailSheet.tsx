@@ -8,6 +8,7 @@ import { uploadOne } from "@/lib/media-upload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PatientDetailModal } from "@/components/PatientDetailModal";
+import { OUTCOME_LABELS, OUTCOME_EMOJI, OUTCOME_PILL, PUBLIC_OUTCOMES, getOutcome, type MissingOutcome } from "@/lib/missing-outcome";
 import type { MissingPerson, MissingStatus } from "@/lib/types";
 
 type Comment = {
@@ -72,6 +73,9 @@ export function MissingDetailSheet({
   const [matchLoading, setMatchLoading] = useState(false);
   const [matchError, setMatchError] = useState<string | null>(null);
   const [foundMarks, setFoundMarks] = useState<number | null>(null);
+  const [outcome, setOutcome] = useState<MissingOutcome | null>(null);
+  const [outcomeNote, setOutcomeNote] = useState<string | null>(null);
+  const [showOutcomeDialog, setShowOutcomeDialog] = useState(false);
 
   const [markBusy, setMarkBusy] = useState(false);
   const [localPhoto, setLocalPhoto] = useState<string | null>(null);
@@ -97,6 +101,9 @@ export function MissingDetailSheet({
     setMatchLoading(false);
     setMatchError(null);
     setFoundMarks((person as any)?.found_marks ?? null);
+    setOutcome(getOutcome(person ?? ({} as MissingPerson)));
+    setOutcomeNote((person as any)?.outcome_note ?? null);
+    setShowOutcomeDialog(false);
     setLocalPhoto(null);
   }, [person?.id]);
 
@@ -122,7 +129,7 @@ export function MissingDetailSheet({
   };
 
 
-  const markFound = async () => {
+  const markFound = async (chosenOutcome?: MissingOutcome | null, note?: string | null) => {
     if (!person || markBusy) return;
     setMarkBusy(true);
     try {
@@ -130,16 +137,22 @@ export function MissingDetailSheet({
       const { data, error } = await (supabase as any).rpc("mark_missing_person_found", {
         _person_id: person.id,
         _device_id: getDeviceId(),
+        _outcome: chosenOutcome ?? null,
+        _note: note ?? null,
       });
       if (error) { toast.error(error.message); return; }
       const row = Array.isArray(data) ? data[0] : data;
       const n = row?.found_marks ?? (foundMarks ?? 0) + 1;
       setFoundMarks(n);
+      if (row?.outcome) setOutcome(row.outcome as MissingOutcome);
+      if (row?.outcome_note) setOutcomeNote(row.outcome_note);
+      setShowOutcomeDialog(false);
       toast.success(`Marcada como encontrada ❤️ (${n} confirmación${n === 1 ? "" : "es"})`);
     } finally {
       setMarkBusy(false);
     }
   };
+
 
   // Load comments + realtime
   useEffect(() => {
@@ -362,8 +375,15 @@ export function MissingDetailSheet({
             </div>
 
 
+            {outcome && (
+              <div className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full ${OUTCOME_PILL[outcome]}`}>
+                <span>{OUTCOME_EMOJI[outcome]}</span>
+                <span>{OUTCOME_LABELS[outcome]}</span>
+                {outcomeNote && <span className="font-normal opacity-90 truncate max-w-[16rem]">· {outcomeNote}</span>}
+              </div>
+            )}
 
-            {person.matched_patient_id && (
+            {person.matched_patient_id && !outcome && (
               <div className="flex items-start gap-2 text-sm rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-3 py-2.5">
                 <span className="shrink-0 text-base">✅</span>
                 <div className="min-w-0">
@@ -439,7 +459,7 @@ export function MissingDetailSheet({
                 )}
 
                 <button
-                  onClick={markFound}
+                  onClick={() => setShowOutcomeDialog(true)}
                   disabled={markBusy}
                   className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white text-base font-extrabold px-3 py-3 rounded-xl disabled:opacity-60 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/40"
                   title="Marcar como encontrada/o"
@@ -625,6 +645,84 @@ export function MissingDetailSheet({
         toast.success("Marcado como no coincidente");
       }}
     />
+
+    {showOutcomeDialog && person && (
+      <OutcomePickerDialog
+        busy={markBusy}
+        onSkip={() => markFound(null)}
+        onSelect={(o, note) => markFound(o, note)}
+        onClose={() => setShowOutcomeDialog(false)}
+      />
+    )}
     </>
+  );
+}
+
+function OutcomePickerDialog({
+  busy, onSkip, onSelect, onClose,
+}: {
+  busy: boolean;
+  onSkip: () => void;
+  onSelect: (o: MissingOutcome, note: string | null) => void;
+  onClose: () => void;
+}) {
+  const [note, setNote] = useState("");
+  return (
+    <div className="fixed inset-0 z-[1300] grid place-items-center p-4" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md p-5 space-y-4">
+        <div>
+          <h3 className="text-lg font-extrabold leading-tight">¿Sabes dónde está?</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Marcar como encontrada/o es público. Si conoces el detalle, ayúdanos a contar mejor la historia.
+          </p>
+        </div>
+        <div className="grid gap-2">
+          {PUBLIC_OUTCOMES.map((o) => (
+            <button
+              key={o}
+              type="button"
+              disabled={busy}
+              onClick={() => onSelect(o, note.trim() ? note.trim() : null)}
+              className={`w-full text-left rounded-xl border border-border hover:border-emerald-500 hover:bg-emerald-500/5 px-3 py-2.5 transition disabled:opacity-60`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{OUTCOME_EMOJI[o]}</span>
+                <span className="font-bold">{OUTCOME_LABELS[o]}</span>
+              </div>
+            </button>
+          ))}
+        </div>
+        <div>
+          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Detalle (opcional)</label>
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Ej.: Hospital Universitario de Caracas"
+            maxLength={140}
+            className="mt-1 w-full px-3 py-2 rounded-lg border border-input bg-background text-sm"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={busy}
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground px-3 py-2"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onSkip}
+            disabled={busy}
+            className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-lg disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            Solo marcar como encontrada
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

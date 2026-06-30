@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { AdminOnlyNotice } from "@/components/admin/AdminOnlyNotice";
 import type { SystemHealth } from "@/lib/system-health.types";
 import {
   Activity, AlertTriangle, CheckCircle2, Cpu, HardDrive, Database,
@@ -173,12 +174,7 @@ function ObservabilityPage() {
     return <div className="p-10 text-center text-sm text-muted-foreground">Verificando permisos...</div>;
   }
   if (!isAdmin) {
-    return (
-      <div className="max-w-md mx-auto py-16 px-4 text-center">
-        <ShieldCheck className="h-12 w-12 text-[color:var(--sunrise)] mx-auto mb-3" />
-        <h1 className="text-xl font-bold mb-2">Sin permisos</h1>
-      </div>
-    );
+    return <AdminOnlyNotice section="Observabilidad" />;
   }
 
   return (

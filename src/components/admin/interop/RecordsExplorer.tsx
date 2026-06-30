@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { sbx } from "./_client";
-import { Loader2, Search, ExternalLink, CheckCircle2, MapPin, Image as ImageIcon } from "lucide-react";
+import { Loader2, Search, ExternalLink, CheckCircle2, MapPin, Image as ImageIcon, Trash2, GitMerge, Pencil } from "lucide-react";
 import { toast } from "sonner";
+
 
 type Kind = "missing" | "patient";
 type Row = {
@@ -95,12 +96,97 @@ export function RecordsExplorer() {
   }, [kind, debounced, source, status, matched, hasPhoto, hasCoords, page]);
 
   const markFound = async (id: string) => {
-    if (!confirm("¿Marcar como encontrada?")) return;
+    const outcome = prompt(
+      "¿Outcome? Escribe una opción exacta o deja en blanco:\n- at_health_center\n- with_family\n- relocated\n- other",
+    ) ?? "";
     const note = prompt("Nota opcional:") ?? null;
-    const { error } = await sbx.rpc("mark_missing_found", { p_id: id, p_note: note });
+    const { error } = await sbx.rpc("mark_missing_found", {
+      p_id: id,
+      p_outcome: outcome.trim() || null,
+      p_note: note,
+    });
     if (error) toast.error(error.message);
     else { toast.success("Marcada como encontrada"); setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: "found" } : r)); }
   };
+
+  const markDeceased = async (id: string) => {
+    if (!confirm("¿Marcar como fallecida/o? Esta acción es sensible.")) return;
+    const note = prompt("Nota opcional:") ?? null;
+    const { error } = await sbx.rpc("mark_missing_deceased", { p_id: id, p_note: note });
+    if (error) toast.error(error.message);
+    else { toast.success("Marcado como fallecido"); setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: "deceased" } : r)); }
+  };
+
+  const setMissingStatus = async (id: string) => {
+    const next = prompt("Nuevo estado del desaparecido:\n- missing\n- found\n- deceased")?.trim();
+    if (!next) return;
+    const note = prompt("Nota opcional (se agrega a la descripción):") ?? null;
+    const { error } = await sbx.rpc("set_missing_status", { p_id: id, p_status: next, p_note: note });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Estado actualizado");
+    setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: next } : r));
+  };
+
+  const deleteMissing = async (id: string, name: string) => {
+    if (!confirm(`¿Eliminar definitivamente el registro de "${name}"?\nEsta acción no se puede deshacer.`)) return;
+    const { error } = await sbx.rpc("delete_missing_person", { p_id: id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Registro eliminado");
+    setRows((rs) => rs.filter((r) => r.id !== id));
+    setCount((c) => Math.max(0, c - 1));
+  };
+
+  const mergeMissing = async (duplicateId: string, name: string) => {
+    const canonical = prompt(
+      `Fusionar "${name}" como DUPLICADO en otro desaparecido.\n\nPega el ID (uuid) del registro CANÓNICO (el que se conserva):`,
+    )?.trim();
+    if (!canonical) return;
+    if (canonical === duplicateId) { toast.error("El ID canónico debe ser distinto"); return; }
+    if (!/^[0-9a-f-]{36}$/i.test(canonical)) { toast.error("UUID inválido"); return; }
+    if (!confirm(`Se eliminará "${name}" y sus datos se consolidarán en ${canonical.slice(0,8)}…\n¿Continuar?`)) return;
+    const { error } = await sbx.rpc("merge_missing_persons", { p_canonical_id: canonical, p_duplicate_id: duplicateId, p_auto: false });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Registros fusionados");
+    setRows((rs) => rs.filter((r) => r.id !== duplicateId));
+    setCount((c) => Math.max(0, c - 1));
+  };
+
+  const setPatientStatus = async (id: string) => {
+    const next = prompt(
+      "Nuevo estado del paciente. Opciones comunes:\n- stable\n- admitted\n- discharged\n- reunited\n- deceased",
+    )?.trim();
+    if (!next) return;
+    const note = prompt("Nota opcional (se agrega al historial):") ?? null;
+    const { error } = await sbx.rpc("set_patient_status", { p_id: id, p_status: next, p_note: note });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Estado actualizado");
+    setRows((rs) => rs.map((r) => r.id === id ? { ...r, status: next } : r));
+  };
+
+  const deletePatient = async (id: string, name: string) => {
+    if (!confirm(`¿Eliminar definitivamente al paciente "${name}"?\nEsta acción no se puede deshacer.`)) return;
+    const { error } = await sbx.rpc("delete_patient", { p_id: id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Paciente eliminado");
+    setRows((rs) => rs.filter((r) => r.id !== id));
+    setCount((c) => Math.max(0, c - 1));
+  };
+
+  const mergePatient = async (duplicateId: string, name: string) => {
+    const canonical = prompt(
+      `Fusionar "${name}" como DUPLICADO en otro paciente.\n\nPega el ID (uuid) del paciente CANÓNICO (el que se conserva):`,
+    )?.trim();
+    if (!canonical) return;
+    if (canonical === duplicateId) { toast.error("El ID canónico debe ser distinto"); return; }
+    if (!/^[0-9a-f-]{36}$/i.test(canonical)) { toast.error("UUID inválido"); return; }
+    if (!confirm(`Se eliminará "${name}" y sus datos se consolidarán en ${canonical.slice(0,8)}…\n¿Continuar?`)) return;
+    const { error } = await sbx.rpc("merge_patients", { p_canonical_id: canonical, p_duplicate_id: duplicateId });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Pacientes fusionados");
+    setRows((rs) => rs.filter((r) => r.id !== duplicateId));
+    setCount((c) => Math.max(0, c - 1));
+  };
+
 
   const select = "px-2 py-1.5 rounded-md border border-input bg-background text-xs";
   const totalPages = Math.max(1, Math.ceil(count / PAGE));
@@ -198,6 +284,53 @@ export function RecordsExplorer() {
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       </button>
                     )}
+                    {kind === "missing" && r.status !== "deceased" && (
+                      <button onClick={() => markDeceased(r.id)} className="p-1.5 rounded hover:bg-neutral-200 text-neutral-700" title="Marcar como fallecida/o">
+                        🕊️
+                      </button>
+                    )}
+                    {kind === "missing" && (
+                      <>
+                        <button onClick={() => setMissingStatus(r.id)} className="p-1.5 rounded hover:bg-blue-100 text-blue-600" title="Cambiar estado">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(r.id); toast.success("ID copiado"); }}
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground font-mono text-[10px]"
+                          title={`Copiar ID (${r.id.slice(0,8)}…)`}
+                        >
+                          ID
+                        </button>
+                        <button onClick={() => mergeMissing(r.id, r.name)} className="p-1.5 rounded hover:bg-amber-100 text-amber-700" title="Fusionar como duplicado de…">
+                          <GitMerge className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => deleteMissing(r.id, r.name)} className="p-1.5 rounded hover:bg-red-100 text-red-600" title="Eliminar registro">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+
+                    {kind === "patient" && (
+                      <>
+                        <button onClick={() => setPatientStatus(r.id)} className="p-1.5 rounded hover:bg-blue-100 text-blue-600" title="Cambiar estado">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(r.id); toast.success("ID copiado"); }}
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground font-mono text-[10px]"
+                          title={`Copiar ID (${r.id.slice(0,8)}…)`}
+                        >
+                          ID
+                        </button>
+                        <button onClick={() => mergePatient(r.id, r.name)} className="p-1.5 rounded hover:bg-amber-100 text-amber-700" title="Fusionar como duplicado de…">
+                          <GitMerge className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => deletePatient(r.id, r.name)} className="p-1.5 rounded hover:bg-red-100 text-red-600" title="Eliminar paciente">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+
                   </div>
                 </td>
               </tr>
