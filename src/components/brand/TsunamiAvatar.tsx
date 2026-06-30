@@ -51,19 +51,27 @@ export function TsunamiAvatar({ size = 40, mood = "idle", className, halo = fals
           )}
         </>
       )}
-      <img
-        src={tsunamiAsset.url}
-        alt="Tsunami, asistente de rescate"
-        width={size}
-        height={size}
+      <span
+        className="relative overflow-hidden rounded-full bg-[color-mix(in_oklab,var(--cream)_70%,white)] ring-1 ring-[color-mix(in_oklab,var(--sunrise)_25%,transparent)]"
         style={{ width: size, height: size }}
-        className={cn(
-          "relative drop-shadow-[0_4px_10px_rgba(255,107,53,0.25)]",
-          mood === "idle" && "animate-tsunami-float",
-          mood === "thinking" && "animate-tsunami-sniff",
-          mood === "hero" && "animate-tsunami-float-lg",
-        )}
-      />
+      >
+        <img
+          src={tsunamiAsset.url}
+          alt="Tsunami, asistente de rescate"
+          className={cn(
+            "absolute left-1/2 top-1/2 drop-shadow-[0_4px_10px_rgba(255,107,53,0.25)]",
+            mood === "idle" && "animate-tsunami-float",
+            mood === "thinking" && "animate-tsunami-sniff",
+            mood === "hero" && "animate-tsunami-float-lg",
+          )}
+          style={{
+            width: size * 1.9,
+            height: size * 1.9,
+            transform: "translate(-50%, -42%)",
+            objectFit: "contain",
+          }}
+        />
+      </span>
     </span>
   );
 }
