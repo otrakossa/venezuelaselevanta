@@ -17,6 +17,10 @@ const TABS = [
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  // En /tsunami damos protagonismo total al chat en móvil: ocultamos la barra
+  // inferior y el FAB de reportar para evitar distracciones.
+  if (pathname === "/tsunami") return null;
+
   return (
     <>
       {/* Spacer so page content never sits under the bar (includes the safe-area
