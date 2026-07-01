@@ -815,6 +815,31 @@ function BrandTooltip({ active, payload, label }: any) {
   );
 }
 
+function SectionHeader({
+  icon: Icon, title, subtitle,
+}: { icon: any; title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-center gap-3 pt-2">
+      <div
+        className="w-9 h-9 rounded-xl grid place-items-center shrink-0 text-[var(--sunrise)]"
+        style={{ background: "linear-gradient(135deg, color-mix(in oklab, var(--sunrise) 18%, transparent), color-mix(in oklab, var(--gold) 12%, transparent))" }}
+      >
+        <Icon className="h-4.5 w-4.5" />
+      </div>
+      <div className="min-w-0">
+        <h2 className="font-display text-lg leading-tight truncate">{title}</h2>
+        {subtitle ? (
+          <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+        ) : null}
+      </div>
+      <div
+        className="flex-1 h-px ml-2"
+        style={{ background: "linear-gradient(90deg, color-mix(in oklab, var(--sunrise) 40%, transparent), transparent)" }}
+      />
+    </div>
+  );
+
+
 function timeAgo(ts: number): string {
   const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
   if (s < 60) return `hace ${s}s`;
