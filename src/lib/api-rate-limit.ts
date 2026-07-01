@@ -22,7 +22,10 @@ export interface RateLimitResult {
 }
 
 const WINDOW_MS = 60 * 60 * 1000
-const ANON_LIMIT = Number(process.env.PUBLIC_API_ANON_LIMIT ?? 120)
+function anonLimit(): number {
+  const raw = Number(process.env.PUBLIC_API_ANON_LIMIT ?? 120)
+  return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : 120
+}
 
 interface Bucket {
   count: number
