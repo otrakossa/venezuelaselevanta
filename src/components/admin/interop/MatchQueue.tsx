@@ -17,6 +17,7 @@ type Pair = {
 };
 
 const MAX_PAIRS = 1000;
+const PATIENT_SCAN_BATCH = 500;
 const fmt = (n: number) => n.toLocaleString("es-VE");
 
 export function MatchQueue() {
@@ -24,14 +25,18 @@ export function MatchQueue() {
   const [loading, setLoading] = useState(false);
   const [minScore, setMinScore] = useState(0.5);
   const [busy, setBusy] = useState<string | null>(null);
+  const [patientOffset, setPatientOffset] = useState(0);
 
-  const load = useCallback(async () => {
-    setLoading(true); setPairs([]);
+  const load = useCallback(async (offset = 0, append = false) => {
+    setLoading(true);
+    if (!append) setPairs([]);
     const [dismissalsRes, suggsRes] = await Promise.all([
       sbx.from("match_dismissals").select("missing_id,patient_id"),
       sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches_all", {
         p_min_score: minScore,
         p_max_pairs: MAX_PAIRS,
+        p_patient_offset: offset,
+        p_patient_limit: PATIENT_SCAN_BATCH,
       }),
     ]);
 
@@ -65,11 +70,16 @@ export function MatchQueue() {
         score: Number(s.score),
       });
     }
-    setPairs(out);
+    setPairs((current) => {
+      if (!append) return out;
+      const seen = new Set(current.map((p) => `${p.missing_id}:${p.patient_id}`));
+      return [...current, ...out.filter((p) => !seen.has(`${p.missing_id}:${p.patient_id}`))];
+    });
+    setPatientOffset(offset);
     setLoading(false);
   }, [minScore]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(0, false); }, [load]);
 
 
   const confirm = async (p: Pair) => {
@@ -107,20 +117,26 @@ export function MatchQueue() {
             onChange={(e) => setMinScore(parseFloat(e.target.value))} className="w-24" />
           <b>{Math.round(minScore * 100)}%</b>
         </label>
-        <button onClick={load} disabled={loading}
+        <button onClick={() => load(0, false)} disabled={loading}
           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-xs hover:bg-muted disabled:opacity-50">
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           Re-escanear
+        </button>
+        <button onClick={() => load(patientOffset + PATIENT_SCAN_BATCH, true)} disabled={loading}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border text-xs font-bold hover:bg-muted disabled:opacity-50">
+          Escanear siguientes {fmt(PATIENT_SCAN_BATCH)}
         </button>
       </div>
 
       {loading && (
         <div className="text-xs text-muted-foreground flex items-center gap-2">
-          <Loader2 className="h-3 w-3 animate-spin" /> Escaneando toda la base de desaparecidos sin match (puede tardar ~20s)…
+          <Loader2 className="h-3 w-3 animate-spin" /> Escaneando lote seguro de pacientes contra toda la base de desaparecidos…
         </div>
       )}
 
-      <div className="text-[11px] text-muted-foreground">{fmt(pairs.length)} pares candidatos</div>
+      <div className="text-[11px] text-muted-foreground">
+        {fmt(pairs.length)} pares candidatos · pacientes escaneados: {fmt(patientOffset + PATIENT_SCAN_BATCH)}
+      </div>
 
       <div className="space-y-2">
         {pairs.map((p) => {
