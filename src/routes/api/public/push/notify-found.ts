@@ -52,7 +52,7 @@ export const Route = createFileRoute("/api/public/push/notify-found")({
           .maybeSingle();
 
         if (pErr || !person) return Response.json({ ok: false, error: "person not found" }, { status: 404 });
-        const p = person as { id: string; name: string; outcome: string | null; outcome_note: string | null; last_seen_location: string | null };
+        const p = person as unknown as { id: string; name: string; outcome: string | null; outcome_note: string | null; last_seen_location: string | null };
 
         const { data: subs, error: sErr } = await supabaseAdmin
           .from("push_subscriptions")
