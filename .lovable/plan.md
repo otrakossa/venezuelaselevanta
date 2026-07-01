@@ -1,35 +1,125 @@
-Respuesta corta: no hay una forma segura/soportada de “ver” o copiar el valor de `LOVABLE_API_KEY` desde Lovable para pegarlo en el VPS. Es una clave administrada por Lovable; se puede crear o rotar, pero el valor no se expone al agente ni al usuario después. El endpoint temporal `_reveal-key` fue un intento de puente, pero no es confiable ni recomendable: en preview puede quedar detrás de auth-bridge y además supone exponer un secreto que no debería salir del runtime de Lovable.
+## Estado de la base de datos de producción (`advebubtfjgxwpjxprok`)
 
-Plan recomendado para resolverlo sin exponer la clave:
+Ya está aplicado (verificado): `missing_status_log`, `page_views`, `solidarity_stats`, columna `outcome`, `suggest_patient_matches_batch`, `dedupe_missing_persons_run`, `merge_missing_persons`, `set_missing_person_photo`, RLS y grants.
 
-1. Eliminar el endpoint temporal inseguro
-   - Borrar `src/routes/api/public/_reveal-key.ts`.
-   - No volver a intentar revelar `LOVABLE_API_KEY` por HTTP.
+Quedan **3 pendientes** que no se pudieron aplicar automáticamente (las tools de migración apuntan al proyecto viejo). Ejecutar todo con:
 
-2. Mantener `LOVABLE_API_KEY` solo dentro de Lovable
-   - La llamada real al Lovable AI Gateway debe ejecutarse en un handler alojado por Lovable, donde esa variable sí existe.
-   - El VPS no necesita tener `LOVABLE_API_KEY` en su `.env`.
+```bash
+psql "$NEW_SUPABASE_DB_URL" -f pendientes.sql
+```
 
-3. Hacer que producción use una de estas dos rutas
+---
 
-   Opción A, recomendada si quieres seguir usando Lovable AI Gateway:
-   - Crear/ajustar un endpoint proxy de Tsunami en Lovable que llame al AI Gateway internamente.
-   - Configurar el frontend/VPS para que `/api/tsunami` reenvíe la petición a ese endpoint Lovable.
-   - Añadir protección mínima: token interno, validación de origen y manejo claro de 429/402/errores.
-   - Resultado: Tsunami funciona en `venezuelaselevanta.info` sin copiar `LOVABLE_API_KEY` al VPS.
+### 1. Bug crítico — `auto_link_missing_to_patient` está roto
 
-   Opción B, inmediata y más simple porque ya tienes `GEMINI_API_KEY` en el VPS:
-   - Cambiar `/api/tsunami` para usar Lovable AI Gateway cuando `LOVABLE_API_KEY` exista.
-   - Si no existe, usar Gemini directo con `GEMINI_API_KEY` como fallback.
-   - Resultado: Tsunami funciona hoy en el VPS, pero las llamadas de producción no pasarían por Lovable Gateway.
+La función escribe `status = 'encontrado'` (español), pero el `CHECK` de `missing_persons` solo acepta `'missing' | 'found' | 'deceased'`. Cualquier auto-vínculo desde el flujo de pacientes falla con violación de constraint.
 
-4. Mi recomendación práctica
-   - Para resolver rápido: implementar fallback con `GEMINI_API_KEY`.
-   - Para mantener Lovable AI Gateway a largo plazo: usar proxy alojado en Lovable, no intentar extraer la clave.
+```sql
+CREATE OR REPLACE FUNCTION public.auto_link_missing_to_patient(
+  p_missing_id uuid, p_patient_id uuid, p_score real DEFAULT 0
+) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $$
+DECLARE already_m boolean; already_p boolean;
+BEGIN
+  SELECT matched_patient_id IS NOT NULL INTO already_m
+    FROM public.missing_persons WHERE id = p_missing_id;
+  SELECT matched_missing_id  IS NOT NULL INTO already_p
+    FROM public.patients        WHERE id = p_patient_id;
+  IF already_m OR already_p THEN RETURN false; END IF;
 
-5. Comandos que NO recomiendo usar
-   - No recomiendo seguir con `curl https://.../_reveal-key?...`.
-   - No recomiendo guardar tokens revelados por endpoints temporales.
-   - No recomiendo rotar de nuevo `LOVABLE_API_KEY`, porque rotarla tampoco mostrará el valor.
+  UPDATE public.missing_persons
+     SET matched_patient_id = p_patient_id,
+         matched_at         = now(),
+         status             = 'found',                 -- FIX: era 'encontrado'
+         outcome            = COALESCE(outcome, 'at_health_center'),
+         found_date         = COALESCE(found_date, now())
+   WHERE id = p_missing_id;
 
-Si quieres, implemento la Opción B ahora para que Tsunami deje de fallar inmediatamente en el VPS, y después dejamos la Opción A como mejora de arquitectura.
+  UPDATE public.patients
+     SET matched_missing_id = p_missing_id
+   WHERE id = p_patient_id;
+
+  INSERT INTO public.missing_status_log
+    (missing_id, prev_status, new_status, new_outcome, note)
+  VALUES
+    (p_missing_id, 'missing', 'found', 'at_health_center',
+     'auto-link patient=' || p_patient_id::text || ' score=' || p_score);
+
+  RETURN true;
+END; $$;
+```
+
+---
+
+### 2. `set_missing_status` no soporta `outcome`
+
+El admin panel ya envía outcomes (`at_health_center`, `with_family`, …), pero la función solo acepta 3 estados y no actualiza la columna `outcome` ni escribe en el log.
+
+```sql
+CREATE OR REPLACE FUNCTION public.set_missing_status(
+  p_id uuid, p_status text, p_note text DEFAULT NULL, p_outcome text DEFAULT NULL
+) RETURNS void
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
+AS $$
+DECLARE uid uuid := auth.uid(); prev_s text; prev_o text;
+BEGIN
+  IF uid IS NULL THEN RAISE EXCEPTION 'not authenticated'; END IF;
+  IF NOT (public.has_role(uid,'admin') OR public.has_role(uid,'moderator')) THEN
+    RAISE EXCEPTION 'insufficient privileges';
+  END IF;
+  IF p_status NOT IN ('missing','found','deceased') THEN
+    RAISE EXCEPTION 'invalid status';
+  END IF;
+  IF p_outcome IS NOT NULL AND p_outcome NOT IN
+     ('at_health_center','with_family','relocated','deceased','other') THEN
+    RAISE EXCEPTION 'invalid outcome';
+  END IF;
+
+  SELECT status, outcome INTO prev_s, prev_o FROM public.missing_persons WHERE id = p_id;
+
+  UPDATE public.missing_persons
+     SET status = p_status,
+         outcome = CASE WHEN p_status = 'missing' THEN NULL ELSE p_outcome END,
+         found_date = CASE WHEN p_status = 'missing' THEN NULL
+                           WHEN found_date IS NULL THEN now() ELSE found_date END,
+         description = CASE WHEN p_note IS NULL OR length(trim(p_note))=0 THEN description
+                            ELSE COALESCE(description || E'\n','') ||
+                                 '[' || now()::date || ' admin] ' || p_note END
+   WHERE id = p_id;
+
+  INSERT INTO public.missing_status_log
+    (missing_id, prev_status, new_status, prev_outcome, new_outcome, changed_by, note)
+  VALUES (p_id, prev_s, p_status, prev_o, p_outcome, uid, p_note);
+END; $$;
+```
+
+---
+
+### 3. Programar dedupe automático cada 8h (pg_cron)
+
+El usuario aprobó frecuencia de 8h, umbral conservador y hard delete. La función `dedupe_missing_persons_run()` ya existe, pero `pg_cron` no está habilitado y no hay job programado.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Corre 3 veces al día: 02:00, 10:00, 18:00 UTC (22h / 06h / 14h Caracas)
+SELECT cron.schedule(
+  'dedupe_missing_persons_8h',
+  '0 2,10,18 * * *',
+  $$ SELECT public.dedupe_missing_persons_run(); $$
+);
+```
+
+Verificación después de correr:
+```sql
+SELECT jobname, schedule, active FROM cron.job WHERE jobname = 'dedupe_missing_persons_8h';
+```
+
+---
+
+### Notas
+
+- Ningún cambio afecta el frontend — todo es DB. No hace falta redeploy del VPS.
+- Los 3 bloques son idempotentes salvo `cron.schedule`: si ya existe el job, primero `SELECT cron.unschedule('dedupe_missing_persons_8h');`.
+- Después de aplicar, el frontend puede empezar a pasar `p_outcome` al RPC `set_missing_status` (ya está listo del lado del admin; el 4º argumento simplemente empezará a persistir).
