@@ -104,6 +104,14 @@ export const Route = createFileRoute('/api/public/contact')({
         }
         const data = parsed.data
 
+        // Anti-spam: honeypot + minimum time-to-fill (~1.5s). Return success
+        // to avoid signaling bots that the trap exists.
+        if ((data.website && data.website.trim().length > 0) || (typeof data.elapsed_ms === 'number' && data.elapsed_ms < 1500)) {
+          console.warn('[contact] spam blocked', { ip, elapsed: data.elapsed_ms, honeypot: !!data.website })
+          return Response.json({ success: true }, { headers: CORS })
+        }
+
+
         const { url: supabaseUrl, serviceKey } = getEnv()
         if (!supabaseUrl || !serviceKey) {
           console.error('Missing Supabase server env')
