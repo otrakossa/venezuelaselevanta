@@ -19,7 +19,10 @@ const schema = z.object({
   email: z.string().trim().email().max(255),
   subject: z.string().trim().max(150).optional().nullable(),
   message: z.string().trim().min(5).max(2000),
+  website: z.string().optional(), // honeypot
+  elapsed_ms: z.number().optional(),
 })
+
 
 // In-memory rate limit: 5 messages/IP/hour
 const LIMIT = 5
