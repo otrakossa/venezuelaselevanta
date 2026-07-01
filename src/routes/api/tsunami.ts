@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/tsunami")({
           // en VPS puede quedar desactualizada tras rotaciones y no podemos
           // re-sincronizarla automáticamente.
           const model = geminiKey
-            ? createGeminiDirectProvider(geminiKey)("gemini-2.0-flash")
+            ? createGeminiDirectProvider(geminiKey)("gemini-2.5-flash")
             : createLovableAiGatewayProvider(lovableKey!)("google/gemini-3-flash-preview");
 
           const result = streamText({
