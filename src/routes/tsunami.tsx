@@ -299,6 +299,13 @@ function TsunamiPage() {
                   🔒 Solo tú ves esta conversación en este navegador.
                 </p>
 
+                <div className="mt-5 flex flex-col items-center gap-1.5">
+                  <InstallTsunamiButton />
+                  <span className="text-[11px] text-muted-foreground">
+                    Ícono de Tsunami directo en tu pantalla · funciona sin abrir el navegador
+                  </span>
+                </div>
+
                 {/* Acciones */}
                 <div className="grid sm:grid-cols-2 gap-4 mt-8 w-full">
                   {EMPTY_SECTIONS.map((sec) => (
