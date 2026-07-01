@@ -149,7 +149,7 @@ function AtendidosPage() {
   const { center } = Route.useSearch();
 
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0);
+  const [totals, setTotals] = useState<{ all: number; active: number; discharged: number }>({ all: 0, active: 0, discharged: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [q, setQ] = useState("");
@@ -164,9 +164,9 @@ function AtendidosPage() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const [data, total] = await Promise.all([fetchPatients(), fetchPatientsTotal()]);
+      const [data, t] = await Promise.all([fetchPatients(), fetchPatientsCounts()]);
       setPatients(data);
-      setTotalCount(total || data.length);
+      setTotals(t);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error cargando datos";
       toast.error(msg);
@@ -183,12 +183,8 @@ function AtendidosPage() {
   const setCenter = (c?: string) =>
     navigate({ search: (prev: { center?: string }) => ({ ...prev, center: c }), replace: true });
 
-  // counts overall (no filter applied)
-  const counts = useMemo(() => ({
-    all:        totalCount || patients.length,
-    active:     patients.filter((p) => p.status !== "discharged").length,
-    discharged: patients.filter((p) => p.status === "discharged").length,
-  }), [patients, totalCount]);
+  // KPIs exactos desde la BD (no del array paginado)
+  const counts = useMemo(() => totals, [totals]);
 
   // hospitals: name -> active count, sorted desc
   const hospitals = useMemo(() => {
