@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { MapLegend } from "@/components/MapLegend";
 import { toast } from "sonner";
+import { SolidarityCounter } from "@/components/SolidarityCounter";
 
 type TrustMode = "all" | "verified" | "trusted";
 type TimeWindow = "all" | "24h" | "7d";
