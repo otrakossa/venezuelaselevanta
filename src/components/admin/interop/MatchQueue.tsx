@@ -16,7 +16,7 @@ type Pair = {
   score: number;
 };
 
-const PAGE = 30;
+const MAX_PAIRS = 1000;
 const fmt = (n: number) => n.toLocaleString("es-VE");
 
 export function MatchQueue() {
@@ -24,36 +24,22 @@ export function MatchQueue() {
   const [loading, setLoading] = useState(false);
   const [minScore, setMinScore] = useState(0.5);
   const [busy, setBusy] = useState<string | null>(null);
-  const [scanned, setScanned] = useState(0);
 
   const load = useCallback(async () => {
-    setLoading(true); setPairs([]); setScanned(0);
-    // 1) Recent unmatched missing_persons
-    const { data: missing, error } = await sbx
-      .from("missing_persons")
-      .select("id,name,age,last_seen_location,source_label")
-      .is("matched_patient_id", null)
-      .neq("status", "found")
-      .order("created_at", { ascending: false })
-      .limit(PAGE);
-    if (error) { toast.error(error.message); setLoading(false); return; }
-
-    const missingList = (missing ?? []) as Array<{
-      id: string; name: string; age: number | null;
-      last_seen_location: string | null; source_label: string | null;
-    }>;
-    setScanned(missingList.length);
-
-    if (missingList.length === 0) { setPairs([]); setLoading(false); return; }
-
-    // 2) Dismissed pairs + 3) batch suggestions, in parallel
-    const missingById = new Map(missingList.map((m) => [m.id, m]));
+    setLoading(true); setPairs([]);
     const [dismissalsRes, suggsRes] = await Promise.all([
       sbx.from("match_dismissals").select("missing_id,patient_id"),
-      sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches_batch", {
-        p_missing_ids: missingList.map((m) => m.id),
+      sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches_all", {
+        p_min_score: minScore,
+        p_max_pairs: MAX_PAIRS,
       }),
     ]);
+
+    if (suggsRes.error) {
+      toast.error(suggsRes.error.message);
+      setLoading(false);
+      return;
+    }
 
     const dismissed = new Set(
       ((dismissalsRes.data ?? []) as Array<{ missing_id: string; patient_id: string }>)
@@ -66,28 +52,25 @@ export function MatchQueue() {
       const mid = s.missing_id as string;
       const pid = s.patient_id as string;
       if (dismissed.has(`${mid}:${pid}`)) continue;
-      if (Number(s.score) < minScore) continue;
-      const m = missingById.get(mid);
-      if (!m) continue;
       out.push({
         missing_id: mid,
-        missing_name: m.name,
-        missing_age: m.age,
-        missing_location: m.last_seen_location,
-        missing_source: m.source_label ?? null,
+        missing_name: (s.missing_name as string) ?? "",
+        missing_age: (s.missing_age as number | null) ?? null,
+        missing_location: (s.missing_location as string | null) ?? null,
+        missing_source: (s.missing_source as string | null) ?? null,
         patient_id: pid,
-        patient_name: s.patient_name as string,
+        patient_name: (s.patient_name as string) ?? "",
         patient_age: (s.patient_age as number | null) ?? null,
         patient_center: (s.center_name as string | null) ?? null,
         score: Number(s.score),
       });
     }
-    out.sort((a, b) => b.score - a.score);
     setPairs(out);
     setLoading(false);
   }, [minScore]);
 
   useEffect(() => { load(); }, [load]);
+
 
   const confirm = async (p: Pair) => {
     setBusy(`${p.missing_id}:${p.patient_id}`);
@@ -133,7 +116,7 @@ export function MatchQueue() {
 
       {loading && (
         <div className="text-xs text-muted-foreground flex items-center gap-2">
-          <Loader2 className="h-3 w-3 animate-spin" /> Analizando {scanned} desaparecidos recientes en lote…
+          <Loader2 className="h-3 w-3 animate-spin" /> Escaneando toda la base de desaparecidos sin match (puede tardar ~20s)…
         </div>
       )}
 
