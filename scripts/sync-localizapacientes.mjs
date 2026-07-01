@@ -302,7 +302,8 @@ function buildQueryList() {
 // ── Main ──────────────────────────────────────────────────────────────────
 async function main() {
   const startTime = Date.now();
-  console.log(`\n=== Sync localizapacientes.com → Supabase [${new Date().toISOString()}] ===\n`);
+  const runId = await startRun();
+  console.log(`\n=== Sync localizapacientes.com → Supabase [${new Date().toISOString()}] (run ${runId ?? 'n/a'}) ===\n`);
 
   // Obtener estadísticas del sitio
   const hospitals = await fetchHospitals();
