@@ -133,7 +133,7 @@ export function MatchQueue() {
 
       {loading && (
         <div className="text-xs text-muted-foreground flex items-center gap-2">
-          <Loader2 className="h-3 w-3 animate-spin" /> Analizando {scanned}/{PAGE} desaparecidos recientes…
+          <Loader2 className="h-3 w-3 animate-spin" /> Analizando {scanned} desaparecidos recientes en lote…
         </div>
       )}
 
