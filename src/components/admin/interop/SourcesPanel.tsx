@@ -3,6 +3,7 @@ import { sbx } from "./_client";
 import { Loader2, RefreshCw, ImageIcon, MapPin, CheckCircle2, Link2, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { ScraperRunsPanel } from "./ScraperRunsPanel";
 
 type Row = {
   kind: "missing" | "patient";
