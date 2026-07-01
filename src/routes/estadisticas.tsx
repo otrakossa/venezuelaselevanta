@@ -363,8 +363,12 @@ function StatsPage() {
       </div>
 
 
+      {/* Tendencias y distribución */}
+      <SectionHeader icon={TrendingUp} title="Tendencias y distribución" subtitle="Evolución temporal, estado y categorías de reporte" />
+
       {/* Delta + serie temporal */}
       <div className="grid lg:grid-cols-3 gap-4">
+
         <div className="bg-card border border-border rounded-2xl p-4 lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-base">Reportes por día · últimos 14 días</h3>
