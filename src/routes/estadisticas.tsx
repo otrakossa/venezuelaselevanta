@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardExtras } from "@/components/dashboard/DashboardExtras";
+import { SolidarityCounter } from "@/components/SolidarityCounter";
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
@@ -255,6 +256,9 @@ function StatsPage() {
           {stats.total} reportes · {missingCounts.all.toLocaleString("es-VE")} fichas de desaparecidos · CC BY 4.0
         </div>
       </div>
+
+      {/* Contador de solidaridad — motivacional */}
+      <SolidarityCounter variant="kpi" />
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
