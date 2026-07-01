@@ -1341,12 +1341,12 @@ function NeedFicha({
         <div className="flex items-center gap-2 flex-wrap">
           {Boolean(data.category) && (
             <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-              {String(data.category)}
+              {esCategory(data.category)}
             </span>
           )}
           {Boolean(urg) && (
             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${urgencyColors[urg] ?? "bg-muted"}`}>
-              {urg}
+              {esUrgency(urg)}
             </span>
           )}
           {expandable && (
