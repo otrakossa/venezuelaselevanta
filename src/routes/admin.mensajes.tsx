@@ -38,6 +38,14 @@ type Row = {
 };
 
 type Tab = "pending" | "handled" | "all";
+type DateRange = "24h" | "7d" | "30d" | "all";
+
+const DATE_RANGE_MS: Record<DateRange, number | null> = {
+  "24h": 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000,
+  all: null,
+};
 
 function MessagesPage() {
   const { isAuthenticated, userId } = useAuth();
@@ -45,9 +53,11 @@ function MessagesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("pending");
+  const [range, setRange] = useState<DateRange>("all");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
 
   const load = useCallback(async () => {
     setLoading(true);
