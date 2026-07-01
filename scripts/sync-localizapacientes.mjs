@@ -347,6 +347,12 @@ async function main() {
 
   if (allPatients.size === 0) {
     console.log('\n⚠ No se encontraron pacientes.');
+    await finishRun(runId, 'partial', {
+      duration_ms: Date.now() - startTime,
+      records_seen: 0, records_inserted: 0, records_skipped: 0, matches_created: 0,
+      error_message: 'no results from source',
+      metadata: { queriesRun, queriesWithResults, totalSite },
+    });
     process.exit(0);
   }
 
