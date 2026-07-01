@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Wizard } from "@/components/wizard/Wizard";
+import { EmptyState } from "@/components/EmptyState";
 import { ESTADOS, MUNICIPIOS } from "@/lib/venezuela-divipol";
 
 
