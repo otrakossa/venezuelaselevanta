@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardExtras } from "@/components/dashboard/DashboardExtras";
+import { SolidarityCounter } from "@/components/SolidarityCounter";
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
