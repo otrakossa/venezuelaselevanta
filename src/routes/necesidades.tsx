@@ -411,7 +411,7 @@ function NeedDetailModal({
 
   const share = () => {
     if (!need) return;
-    const url = `${window.location.origin}/necesidades?need=${need.id}`;
+    const url = `${window.location.origin}/n/${need.id}`;
     const cat = (CATEGORY_META[cats[0]] ?? CATEGORY_META.other).label;
     const text =
       `🆘 NECESIDAD ${urg!.label.toUpperCase()} — ${cat}\n\n` +
@@ -526,7 +526,7 @@ function NeedDetailModal({
               </button>
               <button
                 onClick={() => {
-                  const url = `${window.location.origin}/necesidades?need=${need.id}`;
+                  const url = `${window.location.origin}/n/${need.id}`;
                   navigator.clipboard.writeText(url).then(() => toast.success("Enlace copiado"));
                 }}
                 className="inline-flex items-center justify-center gap-1.5 bg-muted hover:bg-muted/70 text-foreground text-sm font-bold py-3 px-4 rounded-xl transition"
@@ -660,7 +660,7 @@ function NeedCard({ need: n, onOffer }: { need: Need; onOffer: () => void }) {
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
-              const url = `${window.location.origin}/necesidades?need=${n.id}`;
+              const url = `${window.location.origin}/n/${n.id}`;
               const cat = (CATEGORY_META[cats[0]] ?? CATEGORY_META.other).label;
               const text =
                 `🆘 NECESIDAD ${urg.label.toUpperCase()} — ${cat}\n\n` +

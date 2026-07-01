@@ -11,10 +11,12 @@ const schema = z.object({
 });
 
 export function ContactForm() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", website: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [mountedAt] = useState(() => Date.now());
+
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +40,8 @@ export function ContactForm() {
           email: parsed.data.email,
           subject: parsed.data.subject || null,
           message: parsed.data.message,
+          website: form.website,
+          elapsed_ms: Date.now() - mountedAt,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -53,9 +57,10 @@ export function ContactForm() {
     }
     setLoading(false);
     setSent(true);
-    setForm({ name: "", email: "", subject: "", message: "" });
+    setForm({ name: "", email: "", subject: "", message: "", website: "" });
     toast.success("¡Mensaje enviado! Te responderemos pronto.");
   }
+
 
   if (sent) {
     return (
@@ -84,6 +89,21 @@ export function ContactForm() {
       <p className="text-xs text-muted-foreground -mt-1">
         ¿Quieres colaborar, sumar tu organización o reportar algo? Llena el formulario.
       </p>
+
+      {/* Honeypot: hidden field, real users won't fill it. Bots often do. */}
+      <div aria-hidden="true" className="hidden" style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}>
+        <label>
+          No llenar este campo
+          <input
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+          />
+        </label>
+      </div>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Nombre" error={errors.name}>

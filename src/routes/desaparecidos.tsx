@@ -211,7 +211,10 @@ function MissingPage() {
                 aria-label="Buscar persona desaparecida"
                 className="w-full px-3 py-3.5 sm:py-4 bg-transparent text-base sm:text-lg font-medium placeholder:text-muted-foreground/70 placeholder:font-normal focus:outline-none"
               />
-              {q && (
+              {searching && (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin text-primary shrink-0" aria-label="Buscando" />
+              )}
+              {q && !searching && (
                 <button
                   onClick={() => setQ("")}
                   className="mr-2 p-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition"
@@ -220,6 +223,7 @@ function MissingPage() {
                   <X className="h-4 w-4" />
                 </button>
               )}
+
             </div>
           </div>
 

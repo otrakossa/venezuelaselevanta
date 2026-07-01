@@ -38,6 +38,14 @@ type Row = {
 };
 
 type Tab = "pending" | "handled" | "all";
+type DateRange = "24h" | "7d" | "30d" | "all";
+
+const DATE_RANGE_MS: Record<DateRange, number | null> = {
+  "24h": 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000,
+  all: null,
+};
 
 function MessagesPage() {
   const { isAuthenticated, userId } = useAuth();
@@ -45,9 +53,11 @@ function MessagesPage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("pending");
+  const [range, setRange] = useState<DateRange>("all");
   const [q, setQ] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -67,14 +77,18 @@ function MessagesPage() {
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    const windowMs = DATE_RANGE_MS[range];
+    const cutoff = windowMs ? Date.now() - windowMs : 0;
     return rows.filter((r) => {
       if (tab === "pending" && r.handled) return false;
       if (tab === "handled" && !r.handled) return false;
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
       if (!needle) return true;
       const hay = `${r.name} ${r.email} ${r.subject ?? ""} ${r.message}`.toLowerCase();
       return hay.includes(needle);
     });
-  }, [rows, tab, q]);
+  }, [rows, tab, q, range]);
+
 
   const counts = useMemo(
     () => ({
@@ -186,16 +200,41 @@ function MessagesPage() {
         ))}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md mb-3">
-        <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar por nombre, email, asunto o mensaje..."
-          className="w-full pl-7 pr-2 py-1.5 rounded-md border border-input bg-background text-xs"
-        />
+      {/* Search + date range */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="relative max-w-md flex-1 min-w-[220px]">
+          <Search className="h-3.5 w-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Buscar por nombre, email, asunto o mensaje..."
+            className="w-full pl-7 pr-2 py-1.5 rounded-md border border-input bg-background text-xs"
+          />
+        </div>
+        <div className="flex gap-1 bg-muted/60 rounded-md p-0.5">
+          {(
+            [
+              { k: "24h", label: "Últ. 24h" },
+              { k: "7d", label: "7 días" },
+              { k: "30d", label: "30 días" },
+              { k: "all", label: "Todo" },
+            ] as { k: DateRange; label: string }[]
+          ).map((r) => (
+            <button
+              key={r.k}
+              onClick={() => setRange(r.k)}
+              className={`text-[11px] px-2.5 py-1 rounded font-semibold transition ${
+                range === r.k
+                  ? "bg-card shadow-sm text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
+
 
       <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-4">
         {/* List */}

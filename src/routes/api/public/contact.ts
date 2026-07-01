@@ -19,7 +19,10 @@ const schema = z.object({
   email: z.string().trim().email().max(255),
   subject: z.string().trim().max(150).optional().nullable(),
   message: z.string().trim().min(5).max(2000),
+  website: z.string().optional(), // honeypot
+  elapsed_ms: z.number().optional(),
 })
+
 
 // In-memory rate limit: 5 messages/IP/hour
 const LIMIT = 5
@@ -100,6 +103,14 @@ export const Route = createFileRoute('/api/public/contact')({
           )
         }
         const data = parsed.data
+
+        // Anti-spam: honeypot + minimum time-to-fill (~1.5s). Return success
+        // to avoid signaling bots that the trap exists.
+        if ((data.website && data.website.trim().length > 0) || (typeof data.elapsed_ms === 'number' && data.elapsed_ms < 1500)) {
+          console.warn('[contact] spam blocked', { ip, elapsed: data.elapsed_ms, honeypot: !!data.website })
+          return Response.json({ success: true }, { headers: CORS })
+        }
+
 
         const { url: supabaseUrl, serviceKey } = getEnv()
         if (!supabaseUrl || !serviceKey) {
