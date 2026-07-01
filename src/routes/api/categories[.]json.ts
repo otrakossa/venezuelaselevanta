@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { errorResponse, jsonResponse, metadata, optionsHandler, supaFetch } from "@/lib/api-public";
+import { guardPublicApi } from "@/lib/api-rate-limit";
 
 export const Route = createFileRoute("/api/categories.json")({
   server: {

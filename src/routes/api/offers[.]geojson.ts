@@ -9,6 +9,7 @@ import {
   parseLimit,
   supaFetch,
 } from "@/lib/api-public";
+import { guardPublicApi } from "@/lib/api-rate-limit";
 
 const SAFE_COLS = "id,name,type,lat,lng,address,city,state,phone,created_at";
 

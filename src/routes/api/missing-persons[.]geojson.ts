@@ -14,6 +14,7 @@ import {
   parseLimit,
   supaFetch,
 } from "@/lib/api-public";
+import { guardPublicApi } from "@/lib/api-rate-limit";
 
 const SAFE_COLS =
   "id,name,age,description,last_seen_location,last_seen_lat,last_seen_lng,photo_url,contact_name,status,created_at,updated_at,report_date,found_date,source_url,source_label,state,municipality,parish";
@@ -23,6 +24,8 @@ export const Route = createFileRoute("/api/missing-persons.geojson")({
     handlers: {
       OPTIONS: async () => optionsHandler(),
       GET: async ({ request }) => {
+        const _rl = guardPublicApi(request, "geojson");
+        if (_rl.response) return _rl.response;
         try {
           const url = new URL(request.url);
           const sp = url.searchParams;
