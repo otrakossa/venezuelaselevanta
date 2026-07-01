@@ -545,6 +545,56 @@ function TsunamiPage() {
   );
 }
 
+// Diccionarios ES para etiquetas que vienen como slugs en inglés desde el modelo/tools.
+const NEED_CATEGORY_ES: Record<string, string> = {
+  medicine: "Medicinas",
+  food: "Alimentos",
+  water: "Agua",
+  volunteers: "Voluntarios",
+  equipment: "Equipos",
+  blood: "Sangre",
+  money: "Dinero",
+  hygiene: "Higiene",
+  diapers: "Pañales",
+  other: "Otro",
+};
+const URGENCY_ES: Record<string, string> = {
+  critical: "Crítica",
+  high: "Alta",
+  medium: "Media",
+  low: "Baja",
+};
+const MISSING_STATUS_ES: Record<string, string> = {
+  missing: "Desaparecido",
+  found: "Encontrado",
+  at_health_center: "En centro de salud",
+  with_family: "Con su familia",
+  relocated: "Reubicado",
+  deceased: "Fallecido",
+  other: "Otro estado",
+};
+const TOOL_NAME_ES: Record<string, string> = {
+  search_missing_persons: "búsqueda de personas",
+  get_missing_person: "ficha de persona",
+  suggest_patient_matches: "coincidencias en hospitales",
+  register_missing_person: "registro de desaparecido",
+  list_needs: "necesidades activas",
+  get_need: "detalle de necesidad",
+  guide_offer_help: "guía para ofrecer ayuda",
+};
+function esCategory(slug: unknown): string {
+  const k = String(slug ?? "").toLowerCase();
+  return NEED_CATEGORY_ES[k] ?? k;
+}
+function esUrgency(slug: unknown): string {
+  const k = String(slug ?? "").toLowerCase();
+  return URGENCY_ES[k] ?? k;
+}
+function esMissingStatus(slug: unknown): string {
+  const k = String(slug ?? "").toLowerCase();
+  return MISSING_STATUS_ES[k] ?? k;
+}
+
 // Human-readable summary for the tool accordion header.
 function toolSummary(toolName: string, input: unknown, output: unknown, state: string): string {
   const inp = (input ?? {}) as Record<string, unknown>;
@@ -580,8 +630,10 @@ function toolSummary(toolName: string, input: unknown, output: unknown, state: s
       return done ? `📋 ${String(out.title ?? "Necesidad")}` : "📋 Cargando necesidad…";
     case "guide_offer_help":
       return done ? "🤝 Guía para ofrecer ayuda" : "🤝 Preparando guía…";
-    default:
-      return toolName;
+    default: {
+      const es = TOOL_NAME_ES[toolName] ?? toolName.replace(/_/g, " ");
+      return done ? `✅ ${es}` : failed ? `⚠️ Error en ${es}` : `⏳ ${es}…`;
+    }
   }
 }
 
