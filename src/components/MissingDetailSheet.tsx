@@ -202,7 +202,9 @@ export function MissingDetailSheet({
   const reported = new Date(person.report_date);
   const daysAgo = Math.floor((Date.now() - reported.getTime()) / 86_400_000);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://venezuelaselevanta.info";
-  const directLink = `${origin}/desaparecidos?person=${person.id}`;
+  // Short SSR route that renders per-person OG tags for WhatsApp/Twitter previews.
+  const directLink = `${origin}/m/${person.id}`;
+
 
 
   const openOnMap = () => {
