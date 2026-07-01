@@ -40,6 +40,8 @@ export function ContactForm() {
           email: parsed.data.email,
           subject: parsed.data.subject || null,
           message: parsed.data.message,
+          website: form.website,
+          elapsed_ms: Date.now() - mountedAt,
         }),
       });
       const body = await res.json().catch(() => ({}));
@@ -55,9 +57,10 @@ export function ContactForm() {
     }
     setLoading(false);
     setSent(true);
-    setForm({ name: "", email: "", subject: "", message: "" });
+    setForm({ name: "", email: "", subject: "", message: "", website: "" });
     toast.success("¡Mensaje enviado! Te responderemos pronto.");
   }
+
 
   if (sent) {
     return (
