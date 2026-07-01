@@ -107,11 +107,12 @@ export function Footer() {
         </div>
       </div>
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 flex justify-center">
+        <SolidarityCounter variant="footer" />
+      </div>
+
       <div className="border-t border-white/10 bg-black/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-4">
-          <div className="flex items-center justify-center">
-            <SolidarityCounter variant="footer" />
-          </div>
           <div className="rounded-lg px-4 py-3 text-sm">
             <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs mb-1">
               ⚠ Aviso de responsabilidad
