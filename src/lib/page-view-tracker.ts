@@ -34,7 +34,11 @@ export async function trackPageView(path: string): Promise<void> {
         apikey: SUPA_ANON,
         Authorization: `Bearer ${SUPA_ANON}`,
         "Content-Type": "application/json",
-        Prefer: "return=minimal,resolution=ignore-duplicates",
+        // No usamos `resolution=ignore-duplicates` porque activa ON CONFLICT
+        // en PostgREST y eso requiere política SELECT para anon (leak). La
+        // colisión por unique (device_id, day) devuelve 409 y se ignora en
+        // el catch — es exactamente el comportamiento deseado.
+        Prefer: "return=minimal",
       },
       body: JSON.stringify({ device_id, path: path.slice(0, 200), referrer }),
       keepalive: true,
