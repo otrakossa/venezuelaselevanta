@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { X, Hospital, MapPin, Phone, User, CalendarDays, Loader2, ExternalLink, IdCard } from "lucide-react";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 type PatientFull = {
@@ -112,7 +113,7 @@ export function PatientDetailModal({
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
           {loading && (
             <div className="flex items-center justify-center py-10 text-muted-foreground gap-2 text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" /> Cargando información…
+              <HeartbeatLoader className="size-5" /> Cargando información…
             </div>
           )}
 

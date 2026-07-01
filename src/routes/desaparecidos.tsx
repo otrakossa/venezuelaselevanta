@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import { supabase } from "@/integrations/supabase/client";
 import { useMissing } from "@/hooks/useReports";
 import { MISSING_STATUS_LABELS } from "@/lib/categories";
@@ -284,7 +285,7 @@ function MissingPage() {
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-border bg-card text-sm font-semibold hover:bg-muted disabled:opacity-60"
                 >
                   {loadingMore ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Cargando...</>
+                    <><HeartbeatLoader className="size-5" /> Cargando...</>
                   ) : (
                     <>Ver más personas ({Math.max(counts.all - missing.length, 0)} sin cargar)</>
                   )}
