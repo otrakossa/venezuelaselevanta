@@ -10,7 +10,8 @@ import {
 import {
   AlertCircle, Users, MapPin, Download, Activity,
   ShieldCheck, CheckCircle2, Clock, Flame, Waves, TrendingUp,
-  HeartPulse, ChevronDown, ChevronUp,
+  HeartPulse, ChevronDown, ChevronUp, Search, Handshake, Package,
+  MessageSquare, ThumbsUp, Building2, UserCheck, Skull,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardExtras } from "@/components/dashboard/DashboardExtras";
@@ -19,6 +20,18 @@ import { SolidarityCounter } from "@/components/SolidarityCounter";
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 type PatientZone = { state: string | null; sector: string | null };
+type ExtraCounts = {
+  patients: number;
+  needs: number;
+  needsOpen: number;
+  needsUrgent: number;
+  offers: number;
+  offersMatched: number;
+  healthCenters: number;
+  comments: number;
+  votes: number;
+};
+
 
 
 export const Route = createFileRoute("/estadisticas")({
@@ -44,22 +57,52 @@ function StatsPage() {
   const { missing, counts: missingCounts } = useMissing();
   const { data: quakes = [] } = useUSGSQuakes(true);
   const [patientZones, setPatientZones] = useState<PatientZone[]>([]);
+  const [extras, setExtras] = useState<ExtraCounts>({
+    patients: 0, needs: 0, needsOpen: 0, needsUrgent: 0,
+    offers: 0, offersMatched: 0, healthCenters: 0, comments: 0, votes: 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
+    const h = { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` };
+    const headCount = async (path: string): Promise<number> => {
+      try {
+        const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+          headers: { ...h, Prefer: "count=exact", Range: "0-0" },
+        });
+        const cr = res.headers.get("content-range");
+        if (!cr) return 0;
+        const total = cr.split("/")[1];
+        return total && total !== "*" ? Number(total) : 0;
+      } catch { return 0; }
+    };
     (async () => {
       try {
         const res = await fetch(
           `${SUPA_URL}/rest/v1/patients?select=state,sector&limit=10000`,
-          { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` } },
+          { headers: h },
         );
-        if (!res.ok) return;
-        const data = (await res.json()) as PatientZone[];
-        if (!cancelled) setPatientZones(data);
+        if (res.ok) {
+          const data = (await res.json()) as PatientZone[];
+          if (!cancelled) setPatientZones(data);
+        }
       } catch { /* ignore */ }
+      const [patients, needs, needsOpen, needsUrgent, offers, offersMatched, healthCenters, comments, votes] = await Promise.all([
+        headCount("patients?select=id"),
+        headCount("needs?select=id"),
+        headCount("needs?select=id&status=neq.fulfilled"),
+        headCount("needs?select=id&urgency=in.(critical,high)"),
+        headCount("offers?select=id"),
+        headCount("offers?select=id&need_id=not.is.null"),
+        headCount("health_centers?select=id"),
+        headCount("report_comments?select=id"),
+        headCount("report_votes?select=id"),
+      ]);
+      if (!cancelled) setExtras({ patients, needs, needsOpen, needsUrgent, offers, offersMatched, healthCenters, comments, votes });
     })();
     return () => { cancelled = true; };
   }, []);
+
 
   const stats = useMemo(() => {
     const total = reports.length;
@@ -253,14 +296,15 @@ function StatsPage() {
           </div>
         </div>
         <div className="px-5 sm:px-6 pb-3 text-[11px] text-muted-foreground">
-          {stats.total} reportes · {missingCounts.all.toLocaleString("es-VE")} fichas de desaparecidos · CC BY 4.0
+          {stats.total} reportes · {missingCounts.all.toLocaleString("es-VE")} fichas de desaparecidos · {extras.patients.toLocaleString("es-VE")} atendidos · CC BY 4.0
         </div>
       </div>
 
       {/* Contador de solidaridad — motivacional */}
       <SolidarityCounter variant="kpi" />
 
-      {/* KPI grid */}
+      {/* KPI grid — Reportes */}
+      <SectionHeader icon={Activity} title="Reportes ciudadanos" subtitle="Situación operativa en tiempo real" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon={Activity} color="#1A8FE3" label="Total reportes" value={stats.total} sparkline={stats.last7} />
         <StatCard icon={AlertCircle} color="#DC2626" label="Activos" value={stats.active} accent />
@@ -273,7 +317,6 @@ function StatsPage() {
           value={stats.resolved}
           hint={`${stats.resolveRate}% del total`}
         />
-        <StatCard icon={Users} color="#9333EA" label="Desaparecidos" value={stats.missingActive} />
         <StatCard icon={ShieldCheck} color="#0D9488" label="Verificados" value={stats.verified} hint="≥ 3 confirmaciones" />
         <StatCard
           icon={Waves}
@@ -282,10 +325,50 @@ function StatsPage() {
           value={stats.quakes24h}
           hint={stats.maxMag > 0 ? `Máx M${stats.maxMag.toFixed(1)}` : "Sin eventos"}
         />
+        <StatCard
+          icon={TrendingUp}
+          color={stats.delta24h >= 0 ? "#16A34A" : "#DC2626"}
+          label="Nuevos 24h"
+          value={stats.last24h}
+          hint={`${stats.delta24h >= 0 ? "+" : ""}${stats.delta24h} vs. ayer`}
+        />
       </div>
+
+      {/* KPI grid — Personas */}
+      <SectionHeader icon={Users} title="Personas" subtitle="Desaparecidos y atendidos en centros de salud" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Search} color="#9333EA" label="Desaparecidos activos" value={missingCounts.missing} accent />
+        <StatCard icon={UserCheck} color="#16A34A" label="Localizados" value={missingCounts.found} hint={missingCounts.all > 0 ? `${Math.round((missingCounts.found / missingCounts.all) * 100)}% del total` : undefined} />
+        <StatCard icon={Skull} color="#6B7280" label="Fallecidos confirmados" value={missingCounts.deceased} />
+        <StatCard icon={Users} color="#1A8FE3" label="Total fichas" value={missingCounts.all} />
+        <StatCard icon={HeartPulse} color="#DC2626" label="Atendidos" value={extras.patients} hint="Centros de salud" />
+        <StatCard icon={Building2} color="#0D9488" label="Centros de salud" value={extras.healthCenters} />
+        <StatCard icon={MessageSquare} color="#7C3AED" label="Comentarios" value={extras.comments} hint="En fichas y reportes" />
+        <StatCard icon={ThumbsUp} color="#EA580C" label="Validaciones" value={extras.votes} hint="Votos ciudadanos" />
+      </div>
+
+      {/* KPI grid — Ayuda mutua */}
+      <SectionHeader icon={Handshake} title="Ayuda mutua" subtitle="Necesidades publicadas y ofrecimientos recibidos" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Package} color="#DC2626" label="Necesidades" value={extras.needs} hint={`${extras.needsOpen} abiertas`} />
+        <StatCard icon={Flame} color="#EA580C" label="Urgentes / críticas" value={extras.needsUrgent} accent />
+        <StatCard icon={Handshake} color="#16A34A" label="Ofrecimientos" value={extras.offers} />
+        <StatCard
+          icon={CheckCircle2}
+          color="#1A8FE3"
+          label="Con match"
+          value={extras.offersMatched}
+          hint={extras.offers > 0 ? `${Math.round((extras.offersMatched / extras.offers) * 100)}% conectados` : undefined}
+        />
+      </div>
+
+
+      {/* Tendencias y distribución */}
+      <SectionHeader icon={TrendingUp} title="Tendencias y distribución" subtitle="Evolución temporal, estado y categorías de reporte" />
 
       {/* Delta + serie temporal */}
       <div className="grid lg:grid-cols-3 gap-4">
+
         <div className="bg-card border border-border rounded-2xl p-4 lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-base">Reportes por día · últimos 14 días</h3>
@@ -403,7 +486,9 @@ function StatsPage() {
       </div>
 
       {/* DIVIPOL: estados y municipios */}
+      <SectionHeader icon={MapPin} title="Distribución geográfica (DIVIPOL)" subtitle="Estados y municipios con más reportes" />
       <div className="grid lg:grid-cols-2 gap-4">
+
         {([
           { title: "Top estados (DIVIPOL)", data: stats.topStates, gradient: "linear-gradient(90deg, var(--sky), var(--sunrise))" },
           { title: "Top municipios (DIVIPOL)", data: stats.topMunicipalities, gradient: "linear-gradient(90deg, var(--gold), var(--sunrise))" },
@@ -443,14 +528,17 @@ function StatsPage() {
       </div>
 
       {/* Operación, heatmap y balance ayuda */}
+      <SectionHeader icon={Clock} title="Operación y respuesta" subtitle="Embudo, estancados, patrones horarios y balance de ayuda" />
       <DashboardExtras reports={reports} />
 
       {/* Atendidos por zona */}
+      <SectionHeader icon={HeartPulse} title="Atendidos por zona" subtitle="Distribución geográfica de pacientes en centros de salud" />
       <PatientZonesSection stats={patientStats} />
 
       {/* Urgencia × categoría + Sismos */}
-
+      <SectionHeader icon={Waves} title="Urgencia y sismicidad" subtitle="Composición de urgencia y actividad sísmica USGS" />
       <div className="grid lg:grid-cols-2 gap-4">
+
         <div className="bg-card border border-border rounded-2xl p-4">
           <h3 className="font-display text-base mb-3">Urgencia por categoría</h3>
           <ResponsiveContainer width="100%" height={240}>
@@ -726,6 +814,34 @@ function BrandTooltip({ active, payload, label }: any) {
     </div>
   );
 }
+
+function SectionHeader({
+  icon: Icon, title, subtitle,
+}: { icon: any; title: string; subtitle?: string }) {
+  return (
+    <div className="flex items-center gap-3 pt-2">
+      <div
+        className="w-9 h-9 rounded-xl grid place-items-center shrink-0 text-[var(--sunrise)]"
+        style={{ background: "linear-gradient(135deg, color-mix(in oklab, var(--sunrise) 18%, transparent), color-mix(in oklab, var(--gold) 12%, transparent))" }}
+      >
+        <Icon className="h-4.5 w-4.5" />
+      </div>
+      <div className="min-w-0">
+        <h2 className="font-display text-lg leading-tight truncate">{title}</h2>
+        {subtitle ? (
+          <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
+        ) : null}
+      </div>
+      <div
+        className="flex-1 h-px ml-2"
+        style={{ background: "linear-gradient(90deg, color-mix(in oklab, var(--sunrise) 40%, transparent), transparent)" }}
+      />
+    </div>
+  );
+}
+
+
+
 
 function timeAgo(ts: number): string {
   const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
