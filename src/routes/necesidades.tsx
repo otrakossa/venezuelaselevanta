@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { LocationPickerInline } from "@/components/LocationPickerInline";
 import { Wizard } from "@/components/wizard/Wizard";
+import { EmptyState } from "@/components/EmptyState";
 import { reverseGeocode } from "@/lib/geocode";
 import { maskCedula, maskPhone, isValidCedula, isValidPhone, PHONE_DEFAULT, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
 
@@ -352,29 +353,33 @@ function NecesidadesPage() {
             ))}
           </div>
         ) : list.length === 0 ? (
-          <div className="col-span-full py-16 text-center">
-            <div className="text-4xl mb-3">🤲</div>
-            <p className="font-bold text-base mb-1">No hay necesidades publicadas</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {q || urgency !== "all" || category !== "all"
-                ? "Prueba ajustar los filtros de búsqueda."
-                : "Sé el primero en publicar una necesidad."}
-            </p>
-            {(q || urgency !== "all" || category !== "all") ? (
-              <button
-                onClick={() => { setQ(""); setUrgency("all"); setCategory("all"); }}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
-              >
-                Limpiar filtros
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
-              >
-                Publicar necesidad
-              </button>
-            )}
+          <div className="col-span-full">
+            <EmptyState
+              emoji="🤲"
+              title="No hay necesidades publicadas"
+              description={
+                q || urgency !== "all" || category !== "all"
+                  ? "Prueba ajustar los filtros de búsqueda o limpiar la selección."
+                  : "Sé el primero en publicar una necesidad para que la comunidad pueda ayudar."
+              }
+              action={
+                (q || urgency !== "all" || category !== "all") ? (
+                  <button
+                    onClick={() => { setQ(""); setUrgency("all"); setCategory("all"); }}
+                    className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                  >
+                    Limpiar filtros
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                  >
+                    Publicar necesidad
+                  </button>
+                )
+              }
+            />
           </div>
         ) : (
           list.map((n) => (

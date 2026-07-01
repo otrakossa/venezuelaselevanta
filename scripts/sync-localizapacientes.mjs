@@ -50,6 +50,29 @@ const DELAY_MS     = 250;  // entre queries — respetuosos con el servidor
 const supabaseAnon = createClient(OUR_URL, ANON_KEY, { realtime: { transport: ws } });
 const supabaseSvc  = createClient(OUR_URL, SVC_KEY,  { realtime: { transport: ws } });
 
+// ── Reporte de corridas a observabilidad (tabla scraper_runs) ─────────────
+async function startRun() {
+  try {
+    const { data, error } = await supabaseSvc
+      .from('scraper_runs')
+      .insert({ source_label: SOURCE_LABEL, status: 'running' })
+      .select('id')
+      .single();
+    if (error) { console.warn('⚠ scraper_runs start:', error.message); return null; }
+    return data?.id ?? null;
+  } catch (e) { console.warn('⚠ scraper_runs start:', e.message); return null; }
+}
+async function finishRun(runId, status, patch) {
+  if (!runId) return;
+  try {
+    await supabaseSvc.from('scraper_runs').update({
+      status,
+      finished_at: new Date().toISOString(),
+      ...patch,
+    }).eq('id', runId);
+  } catch (e) { console.warn('⚠ scraper_runs finish:', e.message); }
+}
+
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
   'Accept': 'application/json',
@@ -279,7 +302,8 @@ function buildQueryList() {
 // ── Main ──────────────────────────────────────────────────────────────────
 async function main() {
   const startTime = Date.now();
-  console.log(`\n=== Sync localizapacientes.com → Supabase [${new Date().toISOString()}] ===\n`);
+  const runId = await startRun();
+  console.log(`\n=== Sync localizapacientes.com → Supabase [${new Date().toISOString()}] (run ${runId ?? 'n/a'}) ===\n`);
 
   // Obtener estadísticas del sitio
   const hospitals = await fetchHospitals();
@@ -323,6 +347,12 @@ async function main() {
 
   if (allPatients.size === 0) {
     console.log('\n⚠ No se encontraron pacientes.');
+    await finishRun(runId, 'partial', {
+      duration_ms: Date.now() - startTime,
+      records_seen: 0, records_inserted: 0, records_skipped: 0, matches_created: 0,
+      error_message: 'no results from source',
+      metadata: { queriesRun, queriesWithResults, totalSite },
+    });
     process.exit(0);
   }
 
@@ -342,6 +372,14 @@ async function main() {
   if (toInsert.length === 0) {
     console.log('\n✅ Base de datos ya actualizada.');
     await reportDuplicates();
+    await finishRun(runId, 'success', {
+      duration_ms: Date.now() - startTime,
+      records_seen: allPatients.size,
+      records_inserted: 0,
+      records_skipped: skipped,
+      matches_created: 0,
+      metadata: { queriesRun, queriesWithResults, totalSite, invalid },
+    });
     return;
   }
 
@@ -361,9 +399,9 @@ async function main() {
   console.log(`\n✓ ${insertedRows.length} pacientes insertados`);
 
   // Auto-matching
+  let matchCount = 0;
   if (insertedRows.length > 0) {
     console.log(`\n🔗 Auto-matching contra desaparecidos (umbral ${AUTO_MATCH_THRESHOLD})...`);
-    let matchCount = 0;
     const matchLog = [];
 
     for (const patient of insertedRows) {
@@ -392,9 +430,28 @@ async function main() {
   console.log(`\n✅ Completado en ${elapsed}s`);
   console.log(`   Cobertura: ${allPatients.size}/${totalSite} únicos capturados (${Math.round(allPatients.size/totalSite*100)}%)`);
   console.log(`   ${insertedRows.length} insertados | auto-matched con desaparecidos`);
+
+  await finishRun(runId, 'success', {
+    duration_ms: Date.now() - startTime,
+    records_seen: allPatients.size,
+    records_inserted: insertedRows.length,
+    records_skipped: skipped,
+    matches_created: matchCount,
+    metadata: { queriesRun, queriesWithResults, totalSite, invalid },
+  });
+  return runId;
 }
 
-main().catch(e => {
+main().catch(async (e) => {
   console.error('\n💥 Error fatal:', e.message);
+  try {
+    // Best-effort: log a failure entry so observabilidad shows the crash.
+    await supabaseSvc.from('scraper_runs').insert({
+      source_label: SOURCE_LABEL,
+      status: 'error',
+      finished_at: new Date().toISOString(),
+      error_message: String(e?.stack ?? e?.message ?? e).slice(0, 2000),
+    });
+  } catch { /* swallow */ }
   process.exit(1);
 });
