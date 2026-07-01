@@ -84,10 +84,14 @@ export const Route = createFileRoute('/api/public/contact')({
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
       POST: async ({ request }) => {
         const ip = getIp(request)
-        if (limited(ip)) {
+        const rl = limited(ip)
+        if (rl.limited) {
           return Response.json(
-            { error: 'Demasiados mensajes. Intenta en una hora.' },
-            { status: 429, headers: CORS },
+            { error: 'Demasiados mensajes. Intenta más tarde.' },
+            {
+              status: 429,
+              headers: { ...CORS, 'Retry-After': String(rl.retryAfter) },
+            },
           )
         }
 
