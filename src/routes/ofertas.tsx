@@ -672,9 +672,12 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
           {loading ? (
             <div className="py-10 text-center text-muted-foreground"><HeartbeatLoader className="size-8 mx-auto" /></div>
           ) : needs.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">
-              No hay necesidades abiertas {scope === "same-cat" ? "en esta categoría" : ""}.
-            </div>
+            <EmptyState
+              tone="muted"
+              emoji="✨"
+              title="No hay necesidades abiertas"
+              description={scope === "same-cat" ? "No encontramos necesidades pendientes en esta categoría." : "Todas las necesidades han sido atendidas."}
+            />
           ) : (
             <ul className="space-y-1.5">
               {needs.map((n) => (
