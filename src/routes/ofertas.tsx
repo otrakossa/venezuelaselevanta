@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import { z } from "zod";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -626,7 +627,7 @@ function MatchPicker({ offer, onClose, onLinked }: { offer: Offer; onClose: () =
 
         <div className="overflow-y-auto px-3 py-2 flex-1">
           {loading ? (
-            <div className="py-10 text-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
+            <div className="py-10 text-center text-muted-foreground"><HeartbeatLoader className="size-8 mx-auto" /></div>
           ) : needs.length === 0 ? (
             <div className="py-10 text-center text-sm text-muted-foreground">
               No hay necesidades abiertas {scope === "same-cat" ? "en esta categoría" : ""}.

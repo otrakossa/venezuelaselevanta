@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import { useAuth } from "@/hooks/useReports";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -215,7 +216,7 @@ function UsersPage() {
             {loading ? (
               <tr>
                 <td colSpan={4} className="text-center py-10 text-muted-foreground">
-                  <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                  <HeartbeatLoader className="size-8 mx-auto" />
                 </td>
               </tr>
             ) : rows.length === 0 ? (

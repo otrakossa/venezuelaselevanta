@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import { toast } from "sonner";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { LocationPickerInline } from "@/components/LocationPickerInline";
@@ -445,7 +446,7 @@ function NeedDetailModal({
 
         {loading || !need || !primary || !urg ? (
           <div className="p-10 flex items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <HeartbeatLoader className="size-8" />
           </div>
         ) : (
           <>

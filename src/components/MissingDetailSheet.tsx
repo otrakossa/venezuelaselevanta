@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import {
   X, MapPin, Phone, Mail, User, CalendarDays, Share2, Link as LinkIcon,
   Map as MapIcon, MessageCircle, Send, Loader2, ShieldCheck, Hospital, Search, UserCheck, Camera,
@@ -568,7 +569,7 @@ export function MissingDetailSheet({
 
               {loading ? (
                 <div className="flex items-center justify-center py-6 text-xs text-muted-foreground gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Cargando comentarios…
+                  <HeartbeatLoader className="size-5" /> Cargando comentarios…
                 </div>
               ) : comments.length === 0 ? (
                 <div className="text-xs text-muted-foreground italic py-3 text-center border border-dashed border-border rounded-lg">

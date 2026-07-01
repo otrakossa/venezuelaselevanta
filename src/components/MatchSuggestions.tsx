@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { HeartbeatLoader } from "@/components/HeartbeatLoader";
 import { Link2, Loader2, ChevronDown, ChevronUp, Check, Unlink, Building2, MapPin, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -197,7 +198,7 @@ export function MatchSuggestions({ kind, selfId, matchedId, matchedLabel, onChan
         <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2 space-y-1.5">
           {loading && (
             <div className="flex items-center justify-center py-3 text-xs text-muted-foreground gap-2">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Buscando…
+              <HeartbeatLoader className="size-4" /> Buscando…
             </div>
           )}
           {!loading && items && items.length === 0 && (
