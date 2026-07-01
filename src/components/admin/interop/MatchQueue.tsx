@@ -28,7 +28,7 @@ export function MatchQueue() {
 
   const load = useCallback(async () => {
     setLoading(true); setPairs([]); setScanned(0);
-    // Pull recent unmatched missing_persons and call suggest RPC per row.
+    // 1) Recent unmatched missing_persons
     const { data: missing, error } = await sbx
       .from("missing_persons")
       .select("id,name,age,last_seen_location,source_label")
@@ -38,33 +38,49 @@ export function MatchQueue() {
       .limit(PAGE);
     if (error) { toast.error(error.message); setLoading(false); return; }
 
-    // dismissed pairs to filter
-    const { data: dismissals } = await sbx.from("match_dismissals").select("missing_id,patient_id");
-    const dismissed = new Set(((dismissals ?? []) as Array<{ missing_id: string; patient_id: string }>).map((d) => `${d.missing_id}:${d.patient_id}`));
+    const missingList = (missing ?? []) as Array<{
+      id: string; name: string; age: number | null;
+      last_seen_location: string | null; source_label: string | null;
+    }>;
+    setScanned(missingList.length);
 
+    if (missingList.length === 0) { setPairs([]); setLoading(false); return; }
+
+    // 2) Dismissed pairs + 3) batch suggestions, in parallel
+    const missingById = new Map(missingList.map((m) => [m.id, m]));
+    const [dismissalsRes, suggsRes] = await Promise.all([
+      sbx.from("match_dismissals").select("missing_id,patient_id"),
+      sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches_batch", {
+        p_missing_ids: missingList.map((m) => m.id),
+      }),
+    ]);
+
+    const dismissed = new Set(
+      ((dismissalsRes.data ?? []) as Array<{ missing_id: string; patient_id: string }>)
+        .map((d) => `${d.missing_id}:${d.patient_id}`),
+    );
+
+    const suggs = (suggsRes.data ?? []) as Array<Record<string, unknown>>;
     const out: Pair[] = [];
-    let i = 0;
-    for (const m of missing ?? []) {
-      i++;
-      setScanned(i);
-      const { data: suggs } = await sbx.rpc<Array<Record<string, unknown>>>("suggest_patient_matches", { p_missing_id: m.id });
-      for (const s of (suggs ?? []) as Array<Record<string, unknown>>) {
-        const key = `${m.id}:${s.patient_id as string}`;
-        if (dismissed.has(key)) continue;
-        if (Number(s.score) < minScore) continue;
-        out.push({
-          missing_id: m.id,
-          missing_name: m.name,
-          missing_age: m.age,
-          missing_location: m.last_seen_location,
-          missing_source: m.source_label ?? null,
-          patient_id: s.patient_id as string,
-          patient_name: s.patient_name as string,
-          patient_age: (s.patient_age as number | null) ?? null,
-          patient_center: (s.center_name as string | null) ?? null,
-          score: Number(s.score),
-        });
-      }
+    for (const s of suggs) {
+      const mid = s.missing_id as string;
+      const pid = s.patient_id as string;
+      if (dismissed.has(`${mid}:${pid}`)) continue;
+      if (Number(s.score) < minScore) continue;
+      const m = missingById.get(mid);
+      if (!m) continue;
+      out.push({
+        missing_id: mid,
+        missing_name: m.name,
+        missing_age: m.age,
+        missing_location: m.last_seen_location,
+        missing_source: m.source_label ?? null,
+        patient_id: pid,
+        patient_name: s.patient_name as string,
+        patient_age: (s.patient_age as number | null) ?? null,
+        patient_center: (s.center_name as string | null) ?? null,
+        score: Number(s.score),
+      });
     }
     out.sort((a, b) => b.score - a.score);
     setPairs(out);
