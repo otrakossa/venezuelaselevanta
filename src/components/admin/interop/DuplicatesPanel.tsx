@@ -228,6 +228,8 @@ export function DuplicatesPanel() {
           </div>
         )}
       </div>
+
+      <MergeHistoryPanel />
     </div>
   );
 }
