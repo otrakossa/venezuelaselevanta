@@ -1200,7 +1200,7 @@ function MissingFicha({
             <div className="font-semibold text-sm">{String(full.name ?? "Sin nombre")}</div>
             {status && (
               <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${statusColor}`}>
-                {status === "missing" ? "Desaparecido" : status === "found" ? "Encontrado" : status}
+                {esMissingStatus(status)}
               </span>
             )}
           </div>
