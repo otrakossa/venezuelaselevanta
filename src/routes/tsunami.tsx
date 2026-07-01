@@ -737,7 +737,8 @@ function renderToolOutput(
     };
     const topCats = Object.entries(byCategory)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 4);
+      .slice(0, 4)
+      .map(([c, n]) => [esCategory(c), n] as [string, number]);
 
     return (
       <div className="space-y-3">
