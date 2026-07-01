@@ -16,15 +16,18 @@ export function Footer() {
           <p className="text-sm opacity-80">
             Plataforma&nbsp;abierta y colaborativa para sistematizar la solidaridad
           </p>
-          <a
-            href="https://creativecommons.org/licenses/by/4.0/"
-            target="_blank"
-            rel="noopener noreferrer license"
-            className="inline-flex items-center gap-2 rounded border border-white/20 px-2.5 py-1 text-xs hover:text-[color:var(--sunrise)] hover:border-[color:var(--sunrise)] transition-colors"
-          >
-            <span aria-hidden>🅭🅯</span>
-            <span className="font-semibold">CC BY 4.0</span>
-          </a>
+          <div className="flex flex-wrap items-center gap-2">
+            <a
+              href="https://creativecommons.org/licenses/by/4.0/"
+              target="_blank"
+              rel="noopener noreferrer license"
+              className="inline-flex items-center gap-2 rounded border border-white/20 px-2.5 py-1 text-xs hover:text-[color:var(--sunrise)] hover:border-[color:var(--sunrise)] transition-colors"
+            >
+              <span aria-hidden>🅭🅯</span>
+              <span className="font-semibold">CC BY 4.0</span>
+            </a>
+            <SolidarityCounter variant="footer" />
+          </div>
           <p className="text-xs opacity-60">
             Los datos son de acceso libre. Úsalos, compártelos, atribúyelos.
           </p>
