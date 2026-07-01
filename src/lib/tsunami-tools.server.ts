@@ -338,16 +338,65 @@ export const tsunamiTools = {
       contact_phone: z.string().min(6).describe("Teléfono de contacto"),
     }),
     execute: async (input) => {
+      // Resolve linked need (if any) so the user always sees the exact case being helped.
+      let linkedNeed: {
+        id: string;
+        title: string;
+        category: string | null;
+        urgency: string | null;
+        center_name: string | null;
+        center_address: string | null;
+      } | null = null;
+      if (input.need_id) {
+        try {
+          const rows = (await supaGet(
+            `needs?select=id,title,category,urgency,center_name,center_address,status&id=eq.${input.need_id}&limit=1`,
+          )) as Array<Record<string, unknown>>;
+          if (rows.length > 0) {
+            linkedNeed = {
+              id: String(rows[0].id),
+              title: String(rows[0].title ?? ""),
+              category: (rows[0].category as string) ?? null,
+              urgency: (rows[0].urgency as string) ?? null,
+              center_name: (rows[0].center_name as string) ?? null,
+              center_address: (rows[0].center_address as string) ?? null,
+            };
+          }
+        } catch {
+          // ignore, we'll flag below
+        }
+      }
+
       if (!input.confirm) {
         return {
           status: "pending_confirmation",
-          message: "Muestra este resumen al usuario y pide 'sí, registra' antes de guardar.",
+          message: input.need_id
+            ? linkedNeed
+              ? `Esta oferta quedará VINCULADA a la necesidad "${linkedNeed.title}"${linkedNeed.center_name ? ` (${linkedNeed.center_name})` : ""}. Muestra el resumen y el vínculo al usuario y pide 'sí, registra' antes de guardar.`
+              : "Se recibió un need_id pero no se encontró la necesidad. Confirma con el usuario si quiere registrar la oferta SIN vínculo o corregir el enlace antes de guardar."
+            : "Muestra este resumen al usuario y pide 'sí, registra' antes de guardar. La oferta quedará SIN vincular a una necesidad puntual.",
+          linked_need: linkedNeed,
+          link_status: input.need_id
+            ? linkedNeed
+              ? "linked"
+              : "need_not_found"
+            : "unlinked",
           preview: { ...input, confirm: undefined },
         };
       }
+
+      // Hard guard: if a need_id was passed but can't be resolved, refuse to save silently.
+      if (input.need_id && !linkedNeed) {
+        return {
+          status: "error",
+          error:
+            "No se pudo verificar la necesidad indicada (need_id inválido o eliminada). Pídele al usuario reconfirmar o quitar el vínculo antes de reintentar.",
+        };
+      }
+
       const location_desc = [input.address, input.city, input.state].filter(Boolean).join(", ");
       const payload = {
-        need_id: input.need_id ?? null,
+        need_id: linkedNeed?.id ?? null,
         category: input.category,
         title: input.title.trim(),
         description: input.description ?? null,
@@ -366,8 +415,10 @@ export const tsunamiTools = {
         return {
           status: "ok",
           id: created?.id,
-          message:
-            "Oferta registrada. Quien publicó la necesidad (o el equipo) podrá contactarte pronto.",
+          linked_need: linkedNeed,
+          message: linkedNeed
+            ? `Oferta registrada y vinculada a la necesidad "${linkedNeed.title}". Quien la publicó podrá contactarte pronto.`
+            : "Oferta registrada (sin vínculo a una necesidad puntual). El equipo o quien la necesite podrá contactarte pronto.",
         };
       } catch (e) {
         return { status: "error", error: String(e instanceof Error ? e.message : e) };
