@@ -115,6 +115,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   useEffect(() => {
     void import("@/lib/pwa-register");
+    void import("@/lib/page-view-tracker").then((m) =>
+      m.trackPageView(window.location.pathname),
+    );
   }, []);
   return (
     <QueryClientProvider client={queryClient}>
