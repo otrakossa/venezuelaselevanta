@@ -45,14 +45,15 @@ export const Route = createFileRoute("/api/public/push/notify-found")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const { data: person, error: pErr } = await supabaseAdmin
-          .from("missing_persons")
+        const { data: person, error: pErr } = await (supabaseAdmin.from("missing_persons") as unknown as {
+          select: (cols: string) => { eq: (col: string, v: string) => { maybeSingle: () => Promise<{ data: unknown; error: unknown }> } };
+        })
           .select("id, name, outcome, outcome_note, last_seen_location")
           .eq("id", body.missing_id)
           .maybeSingle();
 
         if (pErr || !person) return Response.json({ ok: false, error: "person not found" }, { status: 404 });
-        const p = person as unknown as { id: string; name: string; outcome: string | null; outcome_note: string | null; last_seen_location: string | null };
+        const p = person as { id: string; name: string; outcome: string | null; outcome_note: string | null; last_seen_location: string | null };
 
         const { data: subs, error: sErr } = await supabaseAdmin
           .from("push_subscriptions")
