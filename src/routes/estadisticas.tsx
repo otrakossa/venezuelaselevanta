@@ -486,7 +486,9 @@ function StatsPage() {
       </div>
 
       {/* DIVIPOL: estados y municipios */}
+      <SectionHeader icon={MapPin} title="Distribución geográfica (DIVIPOL)" subtitle="Estados y municipios con más reportes" />
       <div className="grid lg:grid-cols-2 gap-4">
+
         {([
           { title: "Top estados (DIVIPOL)", data: stats.topStates, gradient: "linear-gradient(90deg, var(--sky), var(--sunrise))" },
           { title: "Top municipios (DIVIPOL)", data: stats.topMunicipalities, gradient: "linear-gradient(90deg, var(--gold), var(--sunrise))" },
