@@ -77,14 +77,18 @@ function MessagesPage() {
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    const windowMs = DATE_RANGE_MS[range];
+    const cutoff = windowMs ? Date.now() - windowMs : 0;
     return rows.filter((r) => {
       if (tab === "pending" && r.handled) return false;
       if (tab === "handled" && !r.handled) return false;
+      if (cutoff && new Date(r.created_at).getTime() < cutoff) return false;
       if (!needle) return true;
       const hay = `${r.name} ${r.email} ${r.subject ?? ""} ${r.message}`.toLowerCase();
       return hay.includes(needle);
     });
-  }, [rows, tab, q]);
+  }, [rows, tab, q, range]);
+
 
   const counts = useMemo(
     () => ({
