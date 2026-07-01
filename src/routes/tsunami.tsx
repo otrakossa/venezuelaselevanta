@@ -545,6 +545,56 @@ function TsunamiPage() {
   );
 }
 
+// Diccionarios ES para etiquetas que vienen como slugs en inglés desde el modelo/tools.
+const NEED_CATEGORY_ES: Record<string, string> = {
+  medicine: "Medicinas",
+  food: "Alimentos",
+  water: "Agua",
+  volunteers: "Voluntarios",
+  equipment: "Equipos",
+  blood: "Sangre",
+  money: "Dinero",
+  hygiene: "Higiene",
+  diapers: "Pañales",
+  other: "Otro",
+};
+const URGENCY_ES: Record<string, string> = {
+  critical: "Crítica",
+  high: "Alta",
+  medium: "Media",
+  low: "Baja",
+};
+const MISSING_STATUS_ES: Record<string, string> = {
+  missing: "Desaparecido",
+  found: "Encontrado",
+  at_health_center: "En centro de salud",
+  with_family: "Con su familia",
+  relocated: "Reubicado",
+  deceased: "Fallecido",
+  other: "Otro estado",
+};
+const TOOL_NAME_ES: Record<string, string> = {
+  search_missing_persons: "búsqueda de personas",
+  get_missing_person: "ficha de persona",
+  suggest_patient_matches: "coincidencias en hospitales",
+  register_missing_person: "registro de desaparecido",
+  list_needs: "necesidades activas",
+  get_need: "detalle de necesidad",
+  guide_offer_help: "guía para ofrecer ayuda",
+};
+function esCategory(slug: unknown): string {
+  const k = String(slug ?? "").toLowerCase();
+  return NEED_CATEGORY_ES[k] ?? k;
+}
+function esUrgency(slug: unknown): string {
+  const k = String(slug ?? "").toLowerCase();
+  return URGENCY_ES[k] ?? k;
+}
+function esMissingStatus(slug: unknown): string {
+  const k = String(slug ?? "").toLowerCase();
+  return MISSING_STATUS_ES[k] ?? k;
+}
+
 // Human-readable summary for the tool accordion header.
 function toolSummary(toolName: string, input: unknown, output: unknown, state: string): string {
   const inp = (input ?? {}) as Record<string, unknown>;
@@ -580,8 +630,10 @@ function toolSummary(toolName: string, input: unknown, output: unknown, state: s
       return done ? `📋 ${String(out.title ?? "Necesidad")}` : "📋 Cargando necesidad…";
     case "guide_offer_help":
       return done ? "🤝 Guía para ofrecer ayuda" : "🤝 Preparando guía…";
-    default:
-      return toolName;
+    default: {
+      const es = TOOL_NAME_ES[toolName] ?? toolName.replace(/_/g, " ");
+      return done ? `✅ ${es}` : failed ? `⚠️ Error en ${es}` : `⏳ ${es}…`;
+    }
   }
 }
 
@@ -685,7 +737,8 @@ function renderToolOutput(
     };
     const topCats = Object.entries(byCategory)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 4);
+      .slice(0, 4)
+      .map(([c, n]) => [esCategory(c), n] as [string, number]);
 
     return (
       <div className="space-y-3">
@@ -1147,7 +1200,7 @@ function MissingFicha({
             <div className="font-semibold text-sm">{String(full.name ?? "Sin nombre")}</div>
             {status && (
               <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${statusColor}`}>
-                {status === "missing" ? "Desaparecido" : status === "found" ? "Encontrado" : status}
+                {esMissingStatus(status)}
               </span>
             )}
           </div>
@@ -1288,12 +1341,12 @@ function NeedFicha({
         <div className="flex items-center gap-2 flex-wrap">
           {Boolean(data.category) && (
             <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-              {String(data.category)}
+              {esCategory(data.category)}
             </span>
           )}
           {Boolean(urg) && (
             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${urgencyColors[urg] ?? "bg-muted"}`}>
-              {urg}
+              {esUrgency(urg)}
             </span>
           )}
           {expandable && (
