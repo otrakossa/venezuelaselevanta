@@ -233,17 +233,20 @@ function TsunamiPage() {
             </div>
           </div>
         </div>
-        {messages.length > 0 && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setConfirmReset(true)}
-            className="gap-1.5 shrink-0"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Nueva</span>
-          </Button>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <InstallTsunamiButton compact />
+          {messages.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfirmReset(true)}
+              className="gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nueva</span>
+            </Button>
+          )}
+        </div>
       </header>
 
       {!online && (
