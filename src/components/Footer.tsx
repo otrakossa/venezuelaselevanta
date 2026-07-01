@@ -110,8 +110,9 @@ export function Footer() {
 
       <div className="border-t border-white/10 bg-black/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-4">
-          <div className="flex justify-center">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <VisitorCounter />
+            <SolidarityCounter variant="footer" />
           </div>
           <div className="rounded-lg px-4 py-3 text-sm">
             <p className="font-display font-bold uppercase tracking-wide text-[color:var(--sunrise)] text-xs mb-1">
