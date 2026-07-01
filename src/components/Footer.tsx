@@ -1,6 +1,5 @@
 import { Logo } from "@/components/brand/Logo";
 import { ExternalLink } from "lucide-react";
-import { VisitorCounter } from "@/components/VisitorCounter";
 import { SolidarityCounter } from "@/components/SolidarityCounter";
 
 export function Footer() {
