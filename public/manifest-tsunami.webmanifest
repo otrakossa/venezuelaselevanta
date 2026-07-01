@@ -1,0 +1,18 @@
+{
+  "name": "Tsunami — Asistente de rescate",
+  "short_name": "Tsunami",
+  "description": "Tu perrito de rescate en línea. Busca familiares, registra desaparecidos y coordina ayuda.",
+  "lang": "es-VE",
+  "start_url": "/tsunami?utm_source=pwa",
+  "scope": "/",
+  "id": "/tsunami",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FF6B35",
+  "theme_color": "#FF6B35",
+  "categories": ["utilities", "social"],
+  "icons": [
+    { "src": "/tsunami-icon-192.png?v=1", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/tsunami-icon-512.png?v=1", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
