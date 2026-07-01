@@ -372,6 +372,14 @@ async function main() {
   if (toInsert.length === 0) {
     console.log('\n✅ Base de datos ya actualizada.');
     await reportDuplicates();
+    await finishRun(runId, 'success', {
+      duration_ms: Date.now() - startTime,
+      records_seen: allPatients.size,
+      records_inserted: 0,
+      records_skipped: skipped,
+      matches_created: 0,
+      metadata: { queriesRun, queriesWithResults, totalSite, invalid },
+    });
     return;
   }
 
