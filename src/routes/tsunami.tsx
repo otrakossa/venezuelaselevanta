@@ -43,6 +43,17 @@ export const Route = createFileRoute("/tsunami")({
     meta: [
       { title: "Tsunami — Asistente (beta privada)" },
       { name: "robots", content: "noindex, nofollow" },
+      { name: "apple-mobile-web-app-title", content: "Tsunami" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "theme-color", content: "#FF6B35" },
+    ],
+    links: [
+      // Manifest específico de Tsunami: el ícono instalado en el escritorio
+      // será el de Tsunami y abrirá directo /tsunami.
+      { rel: "manifest", href: "/manifest-tsunami.webmanifest" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/tsunami-apple-touch.png?v=1" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/tsunami-icon-192.png?v=1" },
     ],
   }),
   component: TsunamiPage,
