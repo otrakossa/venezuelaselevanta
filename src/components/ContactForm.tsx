@@ -90,6 +90,21 @@ export function ContactForm() {
         ¿Quieres colaborar, sumar tu organización o reportar algo? Llena el formulario.
       </p>
 
+      {/* Honeypot: hidden field, real users won't fill it. Bots often do. */}
+      <div aria-hidden="true" className="hidden" style={{ position: "absolute", left: "-10000px", top: "auto", width: 1, height: 1, overflow: "hidden" }}>
+        <label>
+          No llenar este campo
+          <input
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={form.website}
+            onChange={(e) => setForm({ ...form, website: e.target.value })}
+          />
+        </label>
+      </div>
+
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Nombre" error={errors.name}>
           <input
