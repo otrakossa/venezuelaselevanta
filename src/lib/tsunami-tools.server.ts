@@ -299,7 +299,7 @@ export const tsunamiTools = {
 
   guide_offer_help: tool({
     description:
-      "Genera una guía paso a paso para que una persona ofrezca ayuda. Si hay una necesidad específica (need_id), incluye el deep-link al wizard prellenado.",
+      "Devuelve una guía breve en 4 pasos para que el usuario ofrezca ayuda dentro del chat. NO incluye enlaces externos: el propio Tsunami hará el registro con register_offer.",
     inputSchema: z.object({
       need_id: z.string().uuid().optional(),
       category: z.string().optional(),
@@ -307,15 +307,71 @@ export const tsunamiTools = {
     execute: async ({ need_id, category }) => {
       return {
         steps: [
-          "Identifica qué tipo de ayuda puedes ofrecer (insumos, transporte, alojamiento, voluntariado).",
-          "Indica ciudad, estado y dirección donde puedes entregar o desde dónde operas.",
-          "Deja un contacto válido (nombre y teléfono) para coordinar.",
-          "Confirma horarios disponibles para la entrega o el servicio.",
+          "Cuéntame qué tipo de ayuda puedes ofrecer (categoría: alimentos, agua, medicinas, transporte, alojamiento, voluntariado, otros).",
+          "Dime cantidad o descripción breve de lo que ofreces.",
+          "Indícame ciudad, estado y dirección desde donde puedes entregar.",
+          "Déjame tu nombre y teléfono para coordinar.",
         ],
-        offer_url: need_id
-          ? `${SITE}/ofertas?need=${need_id}`
-          : `${SITE}/ofertas${category ? `?category=${encodeURIComponent(category)}` : ""}`,
+        note: "Cuando tengas los datos, Tsunami mismo registra la oferta aquí en el chat, sin salir a otra pantalla.",
+        need_id: need_id ?? null,
+        category: category ?? null,
       };
+    },
+  }),
+
+  register_offer: tool({
+    description:
+      "Registra una oferta de ayuda en la plataforma. SIEMPRE llama primero con confirm=false para mostrar el resumen al usuario y pedir confirmación explícita ('sí, registra'); solo entonces llama con confirm=true. Si viene need_id, la oferta queda vinculada a esa necesidad puntual.",
+    inputSchema: z.object({
+      confirm: z.boolean().describe("true solo cuando el usuario ya confirmó los datos"),
+      need_id: z.string().uuid().optional().describe("Necesidad puntual a la que responde, si aplica"),
+      category: z
+        .enum(["food", "water", "medical", "shelter", "transport", "clothing", "volunteer", "other"])
+        .describe("Categoría de la ayuda ofrecida"),
+      title: z.string().min(3).max(120).describe("Título breve de la oferta"),
+      description: z.string().optional().describe("Descripción libre"),
+      quantity: z.string().optional().describe("Cantidad o unidades (texto libre)"),
+      state: z.string().min(2).describe("Estado / entidad federal"),
+      city: z.string().min(2).describe("Ciudad o municipio"),
+      address: z.string().min(3).describe("Dirección específica de origen o entrega"),
+      contact_name: z.string().min(2).describe("Nombre de contacto"),
+      contact_phone: z.string().min(6).describe("Teléfono de contacto"),
+    }),
+    execute: async (input) => {
+      if (!input.confirm) {
+        return {
+          status: "pending_confirmation",
+          message: "Muestra este resumen al usuario y pide 'sí, registra' antes de guardar.",
+          preview: { ...input, confirm: undefined },
+        };
+      }
+      const location_desc = [input.address, input.city, input.state].filter(Boolean).join(", ");
+      const payload = {
+        need_id: input.need_id ?? null,
+        category: input.category,
+        title: input.title.trim(),
+        description: input.description ?? null,
+        quantity: input.quantity ?? null,
+        state: input.state,
+        city: input.city,
+        address: input.address,
+        location_desc,
+        contact_name: input.contact_name,
+        contact_phone: input.contact_phone,
+        status: "open",
+      };
+      try {
+        const rows = (await supaPost("offers", payload)) as Array<Record<string, unknown>>;
+        const created = rows[0];
+        return {
+          status: "ok",
+          id: created?.id,
+          message:
+            "Oferta registrada. Quien publicó la necesidad (o el equipo) podrá contactarte pronto.",
+        };
+      } catch (e) {
+        return { status: "error", error: String(e instanceof Error ? e.message : e) };
+      }
     },
   }),
 };
