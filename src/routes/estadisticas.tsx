@@ -528,14 +528,17 @@ function StatsPage() {
       </div>
 
       {/* Operación, heatmap y balance ayuda */}
+      <SectionHeader icon={Clock} title="Operación y respuesta" subtitle="Embudo, estancados, patrones horarios y balance de ayuda" />
       <DashboardExtras reports={reports} />
 
       {/* Atendidos por zona */}
+      <SectionHeader icon={HeartPulse} title="Atendidos por zona" subtitle="Distribución geográfica de pacientes en centros de salud" />
       <PatientZonesSection stats={patientStats} />
 
       {/* Urgencia × categoría + Sismos */}
-
+      <SectionHeader icon={Waves} title="Urgencia y sismicidad" subtitle="Composición de urgencia y actividad sísmica USGS" />
       <div className="grid lg:grid-cols-2 gap-4">
+
         <div className="bg-card border border-border rounded-2xl p-4">
           <h3 className="font-display text-base mb-3">Urgencia por categoría</h3>
           <ResponsiveContainer width="100%" height={240}>
