@@ -33,6 +33,7 @@ export const Route = createFileRoute("/ofertas")({
 });
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
+import { maskPhone, isValidPhone, phoneIsEmpty, PHONE_DEFAULT, PHONE_ERROR } from "@/lib/validators";
 
 type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type OfferStatus = "available" | "matched" | "delivered" | "cancelled";
@@ -112,6 +113,29 @@ async function fetchOffers(tab: "available" | "matched" | "delivered", category:
   return res.json();
 }
 
+async function fetchCount(statusQ: string, category: Category | "all"): Promise<number> {
+  const catQ = category !== "all" ? `&category=eq.${category}` : "";
+  const res = await fetch(`${SUPA_URL}/rest/v1/offers?${statusQ}${catQ}`, {
+    method: "HEAD",
+    headers: { ...HEADERS, Prefer: "count=exact" },
+  });
+  if (!res.ok) return 0;
+  const total = res.headers.get("content-range")?.split("/")[1];
+  return total && total !== "*" ? parseInt(total, 10) || 0 : 0;
+}
+
+// Conteos globales por status (independientes del tab activo) para los KPIs.
+async function fetchOfferCounts(
+  category: Category | "all",
+): Promise<{ available: number; matched: number; delivered: number }> {
+  const [available, matched, delivered] = await Promise.all([
+    fetchCount("status=in.(open,available)", category),
+    fetchCount("status=eq.matched", category),
+    fetchCount("status=eq.delivered", category),
+  ]);
+  return { available, matched, delivered };
+}
+
 async function fetchNeed(id: string): Promise<NeedLite | null> {
   const res = await fetch(
     `${SUPA_URL}/rest/v1/needs?id=eq.${id}&select=id,title,category,center_name,status&limit=1`,
@@ -148,6 +172,11 @@ function OfertasPage() {
   const [showForm, setShowForm] = useState(false);
   const [matchTarget, setMatchTarget] = useState<Offer | null>(null);
   const [prefilledNeed, setPrefilledNeed] = useState<NeedLite | null>(null);
+  const [counts, setCounts] = useState<{ available: number; matched: number; delivered: number }>({
+    available: 0,
+    matched: 0,
+    delivered: 0,
+  });
 
   // Resolve ?need=<uuid> into a need + open form
   useEffect(() => {
@@ -164,8 +193,12 @@ function OfertasPage() {
     if (!silent) setLoading(true);
     else setRefreshing(true);
     try {
-      const data = await fetchOffers(tab, category);
+      const [data, c] = await Promise.all([
+        fetchOffers(tab, category),
+        fetchOfferCounts(category),
+      ]);
       setOffers(data);
+      setCounts(c);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Error cargando ofertas");
     } finally {
@@ -186,15 +219,6 @@ function OfertasPage() {
       (o.location_desc ?? "").toLowerCase().includes(n),
     );
   }, [offers, q]);
-
-  const counts = useMemo(() => {
-    const c = { available: 0, matched: 0, delivered: 0 };
-    for (const o of offers) {
-      const s = normalizeStatus(o.status);
-      c[s]++;
-    }
-    return c;
-  }, [offers]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 relative">
@@ -253,10 +277,15 @@ function OfertasPage() {
         <OfferForm
           prefilledNeed={prefilledNeed}
           onDone={() => {
+            const wasLinked = !!prefilledNeed;
             setShowForm(false);
             setPrefilledNeed(null);
             if (prefilledNeedId) navigate({ search: {} });
-            load(true);
+            // Si se creó vinculada a una necesidad (status='matched'), saltar al tab
+            // "Vinculadas" para que la oferta sea visible. El cambio de tab dispara la
+            // recarga vía el efecto [tab, category]; si no, recargamos el tab actual.
+            if (wasLinked && tab !== "matched") setTab("matched");
+            else load(true);
           }}
         />
       )}
@@ -467,7 +496,7 @@ function OfferCard({ offer: o, onMatch, onChanged }: { offer: Offer; onMatch: ()
               </div>
             )}
             {o.contact_phone && (
-              <a href={`tel:${o.contact_phone}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+              <a href={`tel:${o.contact_phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
                 <Phone className="h-3 w-3" /> {o.contact_phone}
               </a>
             )}
@@ -673,7 +702,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     address: "",
     location_desc: "",
     contact_name: "",
-    contact_phone: "",
+    contact_phone: PHONE_DEFAULT,
     contact_info: "",
   });
   const [busy, setBusy] = useState(false);
@@ -685,6 +714,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     if (!f.city.trim()) { toast.error("Indica la ciudad o municipio"); return; }
     if (!f.address.trim()) { toast.error("Indica la dirección de entrega"); return; }
     if (!f.contact_name.trim()) { toast.error("Tu nombre es requerido"); return; }
+    if (!phoneIsEmpty(f.contact_phone) && !isValidPhone(f.contact_phone)) { toast.error(PHONE_ERROR); return; }
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
@@ -697,7 +727,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         address: f.address.trim(),
         location_desc: f.location_desc.trim() || null,
         contact_name: f.contact_name.trim(),
-        contact_phone: f.contact_phone.trim() || null,
+        contact_phone: phoneIsEmpty(f.contact_phone) ? null : f.contact_phone.trim(),
         contact_info: f.contact_info.trim() || null,
         status: prefilledNeed ? "matched" : "available",
         need_id: prefilledNeed?.id ?? null,
@@ -888,10 +918,11 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
       />
       <input
         className={field}
-        placeholder="Teléfono / WhatsApp (opcional)"
+        placeholder="Teléfono / WhatsApp (+58 4141234567)"
         value={f.contact_phone}
-        onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
-        maxLength={40}
+        onChange={(e) => setF({ ...f, contact_phone: maskPhone(e.target.value) })}
+        inputMode="tel"
+        maxLength={18}
       />
       <input
         className={`${field} sm:col-span-2`}
