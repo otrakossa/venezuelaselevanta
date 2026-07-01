@@ -90,6 +90,18 @@ export function checkRateLimit(req: Request): RateLimitResult {
   const b = buckets.get(identity)
   if (!b || now >= b.resetAt) {
     const resetAt = now + WINDOW_MS
+    if (limit <= 0) {
+      buckets.set(identity, { count: 0, resetAt, limit })
+      return {
+        limited: true,
+        limit,
+        remaining: 0,
+        resetAt: Math.floor(resetAt / 1000),
+        retryAfter: Math.ceil(WINDOW_MS / 1000),
+        identity,
+        tier,
+      }
+    }
     buckets.set(identity, { count: 1, resetAt, limit })
     return {
       limited: false,
