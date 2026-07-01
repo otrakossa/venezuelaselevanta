@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Copy, RefreshCw, Square, Trash2, WifiOff } from "lucide-react";
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 import { TsunamiAvatar } from "@/components/brand/TsunamiAvatar";
+import { InstallTsunamiButton } from "@/components/InstallTsunamiButton";
 
 import {
   Conversation,
@@ -42,6 +43,17 @@ export const Route = createFileRoute("/tsunami")({
     meta: [
       { title: "Tsunami — Asistente (beta privada)" },
       { name: "robots", content: "noindex, nofollow" },
+      { name: "apple-mobile-web-app-title", content: "Tsunami" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "theme-color", content: "#FF6B35" },
+    ],
+    links: [
+      // Manifest específico de Tsunami: el ícono instalado en el escritorio
+      // será el de Tsunami y abrirá directo /tsunami.
+      { rel: "manifest", href: "/manifest-tsunami.webmanifest" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/tsunami-apple-touch.png?v=1" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "/tsunami-icon-192.png?v=1" },
     ],
   }),
   component: TsunamiPage,
@@ -221,17 +233,20 @@ function TsunamiPage() {
             </div>
           </div>
         </div>
-        {messages.length > 0 && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setConfirmReset(true)}
-            className="gap-1.5 shrink-0"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Nueva</span>
-          </Button>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <InstallTsunamiButton compact />
+          {messages.length > 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setConfirmReset(true)}
+              className="gap-1.5"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nueva</span>
+            </Button>
+          )}
+        </div>
       </header>
 
       {!online && (
@@ -283,6 +298,13 @@ function TsunamiPage() {
                 <p className="mt-1 text-xs text-muted-foreground/80">
                   🔒 Solo tú ves esta conversación en este navegador.
                 </p>
+
+                <div className="mt-5 flex flex-col items-center gap-1.5">
+                  <InstallTsunamiButton />
+                  <span className="text-[11px] text-muted-foreground">
+                    Ícono de Tsunami directo en tu pantalla · funciona sin abrir el navegador
+                  </span>
+                </div>
 
                 {/* Acciones */}
                 <div className="grid sm:grid-cols-2 gap-4 mt-8 w-full">
