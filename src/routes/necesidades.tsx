@@ -5,7 +5,7 @@ import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { LocationPickerInline } from "@/components/LocationPickerInline";
 import { Wizard } from "@/components/wizard/Wizard";
 import { reverseGeocode } from "@/lib/geocode";
-import { isValidCedula, isValidVePhone, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
+import { maskCedula, maskPhone, isValidCedula, isValidPhone, PHONE_DEFAULT, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
 
 import {
   Search, X, HandHeart, Loader2, RefreshCw, Plus, Phone, User,
@@ -717,7 +717,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     center_phone:  "" as string,
     contact_name:    "",
     reporter_cedula: "",
-    contact_phone:   "",
+    contact_phone:   PHONE_DEFAULT,
     contact_info:    "",
   });
   const [busy, setBusy] = useState(false);
@@ -765,8 +765,7 @@ function NeedForm({ onDone }: { onDone: () => void }) {
     if (!f.contact_name.trim())    { toast.error("Tu nombre es obligatorio"); return; }
     if (!f.reporter_cedula.trim()) { toast.error("Tu cédula es obligatoria"); return; }
     if (!isValidCedula(f.reporter_cedula)) { toast.error(CEDULA_ERROR); return; }
-    if (!f.contact_phone.trim())   { toast.error("Tu teléfono es obligatorio"); return; }
-    if (!isValidVePhone(f.contact_phone))  { toast.error(PHONE_ERROR); return; }
+    if (!isValidPhone(f.contact_phone))    { toast.error(PHONE_ERROR); return; }
 
 
     setBusy(true);
@@ -992,18 +991,19 @@ function NeedForm({ onDone }: { onDone: () => void }) {
         />
         <input
           className={field}
-          placeholder="Cédula *"
+          placeholder="Cédula/ID * (V-12345678)"
           value={f.reporter_cedula}
-          onChange={(e) => setF({ ...f, reporter_cedula: e.target.value })}
-          maxLength={30}
+          onChange={(e) => setF({ ...f, reporter_cedula: maskCedula(e.target.value) })}
+          maxLength={18}
           required
         />
         <input
           className={field}
-          placeholder="Teléfono *"
+          placeholder="Teléfono * (+58 4141234567)"
           value={f.contact_phone}
-          onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
-          maxLength={40}
+          onChange={(e) => setF({ ...f, contact_phone: maskPhone(e.target.value) })}
+          inputMode="tel"
+          maxLength={18}
           required
         />
         {f.categories.includes("money") && (

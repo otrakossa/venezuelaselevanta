@@ -30,7 +30,7 @@ export const Route = createFileRoute("/pacientes")({
 });
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
-import { isValidCedula, isValidVePhone, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
+import { maskCedula, maskPhone, isValidCedula, isValidPhone, phoneIsEmpty, PHONE_DEFAULT, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
 
 type PatientStatus = "stable" | "critical" | "recovering" | "discharged" | "admitted";
 type Filter = "all" | "active" | "discharged";
@@ -565,7 +565,7 @@ function PatientCard({ patient: p, onChanged }: { patient: Patient; onChanged?: 
             {p.phone && (
               <div className="flex items-center gap-1.5">
                 <Phone className="h-3 w-3 shrink-0" />
-                <a href={`tel:${p.phone}`} className="font-semibold text-foreground/80 hover:text-primary">{p.phone}</a>
+                <a href={`tel:${p.phone.replace(/\s/g, "")}`} className="font-semibold text-foreground/80 hover:text-primary">{p.phone}</a>
               </div>
             )}
             {p.address && (
@@ -626,7 +626,7 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     age: "",
     sex: "no indicado",
     id_number: "",
-    phone: "",
+    phone: PHONE_DEFAULT,
     address: "",
     center_name: "",
     center_address: "",
@@ -644,7 +644,7 @@ function PatientForm({ onDone }: { onDone: () => void }) {
     if (!f.name.trim())        { toast.error("El nombre es requerido"); return; }
     if (!f.center_name.trim()) { toast.error("El nombre del centro es requerido"); return; }
     if (f.id_number.trim() && !isValidCedula(f.id_number)) { toast.error(CEDULA_ERROR); return; }
-    if (f.phone.trim() && !isValidVePhone(f.phone)) { toast.error(PHONE_ERROR); return; }
+    if (!phoneIsEmpty(f.phone) && !isValidPhone(f.phone)) { toast.error(PHONE_ERROR); return; }
 
     setBusy(true);
     try {
@@ -658,8 +658,8 @@ function PatientForm({ onDone }: { onDone: () => void }) {
         center_lat:     f.center_lat,
         center_lng:     f.center_lng,
         notes:          f.notes.trim() || null,
-        id_number:      f.id_number.trim().replace(/\D/g, "") || null,
-        phone:          f.phone.trim() || null,
+        id_number:      f.id_number.trim() || null,
+        phone:          phoneIsEmpty(f.phone) ? null : f.phone.trim(),
         address:        f.address.trim() || null,
       };
 
@@ -722,18 +722,17 @@ function PatientForm({ onDone }: { onDone: () => void }) {
       </select>
       <input
         className={field}
-        placeholder="Cédula / ID"
+        placeholder="Cédula / ID (V-12345678)"
         value={f.id_number}
-        onChange={(e) => setF({ ...f, id_number: e.target.value })}
-        maxLength={20}
-        inputMode="numeric"
+        onChange={(e) => setF({ ...f, id_number: maskCedula(e.target.value) })}
+        maxLength={18}
       />
       <input
         className={field}
-        placeholder="Teléfono de contacto"
+        placeholder="Teléfono de contacto (+58 4141234567)"
         value={f.phone}
-        onChange={(e) => setF({ ...f, phone: e.target.value })}
-        maxLength={30}
+        onChange={(e) => setF({ ...f, phone: maskPhone(e.target.value) })}
+        maxLength={18}
         inputMode="tel"
       />
       <select

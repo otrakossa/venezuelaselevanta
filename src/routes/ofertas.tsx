@@ -32,7 +32,7 @@ export const Route = createFileRoute("/ofertas")({
 });
 
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
-import { isValidVePhone, PHONE_ERROR } from "@/lib/validators";
+import { maskPhone, isValidPhone, phoneIsEmpty, PHONE_DEFAULT, PHONE_ERROR } from "@/lib/validators";
 
 type Category   = "medicine" | "food" | "water" | "volunteers" | "equipment" | "blood" | "money" | "hygiene" | "diapers" | "other";
 type OfferStatus = "available" | "matched" | "delivered" | "cancelled";
@@ -495,7 +495,7 @@ function OfferCard({ offer: o, onMatch, onChanged }: { offer: Offer; onMatch: ()
               </div>
             )}
             {o.contact_phone && (
-              <a href={`tel:${o.contact_phone}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+              <a href={`tel:${o.contact_phone.replace(/\s/g, "")}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
                 <Phone className="h-3 w-3" /> {o.contact_phone}
               </a>
             )}
@@ -701,7 +701,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     address: "",
     location_desc: "",
     contact_name: "",
-    contact_phone: "",
+    contact_phone: PHONE_DEFAULT,
     contact_info: "",
   });
   const [busy, setBusy] = useState(false);
@@ -713,7 +713,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
     if (!f.city.trim()) { toast.error("Indica la ciudad o municipio"); return; }
     if (!f.address.trim()) { toast.error("Indica la dirección de entrega"); return; }
     if (!f.contact_name.trim()) { toast.error("Tu nombre es requerido"); return; }
-    if (f.contact_phone.trim() && !isValidVePhone(f.contact_phone)) { toast.error(PHONE_ERROR); return; }
+    if (!phoneIsEmpty(f.contact_phone) && !isValidPhone(f.contact_phone)) { toast.error(PHONE_ERROR); return; }
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
@@ -726,7 +726,7 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
         address: f.address.trim(),
         location_desc: f.location_desc.trim() || null,
         contact_name: f.contact_name.trim(),
-        contact_phone: f.contact_phone.trim() || null,
+        contact_phone: phoneIsEmpty(f.contact_phone) ? null : f.contact_phone.trim(),
         contact_info: f.contact_info.trim() || null,
         status: prefilledNeed ? "matched" : "available",
         need_id: prefilledNeed?.id ?? null,
@@ -917,10 +917,11 @@ function OfferForm({ prefilledNeed, onDone }: { prefilledNeed: NeedLite | null; 
       />
       <input
         className={field}
-        placeholder="Teléfono / WhatsApp (opcional)"
+        placeholder="Teléfono / WhatsApp (+58 4141234567)"
         value={f.contact_phone}
-        onChange={(e) => setF({ ...f, contact_phone: e.target.value })}
-        maxLength={40}
+        onChange={(e) => setF({ ...f, contact_phone: maskPhone(e.target.value) })}
+        inputMode="tel"
+        maxLength={18}
       />
       <input
         className={`${field} sm:col-span-2`}
