@@ -78,12 +78,12 @@ export function checkRateLimit(req: Request): RateLimitResult {
     } else {
       // Unknown key → treat as anonymous, do not leak validity.
       identity = `ip:${getIp(req)}`
-      limit = ANON_LIMIT
+      limit = anonLimit()
       tier = 'anonymous'
     }
   } else {
     identity = `ip:${getIp(req)}`
-    limit = ANON_LIMIT
+    limit = anonLimit()
     tier = 'anonymous'
   }
 
