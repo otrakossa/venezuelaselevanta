@@ -308,6 +308,10 @@ function HomePage() {
               </Link>
             </div>
 
+            <div className="mt-4 sm:mt-5">
+              <SolidarityCounter variant="hero" />
+            </div>
+
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] sm:text-xs text-white/65">
               <button
                 onClick={dismissHero}
