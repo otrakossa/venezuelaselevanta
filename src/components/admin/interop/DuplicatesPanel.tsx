@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { sbx } from "./_client";
 import { Loader2, RefreshCw, Combine, ShieldX, ExternalLink, PlayCircle, History } from "lucide-react";
 import { toast } from "sonner";
+import { MergeHistoryPanel } from "./MergeHistoryPanel";
 
 type Person = {
   id: string;
