@@ -56,6 +56,7 @@ export function SourcesPanel() {
 
       <Section title="Personas desaparecidas por fuente" rows={missing} kind="missing" />
       <Section title="Pacientes / Atendidos por fuente" rows={patient} kind="patient" />
+      <ScraperRunsPanel />
     </div>
   );
 }
