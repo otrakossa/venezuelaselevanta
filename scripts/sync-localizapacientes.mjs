@@ -50,6 +50,29 @@ const DELAY_MS     = 250;  // entre queries — respetuosos con el servidor
 const supabaseAnon = createClient(OUR_URL, ANON_KEY, { realtime: { transport: ws } });
 const supabaseSvc  = createClient(OUR_URL, SVC_KEY,  { realtime: { transport: ws } });
 
+// ── Reporte de corridas a observabilidad (tabla scraper_runs) ─────────────
+async function startRun() {
+  try {
+    const { data, error } = await supabaseSvc
+      .from('scraper_runs')
+      .insert({ source_label: SOURCE_LABEL, status: 'running' })
+      .select('id')
+      .single();
+    if (error) { console.warn('⚠ scraper_runs start:', error.message); return null; }
+    return data?.id ?? null;
+  } catch (e) { console.warn('⚠ scraper_runs start:', e.message); return null; }
+}
+async function finishRun(runId, status, patch) {
+  if (!runId) return;
+  try {
+    await supabaseSvc.from('scraper_runs').update({
+      status,
+      finished_at: new Date().toISOString(),
+      ...patch,
+    }).eq('id', runId);
+  } catch (e) { console.warn('⚠ scraper_runs finish:', e.message); }
+}
+
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
   'Accept': 'application/json',
