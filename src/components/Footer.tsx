@@ -110,9 +110,8 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-6 flex justify-center">
-        <SolidarityCounter variant="footer" />
       </div>
+
 
       <div className="border-t border-white/10 bg-black/30">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 space-y-4">
