@@ -10,7 +10,8 @@ import {
 import {
   AlertCircle, Users, MapPin, Download, Activity,
   ShieldCheck, CheckCircle2, Clock, Flame, Waves, TrendingUp,
-  HeartPulse, ChevronDown, ChevronUp,
+  HeartPulse, ChevronDown, ChevronUp, Search, Handshake, Package,
+  MessageSquare, ThumbsUp, Building2, UserCheck, Skull,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DashboardExtras } from "@/components/dashboard/DashboardExtras";
@@ -19,6 +20,18 @@ import { SolidarityCounter } from "@/components/SolidarityCounter";
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 
 type PatientZone = { state: string | null; sector: string | null };
+type ExtraCounts = {
+  patients: number;
+  needs: number;
+  needsOpen: number;
+  needsUrgent: number;
+  offers: number;
+  offersMatched: number;
+  healthCenters: number;
+  comments: number;
+  votes: number;
+};
+
 
 
 export const Route = createFileRoute("/estadisticas")({
