@@ -3,9 +3,9 @@ import { ShieldCheck, Link2, Activity, ArrowLeft, Users, Mail } from "lucide-rea
 
 const ITEMS: { to: string; label: string; icon: typeof ShieldCheck; exact?: boolean }[] = [
   { to: "/admin", label: "Moderación", icon: ShieldCheck, exact: true },
-  { to: "/admin/mensajes", label: "Mensajes", icon: Mail },
   { to: "/admin/interop", label: "Interoperabilidad", icon: Link2 },
   { to: "/admin/observabilidad", label: "Observabilidad", icon: Activity },
+  { to: "/admin/mensajes", label: "Mensajes", icon: Mail },
   { to: "/admin/usuarios", label: "Usuarios", icon: Users },
 ];
 
