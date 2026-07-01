@@ -4,7 +4,7 @@ import { describe, it, expect } from "vitest";
 import { server } from "../setup/msw.server";
 import { http, HttpResponse } from "msw";
 import { tsunamiTools } from "@/lib/tsunami-tools.server";
-import { SUPA_URL } from "../mocks/handlers/supabase";
+import { SUPA_URL } from "@/lib/supabase-rest";
 
 // AI SDK v5 tool()s have inputSchema (Zod). Call the executor directly.
 type ToolExec = { execute?: (i: unknown, opts?: unknown) => Promise<unknown> };
