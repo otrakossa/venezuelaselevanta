@@ -57,22 +57,52 @@ function StatsPage() {
   const { missing, counts: missingCounts } = useMissing();
   const { data: quakes = [] } = useUSGSQuakes(true);
   const [patientZones, setPatientZones] = useState<PatientZone[]>([]);
+  const [extras, setExtras] = useState<ExtraCounts>({
+    patients: 0, needs: 0, needsOpen: 0, needsUrgent: 0,
+    offers: 0, offersMatched: 0, healthCenters: 0, comments: 0, votes: 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
+    const h = { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` };
+    const headCount = async (path: string): Promise<number> => {
+      try {
+        const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+          headers: { ...h, Prefer: "count=exact", Range: "0-0" },
+        });
+        const cr = res.headers.get("content-range");
+        if (!cr) return 0;
+        const total = cr.split("/")[1];
+        return total && total !== "*" ? Number(total) : 0;
+      } catch { return 0; }
+    };
     (async () => {
       try {
         const res = await fetch(
           `${SUPA_URL}/rest/v1/patients?select=state,sector&limit=10000`,
-          { headers: { apikey: SUPA_ANON, Authorization: `Bearer ${SUPA_ANON}` } },
+          { headers: h },
         );
-        if (!res.ok) return;
-        const data = (await res.json()) as PatientZone[];
-        if (!cancelled) setPatientZones(data);
+        if (res.ok) {
+          const data = (await res.json()) as PatientZone[];
+          if (!cancelled) setPatientZones(data);
+        }
       } catch { /* ignore */ }
+      const [patients, needs, needsOpen, needsUrgent, offers, offersMatched, healthCenters, comments, votes] = await Promise.all([
+        headCount("patients?select=id"),
+        headCount("needs?select=id"),
+        headCount("needs?select=id&status=neq.fulfilled"),
+        headCount("needs?select=id&urgency=in.(critical,high)"),
+        headCount("offers?select=id"),
+        headCount("offers?select=id&need_id=not.is.null"),
+        headCount("health_centers?select=id"),
+        headCount("report_comments?select=id"),
+        headCount("report_votes?select=id"),
+      ]);
+      if (!cancelled) setExtras({ patients, needs, needsOpen, needsUrgent, offers, offersMatched, healthCenters, comments, votes });
     })();
     return () => { cancelled = true; };
   }, []);
+
 
   const stats = useMemo(() => {
     const total = reports.length;
