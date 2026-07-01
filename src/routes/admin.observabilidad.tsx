@@ -5,10 +5,11 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { AdminOnlyNotice } from "@/components/admin/AdminOnlyNotice";
-import type { SystemHealth } from "@/lib/system-health.types";
+import type { SystemHealth, ScraperRun, TableStat } from "@/lib/system-health.types";
 import {
   Activity, AlertTriangle, CheckCircle2, Cpu, HardDrive, Database,
-  MemoryStick, RefreshCw, ShieldCheck, Clock, Copy,
+  MemoryStick, RefreshCw, ShieldCheck, Clock, Copy, Network, Users,
+  Archive, Globe, ChevronDown, ChevronRight, Server, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +41,28 @@ function fmtUptime(sec: number) {
   if (d) return `${d}d ${h}h ${m}m`;
   if (h) return `${h}h ${m}m`;
   return `${m}m`;
+}
+
+function fmtDuration(ms: number | null) {
+  if (ms == null) return "—";
+  if (ms < 1000) return `${ms}ms`;
+  const s = ms / 1000;
+  if (s < 60) return `${s.toFixed(1)}s`;
+  const m = Math.floor(s / 60);
+  const rs = Math.round(s % 60);
+  return `${m}m ${rs}s`;
+}
+
+function fmtRelative(iso: string | null) {
+  if (!iso) return "nunca";
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "ahora";
+  if (m < 60) return `hace ${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `hace ${h}h`;
+  const d = Math.floor(h / 24);
+  return `hace ${d}d`;
 }
 
 const SQL_SETUP = `-- Crear función helper para métricas de la BD (ejecutar 1 sola vez en la BD de producción)
@@ -88,6 +111,7 @@ function ObservabilityPage() {
   const [autorefresh, setAutorefresh] = useState(true);
   const [history, setHistory] = useState<{ t: number; memPct: number | null; cpuPct: number | null; diskPct: number | null }[]>([]);
   const [showSql, setShowSql] = useState(false);
+  const [showAllTables, setShowAllTables] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
@@ -140,7 +164,7 @@ function ObservabilityPage() {
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (autorefresh && isAuthenticated && !roleLoading && isAdmin) {
-      timerRef.current = setInterval(load, 15000);
+      timerRef.current = setInterval(load, 30000);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -188,7 +212,7 @@ function ObservabilityPage() {
             Observabilidad
           </h1>
           <p className="text-[11px] text-muted-foreground">
-            Memoria, CPU, disco y base de datos del servidor — útil para anticipar saturación.
+            Estado del VPS, base de datos, scrapers y servicios externos.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -198,7 +222,7 @@ function ObservabilityPage() {
               checked={autorefresh}
               onChange={(e) => setAutorefresh(e.target.checked)}
             />
-            Auto-refresh 15s
+            Auto-refresh 30s
           </label>
           <button
             onClick={load}
@@ -239,6 +263,8 @@ function ObservabilityPage() {
 
       {data && (
         <>
+          {/* ═══════════════════ VPS ═══════════════════ */}
+          <SectionHeader icon={<Server className="h-4 w-4" />} title="VPS" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
             <MetricCard
               icon={<MemoryStick className="h-4 w-4" />}
@@ -246,7 +272,7 @@ function ObservabilityPage() {
               pct={data.memory.os?.usedPct ?? null}
               primary={data.memory.os ? `${data.memory.os.usedMB} / ${data.memory.os.totalMB} MB` : "No disponible"}
               secondary={data.memory.os ? `${data.memory.os.freeMB} MB libres` : undefined}
-              tip="Si pasa de 90% sostenido, aumenta la RAM del VPS o reduce el footprint."
+              tip="Si pasa de 90% sostenido, aumenta la RAM del VPS."
             />
             <MetricCard
               icon={<HardDrive className="h-4 w-4" />}
@@ -256,7 +282,7 @@ function ObservabilityPage() {
               crit={90}
               primary={data.disk ? `${data.disk.usedGB} / ${data.disk.totalGB} GB` : "No disponible"}
               secondary={data.disk ? `${data.disk.freeGB} GB libres · ${data.disk.path}` : undefined}
-              tip="Sobre 90% riesgo alto: amplía el disco o limpia logs/builds antiguos."
+              tip="Sobre 90%: amplía disco o limpia logs/builds."
             />
             <MetricCard
               icon={<Cpu className="h-4 w-4" />}
@@ -270,7 +296,7 @@ function ObservabilityPage() {
                   : "No disponible"
               }
               secondary={data.cpu.cores ? `${data.cpu.cores} cores` : undefined}
-              tip="Load sostenido > nº de cores indica que necesitas más CPU."
+              tip="Load > nº de cores = necesitas más CPU."
             />
             <MetricCard
               icon={<Activity className="h-4 w-4" />}
@@ -278,54 +304,34 @@ function ObservabilityPage() {
               pct={data.memory.os ? +((data.memory.process.rssMB / data.memory.os.totalMB) * 100).toFixed(1) : null}
               primary={`${data.memory.process.rssMB} MB RSS`}
               secondary={`heap ${data.memory.process.heapUsedMB} / ${data.memory.process.heapTotalMB} MB`}
-              tip="Crecimiento monotónico = posible fuga de memoria; revisa logs y reinicia con PM2."
+              tip="Crecimiento sostenido = posible fuga de memoria."
             />
             <MetricCard
-              icon={<Database className="h-4 w-4" />}
-              title="Base de datos"
+              icon={<Clock className="h-4 w-4" />}
+              title="Uptime del proceso"
               pct={null}
-              primary={data.database?.sizePretty ?? (data.database?.error ? "RPC no disponible" : "—")}
-              secondary={
-                data.database?.tables?.length
-                  ? `${data.database.tables.length} tablas medidas`
-                  : data.database?.error
-              }
-              tip={
-                data.database?.error
-                  ? "Crea la función admin_db_stats() (ver SQL abajo) para ver tamaño y top tablas."
-                  : "Vigila el crecimiento mensual y crea índices/limpia tablas grandes."
-              }
+              primary={fmtUptime(data.node.uptimeSec)}
+              secondary={`PID ${data.node.pid} · Node ${data.node.version}`}
+              tip="Reinicios frecuentes = revisar logs de PM2."
             />
+            {data.network && data.network.interfaces.length > 0 && (
+              <div className="rounded-lg border border-border bg-card p-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold mb-1.5">
+                  <Network className="h-4 w-4" /> Red I/O (acumulado)
+                </div>
+                <div className="space-y-1.5">
+                  {data.network.interfaces.slice(0, 4).map((iface) => (
+                    <div key={iface.name} className="text-[11px] flex items-center justify-between">
+                      <span className="font-mono text-muted-foreground">{iface.name}</span>
+                      <span className="tabular-nums">
+                        ↓ {iface.rxMB.toLocaleString("es-VE")} MB · ↑ {iface.txMB.toLocaleString("es-VE")} MB
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* Top tables */}
-          {data.database?.tables && data.database.tables.length > 0 && (
-            <div className="border border-border rounded-lg overflow-hidden mb-4">
-              <div className="bg-muted/40 px-3 py-2 text-xs font-bold flex items-center gap-1.5">
-                <Database className="h-3.5 w-3.5" /> Top tablas por tamaño
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/20 text-muted-foreground">
-                    <tr>
-                      <th className="text-left px-3 py-1.5 font-semibold">Tabla</th>
-                      <th className="text-right px-3 py-1.5 font-semibold">Filas</th>
-                      <th className="text-right px-3 py-1.5 font-semibold">Tamaño (MB)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.database.tables.slice(0, 12).map((t) => (
-                      <tr key={t.name} className="border-t border-border">
-                        <td className="px-3 py-1.5 font-mono">{t.name}</td>
-                        <td className="px-3 py-1.5 text-right">{t.rows.toLocaleString("es-VE")}</td>
-                        <td className="px-3 py-1.5 text-right">{t.sizeMB.toLocaleString("es-VE")}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
 
           {/* History sparkline */}
           {history.length > 1 && (
@@ -339,8 +345,219 @@ function ObservabilityPage() {
             </div>
           )}
 
+          {/* ═══════════════════ Base de datos ═══════════════════ */}
+          <SectionHeader icon={<Database className="h-4 w-4" />} title="Base de datos" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+            <StatCard
+              label="Tamaño total"
+              value={data.database?.sizePretty ?? (data.database?.error ? "N/A" : "—")}
+              hint={data.database?.error}
+            />
+            <StatCard
+              label="Conexiones totales"
+              value={data.database?.connections?.total ?? "—"}
+              hint={
+                data.database?.connections
+                  ? `${data.database.connections.active} activas · ${data.database.connections.idle} idle`
+                  : undefined
+              }
+            />
+            <StatCard
+              label="Esperando"
+              value={data.database?.connections?.waiting ?? "—"}
+              hint="Bloqueos si crece"
+              alarm={(data.database?.connections?.waiting ?? 0) > 5}
+            />
+            <StatCard
+              label="Índices sin usar"
+              value={data.database?.unusedIndexes?.length ?? "—"}
+              hint="Candidatos a eliminar"
+            />
+          </div>
+
+          {/* Unused indexes */}
+          {data.database?.unusedIndexes && data.database.unusedIndexes.length > 0 && (
+            <div className="border border-border rounded-lg overflow-hidden mb-4">
+              <div className="bg-muted/40 px-3 py-2 text-xs font-bold">Índices sin usar (top por tamaño)</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/20 text-muted-foreground">
+                    <tr>
+                      <th className="text-left px-3 py-1.5 font-semibold">Tabla</th>
+                      <th className="text-left px-3 py-1.5 font-semibold">Índice</th>
+                      <th className="text-right px-3 py-1.5 font-semibold">MB</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.database.unusedIndexes.slice(0, 10).map((i) => (
+                      <tr key={`${i.table}.${i.index}`} className="border-t border-border">
+                        <td className="px-3 py-1.5 font-mono">{i.table}</td>
+                        <td className="px-3 py-1.5 font-mono text-muted-foreground">{i.index}</td>
+                        <td className="px-3 py-1.5 text-right">{i.sizeMB.toLocaleString("es-VE")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Top tables + expandable full stats */}
+          {data.database?.tables && data.database.tables.length > 0 && (
+            <div className="border border-border rounded-lg overflow-hidden mb-4">
+              <div className="bg-muted/40 px-3 py-2 text-xs font-bold flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Database className="h-3.5 w-3.5" /> Tablas ({data.database.tables.length})
+                </span>
+                <button
+                  onClick={() => setShowAllTables((v) => !v)}
+                  className="inline-flex items-center gap-1 text-[10px] hover:underline"
+                >
+                  {showAllTables ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                  {showAllTables ? "Ver menos" : "Ver todas + I/O"}
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/20 text-muted-foreground">
+                    <tr>
+                      <th className="text-left px-3 py-1.5 font-semibold">Tabla</th>
+                      <th className="text-right px-3 py-1.5 font-semibold">Filas</th>
+                      <th className="text-right px-3 py-1.5 font-semibold">MB</th>
+                      {showAllTables && (
+                        <>
+                          <th className="text-right px-3 py-1.5 font-semibold">Dead</th>
+                          <th className="text-right px-3 py-1.5 font-semibold">Ins</th>
+                          <th className="text-right px-3 py-1.5 font-semibold">Upd</th>
+                          <th className="text-right px-3 py-1.5 font-semibold">Del</th>
+                          <th className="text-right px-3 py-1.5 font-semibold">Seq</th>
+                          <th className="text-right px-3 py-1.5 font-semibold">Idx</th>
+                        </>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(showAllTables ? data.database.tables : data.database.tables.slice(0, 12)).map((t: TableStat) => (
+                      <tr key={t.name} className="border-t border-border">
+                        <td className="px-3 py-1.5 font-mono">{t.name}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">{t.rows.toLocaleString("es-VE")}</td>
+                        <td className="px-3 py-1.5 text-right tabular-nums">{t.sizeMB.toLocaleString("es-VE")}</td>
+                        {showAllTables && (
+                          <>
+                            <td className={`px-3 py-1.5 text-right tabular-nums ${t.deadRows > t.rows * 0.2 ? "text-amber-700 font-bold" : ""}`}>
+                              {t.deadRows.toLocaleString("es-VE")}
+                            </td>
+                            <td className="px-3 py-1.5 text-right tabular-nums">{t.inserts.toLocaleString("es-VE")}</td>
+                            <td className="px-3 py-1.5 text-right tabular-nums">{t.updates.toLocaleString("es-VE")}</td>
+                            <td className="px-3 py-1.5 text-right tabular-nums">{t.deletes.toLocaleString("es-VE")}</td>
+                            <td className="px-3 py-1.5 text-right tabular-nums">{t.seqScans.toLocaleString("es-VE")}</td>
+                            <td className="px-3 py-1.5 text-right tabular-nums">{t.idxScans.toLocaleString("es-VE")}</td>
+                          </>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════════════════ App / Usuarios ═══════════════════ */}
+          <SectionHeader icon={<Users className="h-4 w-4" />} title="App y usuarios" />
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+            <StatCard label="Usuarios auth" value={data.appStats?.authUsers ?? "—"} />
+            <StatCard label="Nuevos (24h)" value={data.appStats?.authUsers24h ?? "—"} accent="text-emerald-700" />
+            <StatCard label="Visitas hoy" value={data.appStats?.visitors?.today ?? "—"} />
+            <StatCard label="Ayer" value={data.appStats?.visitors?.yesterday ?? "—"} />
+            <StatCard label="Últ. 7 días" value={data.appStats?.visitors?.week ?? "—"} />
+            <StatCard
+              label="Total histórico"
+              value={data.appStats?.visitors?.total ?? "—"}
+              hint={data.appStats?.visitors ? `${data.appStats.visitors.uniqueTotal.toLocaleString("es-VE")} únicos` : undefined}
+            />
+          </div>
+
+          {/* ═══════════════════ Scrapers ═══════════════════ */}
+          <SectionHeader icon={<RefreshCw className="h-4 w-4" />} title="Scrapers" />
+          <div className="border border-border rounded-lg overflow-hidden mb-4">
+            {data.appStats?.scraperRuns && data.appStats.scraperRuns.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted/40 text-muted-foreground">
+                    <tr>
+                      <th className="text-left px-3 py-2 font-semibold">Fuente</th>
+                      <th className="text-left px-3 py-2 font-semibold">Estado</th>
+                      <th className="text-left px-3 py-2 font-semibold">Última corrida</th>
+                      <th className="text-right px-3 py-2 font-semibold">Duración</th>
+                      <th className="text-right px-3 py-2 font-semibold">Vistos</th>
+                      <th className="text-right px-3 py-2 font-semibold">Insertados</th>
+                      <th className="text-right px-3 py-2 font-semibold">Matches</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.appStats.scraperRuns.map((r: ScraperRun) => (
+                      <tr key={r.source} className="border-t border-border">
+                        <td className="px-3 py-2 font-mono">{r.source}</td>
+                        <td className="px-3 py-2"><ScraperBadge status={r.status} /></td>
+                        <td className="px-3 py-2 text-muted-foreground">{fmtRelative(r.finishedAt ?? r.startedAt)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{fmtDuration(r.durationMs)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{r.seen ?? "—"}</td>
+                        <td className="px-3 py-2 text-right tabular-nums font-bold">{r.inserted ?? "—"}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{r.matches ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {data.appStats.scraperRuns.some((r) => r.error) && (
+                  <div className="border-t border-border bg-red-50 px-3 py-2 text-[11px] text-red-800 space-y-0.5">
+                    {data.appStats.scraperRuns.filter((r) => r.error).map((r) => (
+                      <div key={r.source}><b>{r.source}:</b> {r.error}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-xs text-muted-foreground">Sin corridas registradas.</div>
+            )}
+          </div>
+
+          {/* ═══════════════════ Servicios externos ═══════════════════ */}
+          <SectionHeader icon={<Globe className="h-4 w-4" />} title="Servicios externos" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+            {data.externalServices.map((svc) => (
+              <div
+                key={svc.name}
+                className={`rounded-lg border p-3 flex items-center gap-3 ${
+                  svc.ok ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"
+                }`}
+              >
+                {svc.ok ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-600 shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">{svc.name}</div>
+                  <div className="text-[10.5px] text-muted-foreground truncate">{svc.url}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className={`text-xs font-bold ${svc.ok ? "text-emerald-700" : "text-red-700"}`}>
+                    {svc.statusCode ?? "ERR"}
+                  </div>
+                  <div className="text-[10.5px] text-muted-foreground tabular-nums">
+                    {svc.latencyMs != null ? `${svc.latencyMs} ms` : "—"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ═══════════════════ Backup ═══════════════════ */}
+          <SectionHeader icon={<Archive className="h-4 w-4" />} title="Backup de la base de datos" />
+          <BackupCard backup={data.backup} />
+
           {/* SQL helper */}
-          <div className="border border-dashed border-border rounded-lg p-3 mb-4">
+          <div className="border border-dashed border-border rounded-lg p-3 mt-6 mb-4">
             <button
               onClick={() => setShowSql((v) => !v)}
               className="text-xs font-bold text-[color:var(--sunrise)] hover:underline"
@@ -350,7 +567,7 @@ function ObservabilityPage() {
             {showSql && (
               <div className="mt-3">
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Ejecuta este SQL <b>una sola vez</b> en la base de datos de producción (psql) para que esta página pueda leer el tamaño de la BD y top tablas.
+                  Ejecuta este SQL <b>una sola vez</b> en la base de datos de producción (psql).
                 </p>
                 <div className="relative">
                   <pre className="text-[10.5px] bg-muted p-3 rounded overflow-auto max-h-80">
@@ -379,6 +596,96 @@ function ObservabilityPage() {
             </div>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+// ─────────────── helpers UI ───────────────
+
+function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-2 mt-2">
+      <div className="flex items-center gap-1.5 text-sm font-bold text-foreground/80">
+        {icon} {title}
+      </div>
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+}
+
+function StatCard({
+  label, value, hint, accent, alarm,
+}: {
+  label: string;
+  value: string | number;
+  hint?: string;
+  accent?: string;
+  alarm?: boolean;
+}) {
+  return (
+    <div className={`rounded-lg border p-3 ${alarm ? "border-red-200 bg-red-50" : "border-border bg-card"}`}>
+      <div className="text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className={`text-xl font-bold leading-tight mt-0.5 ${accent ?? (alarm ? "text-red-700" : "")}`}>
+        {typeof value === "number" ? value.toLocaleString("es-VE") : value}
+      </div>
+      {hint && <div className="text-[10.5px] text-muted-foreground mt-0.5">{hint}</div>}
+    </div>
+  );
+}
+
+function ScraperBadge({ status }: { status: string }) {
+  const s = status.toLowerCase();
+  const style =
+    s === "ok" || s === "success" || s === "completed"
+      ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+      : s === "running" || s === "started"
+      ? "bg-amber-100 text-amber-800 border-amber-200"
+      : "bg-red-100 text-red-800 border-red-200";
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded border text-[10px] font-bold uppercase ${style}`}>
+      {status}
+    </span>
+  );
+}
+
+function BackupCard({ backup }: { backup: SystemHealth["backup"] }) {
+  if (!backup || !backup.lastFile) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-3 flex items-center gap-3 mb-4">
+        <XCircle className="h-5 w-5 text-red-600" />
+        <div>
+          <div className="text-sm font-bold text-red-800">No hay backups registrados</div>
+          <div className="text-[11px] text-red-700">Configura el cron de <code>scripts/backup-supabase.sh</code>.</div>
+        </div>
+      </div>
+    );
+  }
+  const ageHours = backup.lastModified
+    ? (Date.now() - new Date(backup.lastModified).getTime()) / 3_600_000
+    : Infinity;
+  const stale = ageHours > 25;
+  return (
+    <div className={`rounded-lg border p-3 flex items-center gap-3 mb-4 ${
+      stale ? "border-red-200 bg-red-50" : "border-emerald-200 bg-emerald-50"
+    }`}>
+      {stale ? (
+        <AlertTriangle className="h-5 w-5 text-red-600 shrink-0" />
+      ) : (
+        <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className={`text-sm font-bold ${stale ? "text-red-800" : "text-emerald-800"}`}>
+          {backup.lastFile}
+        </div>
+        <div className="text-[11px] text-muted-foreground">
+          {backup.lastSizeMB != null && <>{backup.lastSizeMB.toLocaleString("es-VE")} MB · </>}
+          {fmtRelative(backup.lastModified)}
+          {backup.lastModified && <> · {new Date(backup.lastModified).toLocaleString()}</>}
+        </div>
+      </div>
+      {stale && (
+        <span className="text-[10px] font-bold text-red-700 uppercase shrink-0">Obsoleto (&gt;25h)</span>
       )}
     </div>
   );
