@@ -148,8 +148,19 @@ function StatsPage() {
     const last7 = days.slice(-7).map((d) => ({ v: d.count }));
 
     // Por categoría
+    const shortCategoryLabels: Record<string, string> = {
+      missing: "Desaparecidos",
+      medical: "Heridos",
+      rescue: "Rescate",
+      shelter: "Refugio",
+      infrastructure: "Infraestructura",
+      evacuation: "Evacuación",
+      blocked_road: "Vías",
+      hospital: "Hospital",
+      earthquake: "Sismo",
+    };
     const byCategory = CATEGORIES.map((c) => ({
-      name: c.name.split(" ")[0],
+      name: shortCategoryLabels[c.slug] ?? c.name.split(" ")[0],
       slug: c.slug,
       count: reports.filter((r) => r.category === c.slug).length,
       color: c.color,
