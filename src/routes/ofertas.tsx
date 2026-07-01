@@ -367,20 +367,33 @@ function OfertasPage() {
         {loading ? (
           [...Array(6)].map((_, i) => <div key={i} className="h-40 rounded-2xl bg-muted animate-pulse" />)
         ) : list.length === 0 ? (
-          <div className="col-span-full py-16 text-center">
-            <div className="text-4xl mb-3">🤝</div>
-            <p className="font-bold text-base mb-1">No hay ayudas {tab === "available" ? "disponibles" : tab === "matched" ? "vinculadas" : "entregadas"}</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {q || category !== "all" ? "Prueba ajustar los filtros." : "Sé la primera persona en ofrecer ayuda."}
-            </p>
-            {!q && category === "all" && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold"
-              >
-                Publicar ayuda
-              </button>
-            )}
+          <div className="col-span-full">
+            <EmptyState
+              emoji="🤝"
+              title={`No hay ayudas ${tab === "available" ? "disponibles" : tab === "matched" ? "vinculadas" : "entregadas"}`}
+              description={
+                q || category !== "all"
+                  ? "Prueba ajustar los filtros o limpiar la búsqueda."
+                  : "Sé la primera persona en ofrecer ayuda a la comunidad."
+              }
+              action={
+                !q && category === "all" ? (
+                  <button
+                    onClick={() => setShowForm(true)}
+                    className="text-xs px-3 py-1.5 rounded-md bg-emerald-500 text-white font-semibold"
+                  >
+                    Publicar ayuda
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { setQ(""); setCategory("all"); }}
+                    className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-semibold"
+                  >
+                    Limpiar filtros
+                  </button>
+                )
+              }
+            />
           </div>
         ) : (
           list.map((o) => (
