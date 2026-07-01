@@ -116,7 +116,7 @@ export function MatchQueue() {
 
       {loading && (
         <div className="text-xs text-muted-foreground flex items-center gap-2">
-          <Loader2 className="h-3 w-3 animate-spin" /> Analizando {scanned} desaparecidos recientes en lote…
+          <Loader2 className="h-3 w-3 animate-spin" /> Escaneando toda la base de desaparecidos sin match (puede tardar ~20s)…
         </div>
       )}
 
