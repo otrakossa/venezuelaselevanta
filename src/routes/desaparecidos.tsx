@@ -397,8 +397,9 @@ function MissingCard({ person, onMarkFound, onChanged, onOpen }: { person: Missi
   return (
     <article
       className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex flex-col h-full"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "480px" } as unknown as React.CSSProperties}
+      style={{ contentVisibility: "auto", containIntrinsicSize: "480px" } as unknown as CSSProperties}
     >
+
 
 
       {/* Status ribbon */}
