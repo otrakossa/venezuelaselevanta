@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Copy, RefreshCw, Square, Trash2, WifiOff } from "lucide-react";
 import { SUPA_URL, SUPA_ANON } from "@/lib/supabase-rest";
 import { TsunamiAvatar } from "@/components/brand/TsunamiAvatar";
+import { InstallTsunamiButton } from "@/components/InstallTsunamiButton";
 
 import {
   Conversation,
