@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { HealthCenterPicker } from "@/components/HealthCenterPicker";
 import { LocationPickerInline } from "@/components/LocationPickerInline";
 import { Wizard } from "@/components/wizard/Wizard";
+import { EmptyState } from "@/components/EmptyState";
 import { reverseGeocode } from "@/lib/geocode";
 import { maskCedula, maskPhone, isValidCedula, isValidPhone, PHONE_DEFAULT, CEDULA_ERROR, PHONE_ERROR } from "@/lib/validators";
 
