@@ -296,14 +296,15 @@ function StatsPage() {
           </div>
         </div>
         <div className="px-5 sm:px-6 pb-3 text-[11px] text-muted-foreground">
-          {stats.total} reportes · {missingCounts.all.toLocaleString("es-VE")} fichas de desaparecidos · CC BY 4.0
+          {stats.total} reportes · {missingCounts.all.toLocaleString("es-VE")} fichas de desaparecidos · {extras.patients.toLocaleString("es-VE")} atendidos · CC BY 4.0
         </div>
       </div>
 
       {/* Contador de solidaridad — motivacional */}
       <SolidarityCounter variant="kpi" />
 
-      {/* KPI grid */}
+      {/* KPI grid — Reportes */}
+      <SectionHeader icon={Activity} title="Reportes ciudadanos" subtitle="Situación operativa en tiempo real" />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon={Activity} color="#1A8FE3" label="Total reportes" value={stats.total} sparkline={stats.last7} />
         <StatCard icon={AlertCircle} color="#DC2626" label="Activos" value={stats.active} accent />
@@ -316,7 +317,6 @@ function StatsPage() {
           value={stats.resolved}
           hint={`${stats.resolveRate}% del total`}
         />
-        <StatCard icon={Users} color="#9333EA" label="Desaparecidos" value={stats.missingActive} />
         <StatCard icon={ShieldCheck} color="#0D9488" label="Verificados" value={stats.verified} hint="≥ 3 confirmaciones" />
         <StatCard
           icon={Waves}
@@ -325,7 +325,43 @@ function StatsPage() {
           value={stats.quakes24h}
           hint={stats.maxMag > 0 ? `Máx M${stats.maxMag.toFixed(1)}` : "Sin eventos"}
         />
+        <StatCard
+          icon={TrendingUp}
+          color={stats.delta24h >= 0 ? "#16A34A" : "#DC2626"}
+          label="Nuevos 24h"
+          value={stats.last24h}
+          hint={`${stats.delta24h >= 0 ? "+" : ""}${stats.delta24h} vs. ayer`}
+        />
       </div>
+
+      {/* KPI grid — Personas */}
+      <SectionHeader icon={Users} title="Personas" subtitle="Desaparecidos y atendidos en centros de salud" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Search} color="#9333EA" label="Desaparecidos activos" value={missingCounts.missing} accent />
+        <StatCard icon={UserCheck} color="#16A34A" label="Localizados" value={missingCounts.found} hint={missingCounts.all > 0 ? `${Math.round((missingCounts.found / missingCounts.all) * 100)}% del total` : undefined} />
+        <StatCard icon={Skull} color="#6B7280" label="Fallecidos confirmados" value={missingCounts.deceased} />
+        <StatCard icon={Users} color="#1A8FE3" label="Total fichas" value={missingCounts.all} />
+        <StatCard icon={HeartPulse} color="#DC2626" label="Atendidos" value={extras.patients} hint="Centros de salud" />
+        <StatCard icon={Building2} color="#0D9488" label="Centros de salud" value={extras.healthCenters} />
+        <StatCard icon={MessageSquare} color="#7C3AED" label="Comentarios" value={extras.comments} hint="En fichas y reportes" />
+        <StatCard icon={ThumbsUp} color="#EA580C" label="Validaciones" value={extras.votes} hint="Votos ciudadanos" />
+      </div>
+
+      {/* KPI grid — Ayuda mutua */}
+      <SectionHeader icon={Handshake} title="Ayuda mutua" subtitle="Necesidades publicadas y ofrecimientos recibidos" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Package} color="#DC2626" label="Necesidades" value={extras.needs} hint={`${extras.needsOpen} abiertas`} />
+        <StatCard icon={Flame} color="#EA580C" label="Urgentes / críticas" value={extras.needsUrgent} accent />
+        <StatCard icon={Handshake} color="#16A34A" label="Ofrecimientos" value={extras.offers} />
+        <StatCard
+          icon={CheckCircle2}
+          color="#1A8FE3"
+          label="Con match"
+          value={extras.offersMatched}
+          hint={extras.offers > 0 ? `${Math.round((extras.offersMatched / extras.offers) * 100)}% conectados` : undefined}
+        />
+      </div>
+
 
       {/* Delta + serie temporal */}
       <div className="grid lg:grid-cols-3 gap-4">
