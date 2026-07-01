@@ -257,6 +257,9 @@ function StatsPage() {
         </div>
       </div>
 
+      {/* Contador de solidaridad — motivacional */}
+      <SolidarityCounter variant="kpi" />
+
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard icon={Activity} color="#1A8FE3" label="Total reportes" value={stats.total} sparkline={stats.last7} />
