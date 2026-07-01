@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { SystemHealth } from "@/lib/system-health.types";
+import type { SystemHealth, ScraperRun, TableStat } from "@/lib/system-health.types";
 
 const PROD_PROJECT_REF = "advebubtfjgxwpjxprok";
 const PROD_SUPABASE_URL_FALLBACK = `https://${PROD_PROJECT_REF}.supabase.co`;
@@ -7,8 +7,6 @@ const PROD_SUPABASE_ANON_KEY_FALLBACK =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkdmVidWJ0ZmpneHdwanhwcm9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0NDcyMTMsImV4cCI6MjA5ODAyMzIxM30.e4w9nrHsaNRP-enNPS-beZ0Kns7KxvRtVXxRDLECS5U";
 
 function getProdSupabaseConfig() {
-  // Do not read the generic SUPABASE_* variables here: in this project they can
-  // still point at the legacy backend in preview/VPS environments.
   const url = process.env.NEW_SUPABASE_URL || PROD_SUPABASE_URL_FALLBACK;
   const anonKey = process.env.NEW_SUPABASE_PUBLISHABLE_KEY || PROD_SUPABASE_ANON_KEY_FALLBACK;
   return { url: url.replace(/\/$/, ""), anonKey };
@@ -62,11 +60,7 @@ async function requireAdmin(request: Request): Promise<{ token: string; userId: 
   });
   if (!userRes.ok) {
     return json(
-      {
-        error: "Unauthorized: token rejected by production auth",
-        status: userRes.status,
-        ...authDebug,
-      },
+      { error: "Unauthorized: token rejected by production auth", status: userRes.status, ...authDebug },
       401,
     );
   }
@@ -95,10 +89,14 @@ async function requireAdmin(request: Request): Promise<{ token: string; userId: 
   return { token, userId: user.id };
 }
 
-async function getDbStats(token: string): Promise<SystemHealth["database"]> {
+// ── Supabase: estadísticas extendidas (BD + app) ──────────────────────────────
+async function getExtendedStats(token: string): Promise<{
+  database: SystemHealth["database"];
+  appStats: SystemHealth["appStats"];
+}> {
   try {
     const cfg = getProdSupabaseConfig();
-    const res = await fetch(`${cfg.url}/rest/v1/rpc/admin_db_stats`, {
+    const res = await fetch(`${cfg.url}/rest/v1/rpc/admin_extended_stats`, {
       method: "POST",
       headers: {
         apikey: cfg.anonKey,
@@ -109,27 +107,157 @@ async function getDbStats(token: string): Promise<SystemHealth["database"]> {
     });
     if (!res.ok) {
       const txt = await res.text();
-      return { error: `RPC admin_db_stats: ${res.status} ${txt.slice(0, 180)}` };
+      const err = `RPC admin_extended_stats: ${res.status} ${txt.slice(0, 180)}`;
+      return {
+        database: { error: err },
+        appStats: { authUsers: null, authUsers24h: null, visitors: null, scraperRuns: [], error: err },
+      };
     }
-    const data = (await res.json()) as {
-      size_bytes?: number;
-      size_pretty?: string;
-      tables?: { name: string; rows: number; size_bytes: number }[];
+
+    const d = (await res.json()) as {
+      db_size_bytes?: number;
+      db_size_pretty?: string;
+      table_stats?: {
+        name: string; rows: number; dead_rows: number; inserts: number; updates: number;
+        deletes: number; size_bytes: number; seq_scans: number; idx_scans: number;
+      }[];
+      db_connections?: { total: number; active: number; idle: number; waiting: number };
+      unused_indexes?: { table: string; index: string; size_bytes: number }[];
+      auth_users?: number;
+      auth_users_24h?: number;
+      visitors?: { today: number; yesterday: number; week: number; total: number; unique_total: number };
+      scraper_runs?: {
+        source: string; status: string; started_at: string | null; finished_at: string | null;
+        duration_ms: number | null; inserted: number | null; seen: number | null;
+        matches: number | null; error: string | null;
+      }[];
     };
+
+    const tables: TableStat[] = (d.table_stats ?? []).map((t) => ({
+      name: t.name,
+      rows: t.rows,
+      deadRows: t.dead_rows,
+      sizeMB: +(t.size_bytes / 1024 / 1024).toFixed(2),
+      inserts: t.inserts,
+      updates: t.updates,
+      deletes: t.deletes,
+      seqScans: t.seq_scans,
+      idxScans: t.idx_scans,
+    }));
+
+    const scraperRuns: ScraperRun[] = (d.scraper_runs ?? []).map((r) => ({
+      source: r.source,
+      status: r.status,
+      startedAt: r.started_at,
+      finishedAt: r.finished_at,
+      durationMs: r.duration_ms,
+      inserted: r.inserted,
+      seen: r.seen,
+      matches: r.matches,
+      error: r.error,
+    }));
+
     return {
-      sizeMB: data.size_bytes ? +(data.size_bytes / 1024 / 1024).toFixed(1) : undefined,
-      sizePretty: data.size_pretty,
-      tables: (data.tables ?? []).map((table) => ({
-        name: table.name,
-        rows: table.rows,
-        sizeMB: +(table.size_bytes / 1024 / 1024).toFixed(2),
-      })),
+      database: {
+        sizeMB: d.db_size_bytes ? +(d.db_size_bytes / 1024 / 1024).toFixed(1) : undefined,
+        sizePretty: d.db_size_pretty,
+        tables,
+        connections: d.db_connections,
+        unusedIndexes: (d.unused_indexes ?? []).map((i) => ({
+          table: i.table,
+          index: i.index,
+          sizeMB: +(i.size_bytes / 1024 / 1024).toFixed(2),
+        })),
+      },
+      appStats: {
+        authUsers: d.auth_users ?? null,
+        authUsers24h: d.auth_users_24h ?? null,
+        visitors: d.visitors
+          ? {
+              today: d.visitors.today,
+              yesterday: d.visitors.yesterday,
+              week: d.visitors.week,
+              total: d.visitors.total,
+              uniqueTotal: d.visitors.unique_total,
+            }
+          : null,
+        scraperRuns,
+      },
     };
   } catch (error) {
-    return { error: error instanceof Error ? error.message : String(error) };
+    const msg = error instanceof Error ? error.message : String(error);
+    return {
+      database: { error: msg },
+      appStats: { authUsers: null, authUsers24h: null, visitors: null, scraperRuns: [], error: msg },
+    };
   }
 }
 
+// ── Red: I/O acumulado por interfaz (Linux /proc/net/dev) ─────────────────────
+async function getNetworkStats(): Promise<SystemHealth["network"]> {
+  try {
+    const fs = await import("node:fs/promises");
+    const raw = await fs.readFile("/proc/net/dev", "utf8");
+    const MB = 1024 * 1024;
+    const interfaces = raw
+      .split("\n")
+      .slice(2)
+      .map((line) => {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length < 10) return null;
+        const name = parts[0].replace(":", "");
+        if (name === "lo") return null;
+        return { name, rxMB: +(+parts[1] / MB).toFixed(1), txMB: +(+parts[9] / MB).toFixed(1) };
+      })
+      .filter((x): x is { name: string; rxMB: number; txMB: number } => x !== null);
+    return { interfaces };
+  } catch {
+    return null;
+  }
+}
+
+// ── Backup: último dump en /var/backups/vsl ───────────────────────────────────
+async function getBackupStatus(): Promise<SystemHealth["backup"]> {
+  try {
+    const fs = await import("node:fs/promises");
+    const dir = "/var/backups/vsl";
+    const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".dump")).sort().reverse();
+    if (!files.length) return { lastFile: null, lastSizeMB: null, lastModified: null };
+    const lastFile = files[0];
+    const stat = await fs.stat(`${dir}/${lastFile}`);
+    return {
+      lastFile,
+      lastSizeMB: +(stat.size / 1024 / 1024).toFixed(1),
+      lastModified: stat.mtime.toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ── Servicios externos: latencia + status HTTP ────────────────────────────────
+async function checkExternalServices(): Promise<SystemHealth["externalServices"]> {
+  const targets = [
+    { name: "venezuaselevanta.info", url: "https://venezuelaselevanta.info/api/public/health" },
+    { name: "localizapacientes.com", url: "https://localizapacientes.com" },
+    { name: "desaparecidosterremotovenezuela.com", url: "https://desaparecidosterremotovenezuela.com" },
+    { name: "Supabase Auth", url: `${PROD_SUPABASE_URL_FALLBACK}/auth/v1/health` },
+  ];
+
+  return Promise.all(
+    targets.map(async ({ name, url }) => {
+      const t0 = Date.now();
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        return { name, url, ok: res.ok, statusCode: res.status, latencyMs: Date.now() - t0 };
+      } catch {
+        return { name, url, ok: false, statusCode: null, latencyMs: Date.now() - t0 };
+      }
+    }),
+  );
+}
+
+// ── Recolección principal ─────────────────────────────────────────────────────
 async function readSystemHealth(token: string): Promise<SystemHealth> {
   const errors: string[] = [];
   const MB = 1024 * 1024;
@@ -150,19 +278,11 @@ async function readSystemHealth(token: string): Promise<SystemHealth> {
       usedMB: +((total - free) / MB).toFixed(0),
       usedPct: +(((total - free) / total) * 100).toFixed(1),
     };
-
-    try {
-      cores = typeof os.cpus === "function" ? os.cpus().length : null;
-    } catch {
-      errors.push("os.cpus no disponible en este runtime");
-    }
-
+    try { cores = typeof os.cpus === "function" ? os.cpus().length : null; } catch { errors.push("os.cpus no disponible"); }
     try {
       const la = os.loadavg();
       if (Array.isArray(la) && la.length === 3) loadavg = la as [number, number, number];
-    } catch {
-      // Métrica opcional.
-    }
+    } catch { /* opcional */ }
   } catch (error) {
     errors.push("node:os no disponible: " + (error instanceof Error ? error.message : String(error)));
   }
@@ -189,6 +309,13 @@ async function readSystemHealth(token: string): Promise<SystemHealth> {
     errors.push("Disco no disponible: " + (error instanceof Error ? error.message : String(error)));
   }
 
+  const [{ database, appStats }, network, backup, externalServices] = await Promise.all([
+    getExtendedStats(token),
+    getNetworkStats(),
+    getBackupStatus(),
+    checkExternalServices(),
+  ]);
+
   return {
     timestamp: new Date().toISOString(),
     node: {
@@ -211,7 +338,11 @@ async function readSystemHealth(token: string): Promise<SystemHealth> {
       loadPctPerCore: loadavg && cores ? +((loadavg[0] / cores) * 100).toFixed(1) : null,
     },
     disk,
-    database: await getDbStats(token),
+    network,
+    backup,
+    externalServices,
+    database,
+    appStats,
     errors,
   };
 }
