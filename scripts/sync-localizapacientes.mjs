@@ -399,9 +399,9 @@ async function main() {
   console.log(`\n✓ ${insertedRows.length} pacientes insertados`);
 
   // Auto-matching
+  let matchCount = 0;
   if (insertedRows.length > 0) {
     console.log(`\n🔗 Auto-matching contra desaparecidos (umbral ${AUTO_MATCH_THRESHOLD})...`);
-    let matchCount = 0;
     const matchLog = [];
 
     for (const patient of insertedRows) {
@@ -430,9 +430,28 @@ async function main() {
   console.log(`\n✅ Completado en ${elapsed}s`);
   console.log(`   Cobertura: ${allPatients.size}/${totalSite} únicos capturados (${Math.round(allPatients.size/totalSite*100)}%)`);
   console.log(`   ${insertedRows.length} insertados | auto-matched con desaparecidos`);
+
+  await finishRun(runId, 'success', {
+    duration_ms: Date.now() - startTime,
+    records_seen: allPatients.size,
+    records_inserted: insertedRows.length,
+    records_skipped: skipped,
+    matches_created: matchCount,
+    metadata: { queriesRun, queriesWithResults, totalSite, invalid },
+  });
+  return runId;
 }
 
-main().catch(e => {
+main().catch(async (e) => {
   console.error('\n💥 Error fatal:', e.message);
+  try {
+    // Best-effort: log a failure entry so observabilidad shows the crash.
+    await supabaseSvc.from('scraper_runs').insert({
+      source_label: SOURCE_LABEL,
+      status: 'error',
+      finished_at: new Date().toISOString(),
+      error_message: String(e?.stack ?? e?.message ?? e).slice(0, 2000),
+    });
+  } catch { /* swallow */ }
   process.exit(1);
 });
