@@ -106,9 +106,9 @@ async function fetchPatients(): Promise<Patient[]> {
   return res.json();
 }
 
-async function fetchPatientsTotal(): Promise<number> {
+async function fetchCount(filter = ""): Promise<number> {
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/patients?select=id`,
+    `${SUPA_URL}/rest/v1/patients?select=id${filter}`,
     {
       headers: {
         apikey: SUPA_ANON,
@@ -124,6 +124,14 @@ async function fetchPatientsTotal(): Promise<number> {
     if (m) return parseInt(m[1], 10);
   }
   return 0;
+}
+
+async function fetchPatientsCounts(): Promise<{ all: number; active: number; discharged: number }> {
+  const [all, discharged] = await Promise.all([
+    fetchCount(),
+    fetchCount("&status=eq.discharged"),
+  ]);
+  return { all, active: Math.max(0, all - discharged), discharged };
 }
 
 const PAGE_SIZE = 24;
