@@ -1,7 +1,7 @@
 // SSR share route for a missing person. Purpose: give WhatsApp / Twitter / Facebook
 // crawlers dynamic OG tags per person (photo, name, description). Real users get
 // redirected to /desaparecidos?person=<id> so they land on the full detail sheet.
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { supaFetch } from "@/lib/api-public";
 
