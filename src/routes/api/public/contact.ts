@@ -24,8 +24,9 @@ const schema = z.object({
 })
 
 
-// In-memory rate limit: 5 messages/IP/hour
-const LIMIT = 5
+// In-memory rate limit: 3 messages/IP/hour (per PM2 worker). First line of defense;
+// honeypot + min-fill-time catch the rest of the bots.
+const LIMIT = 3
 const WINDOW_MS = 60 * 60 * 1000
 const ipMap = new Map<string, { count: number; resetAt: number }>()
 function getIp(req: Request): string {
@@ -35,16 +36,18 @@ function getIp(req: Request): string {
     'unknown'
   )
 }
-function limited(ip: string): boolean {
+function limited(ip: string): { limited: boolean; retryAfter: number } {
   const now = Date.now()
   const entry = ipMap.get(ip)
   if (!entry || now >= entry.resetAt) {
     ipMap.set(ip, { count: 1, resetAt: now + WINDOW_MS })
-    return false
+    return { limited: false, retryAfter: 0 }
   }
-  if (entry.count >= LIMIT) return true
+  if (entry.count >= LIMIT) {
+    return { limited: true, retryAfter: Math.ceil((entry.resetAt - now) / 1000) }
+  }
   entry.count++
-  return false
+  return { limited: false, retryAfter: 0 }
 }
 
 function generateToken(): string {
