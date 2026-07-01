@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { errorResponse, jsonResponse, metadata, optionsHandler, supaFetch } from "@/lib/api-public";
+import { guardPublicApi } from "@/lib/api-rate-limit";
 
 export const Route = createFileRoute("/api/categories.json")({
   server: {
     handlers: {
       OPTIONS: async () => optionsHandler(),
-      GET: async () => {
+      GET: async ({ request }) => {
+        const _rl = guardPublicApi(request, "json");
+        if (_rl.response) return _rl.response;
         try {
           const rows = await supaFetch("categories?select=id,slug,name,color,icon,description,created_at&order=slug.asc");
           return jsonResponse({

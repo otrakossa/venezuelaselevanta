@@ -151,8 +151,13 @@ export function buildOpenApiSpec() {
         summary: ep.summary,
         description: ep.description,
         parameters: paramsOf(ep.params),
+        security: [{}, { ApiKeyAuth: [] }],
         responses: {
           "200": responseFor(ep.format),
+          "429": {
+            description:
+              "Cuota superada. Reintenta pasado `Retry-After` segundos o solicita una API key para mayor cuota.",
+          },
           "500": { description: "Error interno." },
         },
       },
@@ -163,14 +168,19 @@ export function buildOpenApiSpec() {
     openapi: "3.0.3",
     info: {
       title: "Venezuela Se Levanta — API pública",
-      version: "1.0.0",
+      version: "1.1.0",
       description:
         "Datos abiertos sobre la respuesta al terremoto de Venezuela.\n\n" +
-        "- Sin autenticación, CORS abierto.\n" +
-        "- Sin PII: nunca expone teléfonos, cédulas ni datos de reporteros.\n" +
+        "- CORS abierto, sin PII (nunca expone teléfonos, cédulas ni datos de reporteros).\n" +
         "- Licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).\n" +
         "- Paginación por cursor: usa `next_cursor` de la respuesta anterior en `?cursor=`.\n\n" +
-        "**Ejemplo:** `curl https://venezuelaselevanta.info/api/missing-persons.json?state=Sucre&limit=100`",
+        "### Rate limiting\n\n" +
+        "- **Anónimo:** 120 solicitudes por hora por IP.\n" +
+        "- **API key:** cuota individual (ej. 5.000/h) — envía el header `X-API-Key: <token>`.\n" +
+        "- Cada respuesta incluye `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset` (epoch s) y `X-RateLimit-Tier`.\n" +
+        "- Al superar la cuota devuelve **429** con `Retry-After` en segundos.\n\n" +
+        "Para solicitar una API key escribe a kenny@codextecnologia.com indicando organización y volumen estimado.\n\n" +
+        "**Ejemplo:** `curl -H 'X-API-Key: tu-token' https://venezuelaselevanta.info/api/missing-persons.json?state=Sucre&limit=100`",
       contact: { name: "Venezuela Se Levanta", url: "https://venezuelaselevanta.info" },
       license: { name: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" },
     },
@@ -184,6 +194,17 @@ export function buildOpenApiSpec() {
       { name: "Centros de salud" },
       { name: "Categorías" },
     ],
+    components: {
+      securitySchemes: {
+        ApiKeyAuth: {
+          type: "apiKey",
+          in: "header",
+          name: "X-API-Key",
+          description:
+            "Token opaco. Concede una cuota elevada por hora. Solicítala a kenny@codextecnologia.com.",
+        },
+      },
+    },
     paths,
   };
 }

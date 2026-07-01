@@ -9,6 +9,7 @@ import {
   parseLimit,
   supaFetch,
 } from "@/lib/api-public";
+import { guardPublicApi } from "@/lib/api-rate-limit";
 
 const SAFE_COLS =
   "id,title,description,category,urgency,status,address,lat,lng,reporter_name,photo_url,affected_count,verified,created_at,updated_at,media_urls,confirm_count,dispute_count,state,municipality,parish,external_id,source";
@@ -18,6 +19,8 @@ export const Route = createFileRoute("/api/reports.csv")({
     handlers: {
       OPTIONS: async () => optionsHandler(),
       GET: async ({ request }) => {
+        const _rl = guardPublicApi(request, "csv");
+        if (_rl.response) return _rl.response;
         try {
           const url = new URL(request.url);
           const sp = url.searchParams;

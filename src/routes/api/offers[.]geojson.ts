@@ -9,6 +9,7 @@ import {
   parseLimit,
   supaFetch,
 } from "@/lib/api-public";
+import { guardPublicApi } from "@/lib/api-rate-limit";
 
 const SAFE_COLS = "id,name,type,lat,lng,address,city,state,phone,created_at";
 
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/api/offers.geojson")({
     handlers: {
       OPTIONS: async () => optionsHandler(),
       GET: async ({ request }) => {
+        const _rl = guardPublicApi(request, "geojson");
+        if (_rl.response) return _rl.response;
         // Offers location is text-only; we re-use offers via geocoded city/state isn't worth it.
         // Fallback: 410 — use /api/offers.json with state/city filters instead.
         void SAFE_COLS;
@@ -25,7 +28,6 @@ export const Route = createFileRoute("/api/offers.geojson")({
         void metadata;
         void parseLimit;
         void supaFetch;
-        void request;
         try {
           return geojsonResponse(
             {
